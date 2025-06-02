@@ -1,0 +1,58 @@
+import { Resources } from "@tago-io/sdk";
+import { toMarkdown } from "../../utils/markdown";
+import { AnalysisQuery } from "@tago-io/sdk/lib/modules/Resources/analysis.types";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { analysisListModel } from "./analysis.model";
+import { idModel } from "../../utils/global-params.model";
+
+/**
+ * @description Fetches analyses from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.
+ * TODO: add more parameters to the query
+ */
+async function _getAnalyses(resources: Resources, query?: AnalysisQuery) {
+  const amount = query?.amount || 200;
+  const fields = query?.fields || ["id", "active", "name", "description", "created_at", "updated_at", "last_run", "variables", "tags", "run_on", "version"];
+
+  const analyses = await resources.analysis
+    .list({
+      amount,
+      fields,
+    })
+    .catch((error) => {
+      throw `**Error fetching analyses:** ${error}`;
+    });
+
+  const markdownResponse = toMarkdown(analyses);
+
+  return markdownResponse;
+}
+
+/**
+ * @description Get an analysis by its ID
+ */
+async function _getAnalysisByID(resources: Resources, analysisID: string) {
+  const analysis = await resources.analysis.info(analysisID).catch((error) => {
+    throw `**Error to get analysis by ID:** ${error}`;
+  });
+
+  const markdownResponse = toMarkdown(analysis);
+
+  return markdownResponse;
+}
+
+/**
+ * @description Handler for analyses
+ */
+async function handlerAnalysesTools(server: McpServer, resources: Resources) {
+  server.tool("list_analyses", "List all analyses", analysisListModel, async (params) => {
+    const result = await _getAnalyses(resources, params);
+    return { content: [{ type: "text", text: result }] };
+  });
+
+  server.tool("get_analysis_by_id", "Get an analysis by its ID", idModel, async (params) => {
+    const result = await _getAnalysisByID(resources, params.id);
+    return { content: [{ type: "text", text: result }] };
+  });
+}
+
+export { handlerAnalysesTools };
