@@ -1,13 +1,13 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { Resources } from "@tago-io/sdk";
 import { DataQuery, DeviceQuery } from "@tago-io/sdk/lib/types";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+
 import { toMarkdown } from "../../utils/markdown";
-import { idModel } from "../../utils/global-params.model";
+import { genericIDModel } from "../../utils/global-params.model";
 import { deviceDataModel, deviceListModel } from "./devices.model";
 
 /**
- * @description Get all devices.
- * TODO: add more parameters to the query
+ * @description Get all devices and returns a Markdown-formatted response.
  */
 async function _getDevices(resources: Resources, query?: DeviceQuery) {
   const amount = query?.amount || 200;
@@ -17,6 +17,7 @@ async function _getDevices(resources: Resources, query?: DeviceQuery) {
     .list({
       amount,
       fields,
+      ...query,
     })
     .catch((error) => {
       throw `**Error to get devices:** ${error}`;
@@ -28,7 +29,7 @@ async function _getDevices(resources: Resources, query?: DeviceQuery) {
 }
 
 /**
- * @description Get data from a device.
+ * @description Get data from a device and returns a Markdown-formatted response.
  */
 async function _getDeviceData(resources: Resources, deviceID: string, query?: DataQuery) {
   const data = await resources.devices.getDeviceData(deviceID, query).catch((error) => {
@@ -41,7 +42,7 @@ async function _getDeviceData(resources: Resources, deviceID: string, query?: Da
 }
 
 /**
- * @description Get a device information by its ID
+ * @description Get a device information by its ID and returns a Markdown-formatted response.
  */
 async function _getDeviceByID(resources: Resources, deviceID: string) {
   const device = await resources.devices.info(deviceID).catch((error) => {
@@ -54,7 +55,7 @@ async function _getDeviceByID(resources: Resources, deviceID: string) {
 }
 
 /**
- * @description Handler for devices tools
+ * @description Handler for devices tools to register tools in the MCP server.
  */
 async function handlerDevicesTools(server: McpServer, resources: Resources) {
   server.tool("list_devices", "List all devices", deviceListModel, async (params) => {
@@ -67,7 +68,7 @@ async function handlerDevicesTools(server: McpServer, resources: Resources) {
     return { content: [{ type: "text", text: result }] };
   });
 
-  server.tool("get_device_by_id", "Get a device by its ID", idModel, async (params) => {
+  server.tool("get_device_by_id", "Get a device by its ID", genericIDModel, async (params) => {
     const result = await _getDeviceByID(resources, params.id);
     return { content: [{ type: "text", text: result }] };
   });
