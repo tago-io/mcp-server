@@ -1,7 +1,7 @@
 import z from "zod";
 
 const genericIDModel = {
-  id: z.string({ required_error: "ID is required" }).describe("ID used on TagoIO, string with 24 character").length(24, "ID must be 24 characters long"),
+  id: z.string({ required_error: "ID is required" }).describe("ID used on TagoIO, string with 24 characters").length(24, "ID must be 24 characters long"),
 };
 
 const queryModel = {
