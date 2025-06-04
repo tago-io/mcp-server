@@ -1,14 +1,13 @@
 import { Resources } from "@tago-io/sdk";
-
-import { toMarkdown } from "../../utils/markdown";
 import { ActionQuery } from "@tago-io/sdk/lib/types";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import { idModel } from "../../utils/global-params.model";
+
+import { toMarkdown } from "../../utils/markdown";
 import { actionListModel } from "./actions.model";
+import { genericIDModel } from "../../utils/global-params.model";
 
 /**
  * Fetches actions from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.
- * TODO: add more parameters to the query
  */
 async function _getActions(resources: Resources, query?: ActionQuery) {
   const amount = query?.amount || 200;
@@ -18,6 +17,7 @@ async function _getActions(resources: Resources, query?: ActionQuery) {
     .list({
       amount,
       fields,
+      ...query,
     })
     .catch((error) => {
       throw `**Error fetching actions:** ${(error as Error)?.message || error}`;
@@ -29,7 +29,7 @@ async function _getActions(resources: Resources, query?: ActionQuery) {
 }
 
 /**
- * @description Get an action by its ID
+ * @description Get an action by its ID and returns a Markdown-formatted response.
  */
 async function _getActionByID(resources: Resources, actionID: string) {
   const action = await resources.actions.info(actionID).catch((error) => {
@@ -40,8 +40,9 @@ async function _getActionByID(resources: Resources, actionID: string) {
 
   return markdownResponse;
 }
+
 /**
- * @description Handler for actions
+ * @description Handler for actions tools to register tools in the MCP server.
  */
 async function handlerActionsTools(server: McpServer, resources: Resources) {
   server.tool("list_actions", "List all actions", actionListModel, async (params) => {
@@ -51,7 +52,7 @@ async function handlerActionsTools(server: McpServer, resources: Resources) {
     };
   });
 
-  server.tool("get_action_by_id", "Get an action by its ID", idModel, async (params) => {
+  server.tool("get_action_by_id", "Get an action by its ID", genericIDModel, async (params) => {
     const result = await _getActionByID(resources, params.id);
     return {
       content: [{ type: "text", text: result }],
