@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 
 import Fastify, { FastifyRequest } from "fastify";
-// import * as dotenv from "dotenv";
+import * as dotenv from "dotenv";
 import { Resources } from "@tago-io/sdk";
-import { Sessions, streamableHttp } from "fastify-mcp/dist/index.js";
+import { Sessions, streamableHttp } from "fastify-mcp/dist/index";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
-import { handlerTools } from "./mcp-tools.js";
-import { environmentModel, IEnvironmentModel } from "./utils/config.model.js";
-import { JSONRPCRequest } from "./interfaces.js";
-import { authenticate } from "./authentication.js";
+import { handlerTools } from "./mcp-tools";
+import { environmentModel, IEnvironmentModel } from "./utils/config.model";
+import { JSONRPCRequest } from "./interfaces";
+import { authenticate } from "./authentication";
 
 // Load environment variables from .env file.
-// dotenv.config();
+dotenv.config();
 
 const ENV: IEnvironmentModel = environmentModel.parse({ PORT: process.env.PORT, LOG_LEVEL: process.env.LOG_LEVEL });
 
@@ -23,7 +23,7 @@ let RESOURCES: Resources;
 // Initialize Fastify server with pino-pretty logger for better logging experience.
 const fastify = Fastify({
   logger: {
-    level: ENV.LOG_LEVEL || "info",
+    level: ENV.LOG_LEVEL || "INFO",
     transport: {
       target: "pino-pretty",
       options: {

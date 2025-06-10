@@ -1,6 +1,6 @@
 import { z } from "zod/v3";
 
-import { genericIDModel } from "../../utils/global-params.model.js";
+import { genericIDModel } from "../../utils/global-params.model";
 
 /**
  * Zod schema for profile statistics parameters

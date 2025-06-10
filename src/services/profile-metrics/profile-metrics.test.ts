@@ -1,7 +1,7 @@
 import { z } from "zod/v3";
 import { describe, it, expect } from "vitest";
 
-import { profileStatisticsModel } from "./profile-metrics.model.js";
+import { profileStatisticsModel } from "./profile-metrics.model";
 
 describe("profileStatisticsModel", () => {
   const schema = z.object(profileStatisticsModel);

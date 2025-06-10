@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { toMarkdown } from "./markdown.js";
-import { ActionInfo } from "@tago-io/sdk/lib/types.js";
+import { toMarkdown } from "./markdown";
+import { ActionInfo } from "@tago-io/sdk/lib/types";
 
 const actions: ActionInfo[] = [
   {

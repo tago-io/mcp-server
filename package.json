@@ -7,6 +7,7 @@
 	},
 	"type": "commonjs",
 	"files": ["build"],
+
 	"scripts": {
 		"test": "vitest",
 		"test:single": "vitest --",
@@ -17,11 +18,11 @@
 	},
 	"keywords": ["mcp", "model-context-protocol", "tagoio", "ai", "tools"],
 	"author": "TagoIO",
+	"engines": {
+		"node": ">=18"
+	},
 	"license": "ISC",
 	"description": "Model Context Protocol server for TagoIO data and analytics",
-	"engines": {
-		"node": ">=20"
-	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@tago-io/sdk": "^11.3.9",

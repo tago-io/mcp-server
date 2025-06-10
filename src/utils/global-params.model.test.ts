@@ -1,7 +1,7 @@
 import z from "zod/v3";
 import { describe, expect, it } from "vitest";
 
-import { genericIDModel, queryModel } from "./global-params.model.js";
+import { genericIDModel, queryModel } from "./global-params.model";
 
 describe("analysisgenericIDModel", () => {
   it("should validate valid ID", () => {

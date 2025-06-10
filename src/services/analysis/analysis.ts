@@ -1,10 +1,10 @@
 import { Resources } from "@tago-io/sdk";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { AnalysisQuery } from "@tago-io/sdk/lib/modules/Resources/analysis.types.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { AnalysisQuery } from "@tago-io/sdk/lib/modules/Resources/analysis.types";
 
-import { toMarkdown } from "../../utils/markdown.js";
-import { analysisListModel } from "./analysis.model.js";
-import { genericIDModel } from "../../utils/global-params.model.js";
+import { toMarkdown } from "../../utils/markdown";
+import { analysisListModel } from "./analysis.model";
+import { genericIDModel } from "../../utils/global-params.model";
 
 /**
  * @description Fetches analyses from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.

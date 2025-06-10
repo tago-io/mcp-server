@@ -1,10 +1,10 @@
 import { Resources } from "@tago-io/sdk";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { EntityQuery } from "@tago-io/sdk/lib/modules/Resources/entities.types.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { EntityQuery } from "@tago-io/sdk/lib/modules/Resources/entities.types";
 
-import { toMarkdown } from "../../utils/markdown.js";
-import { entityListModel } from "./entities.model.js";
-import { genericIDModel } from "../../utils/global-params.model.js";
+import { toMarkdown } from "../../utils/markdown";
+import { entityListModel } from "./entities.model";
+import { genericIDModel } from "../../utils/global-params.model";
 
 /**
  * @description Get entities from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.

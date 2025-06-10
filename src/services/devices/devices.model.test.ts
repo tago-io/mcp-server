@@ -1,7 +1,7 @@
 import { z } from "zod/v3";
 import { describe, it, expect } from "vitest";
 
-import { deviceListModel, deviceDataModel } from "./devices.model.js";
+import { deviceListModel, deviceDataModel } from "./devices.model";
 
 describe("Device Models", () => {
   describe("deviceListModel", () => {

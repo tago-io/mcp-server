@@ -5,7 +5,7 @@ import { z } from "zod/v3";
  */
 const environmentModel = z.object({
   PORT: z.string().regex(/^\d+$/).default("8000").transform(Number),
-  LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARNING", "ERROR"]).optional().default("WARNING"),
+  LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARNING", "ERROR"]).optional().default("INFO"),
 });
 
 /**

@@ -1,10 +1,10 @@
 import { Resources } from "@tago-io/sdk";
-import { DataQuery, DeviceQuery } from "@tago-io/sdk/lib/types.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { DataQuery, DeviceQuery } from "@tago-io/sdk/lib/types";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 
-import { toMarkdown } from "../../utils/markdown.js";
-import { genericIDModel } from "../../utils/global-params.model.js";
-import { deviceDataModel, deviceListModel } from "./devices.model.js";
+import { toMarkdown } from "../../utils/markdown";
+import { genericIDModel } from "../../utils/global-params.model";
+import { deviceDataModel, deviceListModel } from "./devices.model";
 
 /**
  * @description Get all devices and returns a Markdown-formatted response.

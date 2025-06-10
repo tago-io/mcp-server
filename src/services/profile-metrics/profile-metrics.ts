@@ -1,10 +1,10 @@
 import { Resources } from "@tago-io/sdk";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 
-import { toMarkdown } from "../../utils/markdown.js";
-import { genericIDModel } from "../../utils/global-params.model.js";
-import { StatisticsDate } from "@tago-io/sdk/lib/types.js";
-import { profileStatisticsModel } from "./profile-metrics.model.js";
+import { toMarkdown } from "../../utils/markdown";
+import { genericIDModel } from "../../utils/global-params.model";
+import { StatisticsDate } from "@tago-io/sdk/lib/types";
+import { profileStatisticsModel } from "./profile-metrics.model";
 
 /**
  * @description Get the limits of the profile and returns a Markdown-formatted response.

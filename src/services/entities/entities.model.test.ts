@@ -1,7 +1,7 @@
 import { z } from "zod/v3";
 import { describe, it, expect } from "vitest";
 
-import { entityListModel } from "./entities.model.js";
+import { entityListModel } from "./entities.model";
 
 describe("Entity Models", () => {
   describe("entityListModel", () => {

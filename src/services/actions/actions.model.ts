@@ -1,6 +1,6 @@
 import { z } from "zod/v3";
 
-import { queryModel, tagsObjectModel } from "../../utils/global-params.model.js";
+import { queryModel, tagsObjectModel } from "../../utils/global-params.model";
 
 const actionListModel = {
   ...queryModel,
