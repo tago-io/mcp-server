@@ -45,14 +45,14 @@ async function _getEntityByID(resources: Resources, entityID: string) {
  * @description Handler for entities tools to register tools in the MCP server.
  */
 async function handlerEntitiesTools(server: McpServer, resources: Resources) {
-  server.tool("list_entities", "List all entities", entityListModel, async (params) => {
+  server.tool("list-entities", "List all entities", entityListModel, { title: "List Entities" }, async (params) => {
     const result = await _getEntities(resources, params);
     return {
       content: [{ type: "text", text: result }],
     };
   });
 
-  server.tool("get_entity_by_id", "Get an entity by its ID", genericIDModel, async (params) => {
+  server.tool("get-entity-by-id", "Get an entity by its ID", genericIDModel, { title: "Get Entity by ID" }, async (params) => {
     const result = await _getEntityByID(resources, params.id);
     return {
       content: [{ type: "text", text: result }],

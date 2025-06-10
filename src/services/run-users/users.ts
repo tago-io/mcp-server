@@ -45,12 +45,12 @@ async function _getUserByID(resources: Resources, userID: string) {
  * @description Handle users tools to register tools in the MCP server.
  */
 async function handlerUsersTools(server: McpServer, resources: Resources) {
-  server.tool("get_users", "Get users", userListModel, async (params) => {
+  server.tool("list-users", "List all users", userListModel, { title: "List Users" }, async (params) => {
     const result = await _getUsers(resources, params);
     return { content: [{ type: "text", text: result }] };
   });
 
-  server.tool("get_user_by_id", "Get user by ID", genericIDModel, async (params) => {
+  server.tool("get-user-by-id", "Get user by ID", genericIDModel, { title: "Get User by ID" }, async (params) => {
     const result = await _getUserByID(resources, params.id);
     return { content: [{ type: "text", text: result }] };
   });
