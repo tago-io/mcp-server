@@ -3,7 +3,8 @@ import { environmentModel, headersModel } from "./config.model";
 
 // Helper to create a valid base object for environment
 const defaultEnv = {
-  PORT: "8080",
+  TAGOIO_TOKEN: "token123",
+  TAGOIO_API: "https://api.tago.io",
   LOG_LEVEL: "DEBUG",
 };
 
@@ -17,19 +18,20 @@ describe("environmentModel", () => {
   it("validates a complete and valid set of environment variables", () => {
     const parsed = environmentModel.parse(defaultEnv);
     expect(parsed).toEqual({
-      PORT: 8080,
+      TAGOIO_TOKEN: "token123",
+      TAGOIO_API: "https://api.tago.io",
       LOG_LEVEL: "DEBUG",
     });
   });
 
-  it("uses default values for PORT and LOG_LEVEL", () => {
-    const parsed = environmentModel.parse({});
-    expect(parsed.PORT).toBe(3005);
+  it("uses default values for TAGOIO_API and LOG_LEVEL", () => {
+    const parsed = environmentModel.parse({ TAGOIO_TOKEN: "token123" });
+    expect(parsed.TAGOIO_API).toBe("https://api.tago.io");
     expect(parsed.LOG_LEVEL).toBe("INFO");
   });
 
-  it("throws error if PORT is not a number", () => {
-    const env = { ...defaultEnv, PORT: "abc" };
+  it("throws error if TAGOIO_TOKEN is missing", () => {
+    const { TAGOIO_TOKEN, ...env } = defaultEnv;
     expect(() => environmentModel.parse(env)).toThrow();
   });
 

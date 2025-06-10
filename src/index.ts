@@ -1,93 +1,67 @@
 #!/usr/bin/env node
 
-import Fastify, { FastifyRequest } from "fastify";
 import * as dotenv from "dotenv";
 import { Resources } from "@tago-io/sdk";
-import { Sessions, streamableHttp } from "fastify-mcp/dist/index";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 import { handlerTools } from "./mcp-tools";
 import { environmentModel, IEnvironmentModel } from "./utils/config.model";
-import { JSONRPCRequest } from "./interfaces";
-import { authenticate } from "./authentication";
 
 // Load environment variables from .env file.
 dotenv.config();
 
-const ENV: IEnvironmentModel = environmentModel.parse({ PORT: process.env.PORT, LOG_LEVEL: process.env.LOG_LEVEL });
-
-// Lazy resource that will be initialized with the correct tokens
-let RESOURCES: Resources;
-
-// Initialize Fastify server with pino-pretty logger for better logging experience.
-const fastify = Fastify({
-  logger: {
-    level: ENV.LOG_LEVEL || "INFO",
-    transport: {
-      target: "pino-pretty",
-      options: {
-        colorize: true,
-        translateTime: "HH:MM:ss Z",
-        ignore: "pid,hostname",
-        singleLine: false,
-      },
-    },
-  },
+const ENV: IEnvironmentModel = environmentModel.parse({
+  LOG_LEVEL: process.env.LOG_LEVEL,
+  TAGOIO_TOKEN: process.env.TAGOIO_TOKEN,
+  TAGOIO_API: process.env.TAGOIO_API,
 });
 
-// Validate the client connection and ensure the header fields for the `Profile Token` and `TagoIO API URL` are valid.
-fastify.addHook("preHandler", async (request: FastifyRequest<{ Body: JSONRPCRequest }>) => {
-  const isInitialize = request.body?.method === "initialize";
-  if (!isInitialize) {
-    return;
-  }
+/**
+ * @description Start the MCP server using stdio transport.
+ */
+async function startServer() {
+  try {
+    // Validate required environment variables
+    if (!ENV.TAGOIO_TOKEN) {
+      console.error("Error: TAGOIO_TOKEN environment variable is required");
+      process.exit(1);
+    }
 
-  const resources = await authenticate({ profileToken: request?.headers?.authorization, tagoioApi: request?.headers?.["tagoio-api"] });
-  RESOURCES = resources;
-});
+    // Set the TagoIO API endpoint
+    process.env.TAGOIO_API = ENV.TAGOIO_API;
 
-// Register the MCP server using Fastify.
-fastify.register(streamableHttp as any, {
-  stateful: true,
-  mcpEndpoint: "/mcp",
-  createServer: async () => {
-    fastify.log.debug("Creating new MCP server instance");
+    // Initialize TagoIO Resources with the token
+    const resources = new Resources({ token: ENV.TAGOIO_TOKEN });
+
+    // Validate the connection to TagoIO API
+    await resources.account.info().catch(() => {
+      throw new Error("Failed to connect to TagoIO API. Please check your TAGOIO_TOKEN and TAGOIO_API configuration.");
+    });
+
+    // Create MCP server
     const mcpServer = new McpServer({
       name: "middleware-mcp-tagoio",
       version: "1.0.0",
     });
 
-    await handlerTools(mcpServer, RESOURCES);
-    fastify.log.debug("MCP server instance created and tools registered");
+    // Register all tools
+    await handlerTools(mcpServer, resources);
 
-    return mcpServer.server;
-  },
-  sessions: new Sessions<StreamableHTTPServerTransport>(),
-});
+    // Create stdio transport
+    const transport = new StdioServerTransport();
 
-// TODO: Add a better error handler - not working as expected.
-fastify.setErrorHandler((error, _request, reply) => {
-  reply.status(error.statusCode || 500).send({
-    jsonrpc: "2.0",
-    error: { code: -32000, message: error?.message || error },
-    id: null,
-  });
-});
+    // Connect server to transport
+    await mcpServer.connect(transport);
 
-/**
- * @description Start the MCP server using Fastify.
- */
-async function startServer() {
-  await fastify
-    .listen({ port: ENV.PORT, host: "0.0.0.0" })
-    .then(() => {
-      fastify.log.info(`MCP endpoint available at http://0.0.0.0:${ENV.PORT}/mcp`);
-    })
-    .catch((error) => {
-      fastify.log.error(error);
-      process.exit(1);
-    });
+    if (ENV.LOG_LEVEL === "DEBUG") {
+      console.error("MCP server started successfully with stdio transport");
+      console.error("Tools registered and ready to receive requests");
+    }
+  } catch (error) {
+    console.error("Failed to start MCP server:", error);
+    process.exit(1);
+  }
 }
 
 startServer();
