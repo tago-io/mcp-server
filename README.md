@@ -20,8 +20,6 @@ npm install
 3. Create a `.env` file in the root directory with the following variables:
 
 ```env
-TAGOIO_API=https://api.tago.io
-PROFILE_TOKEN=your-profile-token-here
 PORT=8000
 LOG_LEVEL=DEBUG
 ```
@@ -90,11 +88,9 @@ Cursor IDE provides built-in support for MCP servers, allowing you to use AI mod
   "mcpServers": {
     "middleware-mcp-tagoio": {
       "url": "http://localhost:8000/mcp",
-      "env": {
-        "TAGOIO_API": "https://api.tago.io",
-        "PROFILE_TOKEN": "YOUR-PROFILE-TOKEN",
-        "PORT": "8000",
-        "LOG_LEVEL": "DEBUG"
+      "headers": {
+        "Authentication": "YOUR-PROFILE-TOKEN",
+        "TagoIO-API": "https://api.us-e1.tago.io"
       }
     }
   }
@@ -113,9 +109,14 @@ Now you can use AI models in Cursor that will interact with your MCP server. The
 
 ## Environment Variables
 
-| Variable      | Description                              | Default             |
-| ------------- | ---------------------------------------- | ------------------- |
-| TAGOIO_API    | TagoIO API endpoint                      | https://api.tago.io |
-| PROFILE_TOKEN | Your TagoIO profile token                | -                   |
-| PORT          | Server port                              | 8000                |
-| LOG_LEVEL     | Logging level (DEBUG, INFO, WARN, ERROR) | DEBUG               |
+| Variable  | Description                                 | Default | Required |
+| --------- | ------------------------------------------- | ------- | -------- |
+| PORT      | Server port                                 | 8000    | No       |
+| LOG_LEVEL | Logging level (DEBUG, INFO, WARNING, ERROR) | WARNING | No       |
+
+## Headers - Client Connection
+
+| Headers        | Description               | Default             | Required |
+| -------------- | ------------------------- | ------------------- | -------- |
+| Authentication | Your TagoIO profile token | -                   | ✅       |
+| TagoIO-API     | TagoIO API endpoint       | https://api.tago.io | No       |

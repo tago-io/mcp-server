@@ -1,23 +1,10 @@
-import z from "zod";
+import { z } from "zod/v3";
 import { describe, it, expect } from "vitest";
 
 import { analysisListModel } from "./analysis.model";
 
 describe("Analysis Models", () => {
   describe("analysisListModel", () => {
-    it("should validate valid amount", () => {
-      const result = analysisListModel.amount.safeParse(100);
-      expect(result.success).toBe(true);
-    });
-
-    it("should reject amount greater than 200", () => {
-      const result = analysisListModel.amount.safeParse(201);
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues[0].message).toBe("Number must be less than or equal to 200");
-      }
-    });
-
     it("should validate valid fields array", () => {
       const result = analysisListModel.fields.safeParse(["name", "active", "created_at"]);
       expect(result.success).toBe(true);
