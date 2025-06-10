@@ -20,6 +20,7 @@
 	"engines": {
 		"node": ">=18"
 	},
+	"repository": "tago-io/middleware-mcp-tagoio.git",
 	"license": "ISC",
 	"description": "Model Context Protocol server for TagoIO data and analytics",
 	"devDependencies": {
