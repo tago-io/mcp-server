@@ -4,7 +4,7 @@ import { z } from "zod/v3";
  * Zod schema for environment variables.
  */
 const environmentModel = z.object({
-  PORT: z.string().regex(/^\d+$/).default("8000").transform(Number),
+  PORT: z.string().regex(/^\d+$/).default("3005").transform(Number),
   LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARNING", "ERROR"]).optional().default("INFO"),
 });
 

@@ -24,8 +24,8 @@ describe("environmentModel", () => {
 
   it("usa valores padrão para PORT e LOG_LEVEL", () => {
     const parsed = environmentModel.parse({});
-    expect(parsed.PORT).toBe(8000);
-    expect(parsed.LOG_LEVEL).toBe("WARNING");
+    expect(parsed.PORT).toBe(3005);
+    expect(parsed.LOG_LEVEL).toBe("INFO");
   });
 
   it("lança erro se PORT não for um número", () => {

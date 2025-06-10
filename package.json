@@ -7,14 +7,13 @@
 	},
 	"type": "commonjs",
 	"files": ["build"],
-
 	"scripts": {
-		"test": "vitest",
+		"test": "vitest run",
 		"test:single": "vitest --",
 		"linter": "biome lint ./src --no-errors-on-unmatched --diagnostic-level=error",
 		"linter-fix": "biome lint --apply ./src",
-		"build": "rm -rf ./build; tsc --build",
-		"start-fastify": "ts-node-dev --respawn --transpile-only src/index.ts"
+		"build": "rm -rf ./build; tsc --build && shx chmod +x build/*.js",
+		"start": "ts-node-dev --respawn --transpile-only src/index.ts"
 	},
 	"keywords": ["mcp", "model-context-protocol", "tagoio", "ai", "tools"],
 	"author": "TagoIO",
@@ -43,6 +42,7 @@
 		"fastify": "^4.26.2",
 		"fastify-mcp": "^2.0.0",
 		"pino-pretty": "^13.0.0",
+		"shx": "^0.4.0",
 		"zod": "^3.25.28"
 	}
 }
