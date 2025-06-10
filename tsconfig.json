@@ -1,37 +1,24 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "commonjs",
-    "lib": [
-      "ES2023",
-      "DOM"
-    ],
+    "target": "ESNext",
+    "module": "NodeNext",
+    "lib": ["ES2023", "DOM"],
     "allowJs": true,
-    "outDir": "./build",
-    "noImplicitAny": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
     "rootDir": "./src",
+    "outDir": "./build",
+    "strict": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    "noUnusedParameters": true,
-    "noUnusedLocals": true,
-    "removeComments": true,
-    "strictNullChecks": true,
-    "inlineSourceMap": false,
-    "sourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "types": ["node", "vitest"]
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules"
-  ],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"],
   "rules": {
     "no-unused-declaration": true
   },
   "ts-node": {
     "transpileOnly": true
-  },
+  }
 }

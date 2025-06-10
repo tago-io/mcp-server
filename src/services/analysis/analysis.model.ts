@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
-import { queryModel, tagsObjectModel } from "../../utils/global-params.model";
+import { queryModel, tagsObjectModel } from "../../utils/global-params.model.js";
 
 const analysisListModel = {
   ...queryModel,

@@ -1,18 +1,18 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
 /**
  * Zod schema for environment variables.
  */
 const environmentModel = z.object({
-  PORT: z.string().regex(/^\d+$/).transform(Number).default("8000"),
-  LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARNING", "ERROR"]).default("WARNING"),
+  PORT: z.string().regex(/^\d+$/).default("8000").transform(Number),
+  LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARNING", "ERROR"]).optional().default("WARNING"),
 });
 
 /**
  * Zod schema defining the request headers required for client connections to the MCP server.
  */
 const headersModel = z.object({
-  authorization: z.string({ required_error: "Authorization header is required" }).transform((val) => val.replace(/^Bearer\s+/i, "")),
+  authorization: z.string({ message: "Authorization header is required" }).transform((val) => val.replace(/^Bearer\s+/i, "")),
   "tagoio-api": z.string().default("https://api.tago.io"),
 });
 

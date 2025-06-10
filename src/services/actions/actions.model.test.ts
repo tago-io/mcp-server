@@ -1,7 +1,7 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { describe, it, expect } from "vitest";
 
-import { actionListModel } from "./actions.model";
+import { actionListModel } from "./actions.model.js";
 
 describe("Actions Model", () => {
   describe("actionListModel", () => {

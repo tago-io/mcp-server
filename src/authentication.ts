@@ -1,7 +1,7 @@
 import { Resources } from "@tago-io/sdk";
 
-import { headersModel, IHeadersModel } from "./utils/config.model";
-import { getZodError } from "./utils/get-zod-error";
+import { headersModel, IHeadersModel } from "./utils/config.model.js";
+import { getZodError } from "./utils/get-zod-error.js";
 
 /**
  * @description Validate the headers provided by the client and return the resources.

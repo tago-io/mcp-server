@@ -1,10 +1,10 @@
 import { Resources } from "@tago-io/sdk";
-import { ActionQuery } from "@tago-io/sdk/lib/types";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { ActionQuery } from "@tago-io/sdk/lib/types.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-import { toMarkdown } from "../../utils/markdown";
-import { actionListModel } from "./actions.model";
-import { genericIDModel } from "../../utils/global-params.model";
+import { toMarkdown } from "../../utils/markdown.js";
+import { actionListModel } from "./actions.model.js";
+import { genericIDModel } from "../../utils/global-params.model.js";
 
 /**
  * Fetches actions from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.

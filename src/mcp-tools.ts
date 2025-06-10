@@ -1,12 +1,12 @@
 import { Resources } from "@tago-io/sdk";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-import { handlerUsersTools } from "./services/run-users/users";
-import { handlerActionsTools } from "./services/actions/actions";
-import { handlerDevicesTools } from "./services/devices/devices";
-import { handlerAnalysesTools } from "./services/analysis/analysis";
-import { handlerEntitiesTools } from "./services/entities/entities";
-import { handlerProfileMetricsTools } from "./services/profile-metrics/profile-metrics";
+import { handlerUsersTools } from "./services/run-users/users.js";
+import { handlerActionsTools } from "./services/actions/actions.js";
+import { handlerDevicesTools } from "./services/devices/devices.js";
+import { handlerAnalysesTools } from "./services/analysis/analysis.js";
+import { handlerEntitiesTools } from "./services/entities/entities.js";
+import { handlerProfileMetricsTools } from "./services/profile-metrics/profile-metrics.js";
 
 /**
  * @description Register tools for the MCP server.

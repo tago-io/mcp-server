@@ -1,10 +1,10 @@
 import { Resources } from "@tago-io/sdk";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import { UserQuery } from "@tago-io/sdk/lib/modules/Resources/run.types";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { UserQuery } from "@tago-io/sdk/lib/modules/Resources/run.types.js";
 
-import { userListModel } from "./users.model";
-import { toMarkdown } from "../../utils/markdown";
-import { genericIDModel } from "../../utils/global-params.model";
+import { userListModel } from "./users.model.js";
+import { toMarkdown } from "../../utils/markdown.js";
+import { genericIDModel } from "../../utils/global-params.model.js";
 
 /**
  * @description Get users list and returns a Markdown-formatted response.
