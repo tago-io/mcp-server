@@ -14,7 +14,7 @@ const defaultHeaders = {
 };
 
 describe("environmentModel", () => {
-  it("valida um conjunto completo e válido de variáveis", () => {
+  it("validates a complete and valid set of environment variables", () => {
     const parsed = environmentModel.parse(defaultEnv);
     expect(parsed).toEqual({
       PORT: 8080,
@@ -22,25 +22,25 @@ describe("environmentModel", () => {
     });
   });
 
-  it("usa valores padrão para PORT e LOG_LEVEL", () => {
+  it("uses default values for PORT and LOG_LEVEL", () => {
     const parsed = environmentModel.parse({});
-    expect(parsed.PORT).toBe(8000);
-    expect(parsed.LOG_LEVEL).toBe("WARNING");
+    expect(parsed.PORT).toBe(3005);
+    expect(parsed.LOG_LEVEL).toBe("INFO");
   });
 
-  it("lança erro se PORT não for um número", () => {
+  it("throws error if PORT is not a number", () => {
     const env = { ...defaultEnv, PORT: "abc" };
     expect(() => environmentModel.parse(env)).toThrow();
   });
 
-  it("lança erro se LOG_LEVEL for inválido", () => {
+  it("throws error if LOG_LEVEL is invalid", () => {
     const env = { ...defaultEnv, LOG_LEVEL: "SILENT" };
     expect(() => environmentModel.parse(env)).toThrow();
   });
 });
 
 describe("headersModel", () => {
-  it("valida um conjunto completo e válido de headers", () => {
+  it("validates a complete and valid set of headers", () => {
     const parsed = headersModel.parse(defaultHeaders);
     expect(parsed).toEqual({
       authorization: "token123", // Bearer prefix should be removed
@@ -48,24 +48,24 @@ describe("headersModel", () => {
     });
   });
 
-  it("usa valor padrão para tagoio-api", () => {
+  it("uses default value for tagoio-api", () => {
     const { "tagoio-api": tagoApi, ...headers } = defaultHeaders;
     const parsed = headersModel.parse(headers);
     expect(parsed["tagoio-api"]).toBe("https://api.tago.io");
   });
 
-  it("lança erro se authorization estiver ausente", () => {
+  it("throws error if authorization is missing", () => {
     const { authorization, ...headers } = defaultHeaders;
     expect(() => headersModel.parse(headers)).toThrow("Authorization header is required");
   });
 
-  it("remove o prefixo 'Bearer' do token de autorização", () => {
+  it("removes 'Bearer' prefix from authorization token", () => {
     const headers = { ...defaultHeaders, authorization: "Bearer mytoken" };
     const parsed = headersModel.parse(headers);
     expect(parsed.authorization).toBe("mytoken");
   });
 
-  it("mantém o token como está se não tiver o prefixo 'Bearer'", () => {
+  it("keeps token as is if it doesn't have 'Bearer' prefix", () => {
     const headers = { ...defaultHeaders, authorization: "mytoken" };
     const parsed = headersModel.parse(headers);
     expect(parsed.authorization).toBe("mytoken");

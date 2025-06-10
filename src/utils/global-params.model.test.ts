@@ -1,4 +1,4 @@
-import z from "zod";
+import z from "zod/v3";
 import { describe, expect, it } from "vitest";
 
 import { genericIDModel, queryModel } from "./global-params.model";

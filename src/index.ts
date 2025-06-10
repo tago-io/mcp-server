@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import Fastify, { FastifyRequest } from "fastify";
 import * as dotenv from "dotenv";
 import { Resources } from "@tago-io/sdk";
@@ -21,7 +23,7 @@ let RESOURCES: Resources;
 // Initialize Fastify server with pino-pretty logger for better logging experience.
 const fastify = Fastify({
   logger: {
-    level: ENV.LOG_LEVEL,
+    level: ENV.LOG_LEVEL || "INFO",
     transport: {
       target: "pino-pretty",
       options: {

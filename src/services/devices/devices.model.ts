@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
 import { queryModel, tagsObjectModel } from "../../utils/global-params.model";
 

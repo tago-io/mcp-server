@@ -2,10 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "commonjs",
-    "lib": [
-      "ES2023",
-      "DOM"
-    ],
+    "lib": ["ES2023", "DOM"],
     "allowJs": true,
     "outDir": "./build",
     "noImplicitAny": true,
@@ -20,18 +17,14 @@
     "removeComments": true,
     "strictNullChecks": true,
     "inlineSourceMap": false,
-    "sourceMap": true,
+    "sourceMap": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules"
-  ],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"],
   "rules": {
     "no-unused-declaration": true
   },
   "ts-node": {
     "transpileOnly": true
-  },
+  }
 }
