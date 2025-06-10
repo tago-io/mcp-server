@@ -45,14 +45,14 @@ async function _getActionByID(resources: Resources, actionID: string) {
  * @description Handler for actions tools to register tools in the MCP server.
  */
 async function handlerActionsTools(server: McpServer, resources: Resources) {
-  server.tool("list_actions", "List all actions", actionListModel, async (params) => {
+  server.tool("list-actions", "List all actions", actionListModel, { title: "List Actions" }, async (params) => {
     const result = await _getActions(resources, params);
     return {
       content: [{ type: "text", text: result }],
     };
   });
 
-  server.tool("get_action_by_id", "Get an action by its ID", genericIDModel, async (params) => {
+  server.tool("get-action-by-id", "Get an action by its ID", genericIDModel, { title: "Get Action by ID" }, async (params) => {
     const result = await _getActionByID(resources, params.id);
     return {
       content: [{ type: "text", text: result }],

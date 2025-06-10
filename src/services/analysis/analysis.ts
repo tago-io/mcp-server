@@ -45,12 +45,12 @@ async function _getAnalysisByID(resources: Resources, analysisID: string) {
  * @description Handler for analyses tools to register tools in the MCP server.
  */
 async function handlerAnalysesTools(server: McpServer, resources: Resources) {
-  server.tool("list_analyses", "List all analyses", analysisListModel, async (params) => {
+  server.tool("list-analyses", "List all analyses", analysisListModel, { title: "List Analyses" }, async (params) => {
     const result = await _getAnalyses(resources, params);
     return { content: [{ type: "text", text: result }] };
   });
 
-  server.tool("get_analysis_by_id", "Get an analysis by its ID", genericIDModel, async (params) => {
+  server.tool("get-analysis-by-id", "Get an analysis by its ID", genericIDModel, { title: "Get Analysis by ID" }, async (params) => {
     const result = await _getAnalysisByID(resources, params.id);
     return { content: [{ type: "text", text: result }] };
   });

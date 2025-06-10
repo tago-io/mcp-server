@@ -1,39 +1,48 @@
 {
-  "name": "test-mcp-server",
-  "version": "1.0.0",
-  "main": "build/main.js",
-  "scripts": {
-    "test": "vitest",
-    "test:single": "vitest --",
-    "linter": "biome lint ./src --no-errors-on-unmatched --diagnostic-level=error",
-    "linter-fix": "biome lint --apply ./src",
-    "build": "rm -rf ./build; tsc --build",
-    "start-fastify": "ts-node-dev --respawn --transpile-only src/start-fastify.ts"
-  },
-  "keywords": [
-    "mcp",
-    "tagoio",
-    "ai",
-    "tools"
-  ],
-  "author": "",
-  "license": "ISC",
-  "description": "Model Context Protocol server for TagoIO data and analytics",
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
-    "@tago-io/sdk": "^11.3.9",
-    "@types/node": "^22.15.21",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.8.3",
-    "unplugin-swc": "^1.5.3",
-    "vitest": "^3.1.4"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "dotenv": "^16.5.0",
-    "fastify": "^4.26.2",
-    "fastify-mcp": "^2.0.0",
-    "pino-pretty": "^13.0.0",
-    "zod": "^3.25.28"
-  }
+	"name": "@tago-io/mcp-server",
+	"version": "1.0.0",
+	"main": "build/index.js",
+	"bin": {
+		"tago-mcp-server": "build/index.js"
+	},
+	"type": "commonjs",
+	"files": ["build"],
+	"scripts": {
+		"test": "vitest run",
+		"test:single": "vitest --",
+		"linter": "biome lint ./src --no-errors-on-unmatched --diagnostic-level=error",
+		"linter-fix": "biome lint --apply ./src",
+		"build": "rm -rf ./build; tsc --build && shx chmod +x build/*.js",
+		"start": "ts-node-dev --respawn --transpile-only src/index.ts"
+	},
+	"keywords": ["mcp", "model-context-protocol", "tagoio", "ai", "tools"],
+	"author": "TagoIO",
+	"engines": {
+		"node": ">=18"
+	},
+	"license": "ISC",
+	"description": "Model Context Protocol server for TagoIO data and analytics",
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@tago-io/sdk": "^11.3.9",
+		"@types/aws-lambda": "^8.10.136",
+		"@types/node": "^22.15.21",
+		"aws-cdk-lib": "^2.200.1",
+		"constructs": "^10.3.0",
+		"ts-node": "^10.9.2",
+		"ts-node-dev": "^2.0.0",
+		"typescript": "^5.8.3",
+		"unplugin-swc": "^1.5.3",
+		"vitest": "^3.1.4"
+	},
+	"dependencies": {
+		"@fastify/aws-lambda": "^5.0.1",
+		"@modelcontextprotocol/sdk": "^1.12.1",
+		"dotenv": "^16.5.0",
+		"fastify": "^4.26.2",
+		"fastify-mcp": "^2.0.0",
+		"pino-pretty": "^13.0.0",
+		"shx": "^0.4.0",
+		"zod": "^3.25.28"
+	}
 }
