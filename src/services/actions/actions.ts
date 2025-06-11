@@ -1,6 +1,6 @@
 import { Resources } from "@tago-io/sdk";
 import { ActionQuery } from "@tago-io/sdk/lib/types";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { toMarkdown } from "../../utils/markdown";
 import { actionListModel } from "./actions.model";

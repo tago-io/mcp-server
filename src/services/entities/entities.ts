@@ -1,5 +1,5 @@
 import { Resources } from "@tago-io/sdk";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { EntityQuery } from "@tago-io/sdk/lib/modules/Resources/entities.types";
 
 import { toMarkdown } from "../../utils/markdown";

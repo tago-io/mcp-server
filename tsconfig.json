@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
+    "module": "node16",
     "lib": ["ES2023", "DOM"],
     "allowJs": true,
     "outDir": "./build",
     "noImplicitAny": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "rootDir": "./src",

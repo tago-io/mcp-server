@@ -1,6 +1,7 @@
 import { z } from "zod/v3";
 
 import { queryModel, tagsObjectModel } from "../../utils/global-params.model";
+import { preprocessDeviceData } from "../../utils/array-preprocessor";
 
 const deviceListModel = {
   ...queryModel,
@@ -17,8 +18,8 @@ const deviceListModel = {
     .describe("Filter object to apply to the query. Available filters: id, name, active, connector, network, type, tags")
     .optional(),
   fields: z
-    .array(z.enum(["id", "active", "name", "description", "created_at", "updated_at", "connector", "network", "type"]))
-    .describe("Specific fields to include in the device list response. Available fields: id, active, name, description, created_at, updated_at, connector, network, type")
+    .array(z.enum(["id", "active", "name", "tags", "created_at", "updated_at", "connector", "network", "type"]))
+    .describe("Specific fields to include in the device list response. Available fields: id, active, name, tags, created_at, updated_at, connector, network, type")
     .optional(),
 };
 
@@ -72,21 +73,12 @@ const deviceDataModel = {
     .optional(),
 
   // Common parameters
-  variables: z
-    .union([z.string(), z.array(z.string())])
-    .describe("Filter by variables. Can be a single variable name or an array of variable names. E.g: 'temperature' or ['temperature', 'humidity']")
-    .optional(),
-  groups: z
-    .union([z.string(), z.array(z.string())])
-    .describe("Filter by groups. Can be a single group or an array of groups. E.g: 'sensors' or ['sensors', 'actuators']")
-    .optional(),
-  ids: z
-    .union([z.string(), z.array(z.string())])
-    .describe("Filter by record IDs. Can be a single ID or an array of IDs. E.g: '507f1f77bcf86cd799439011' or ['507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012']")
-    .optional(),
+  variables: z.array(z.string()).describe("Filter by variables. Array of variable names. E.g: ['temperature', 'humidity']").optional(),
+  groups: z.array(z.string()).describe("Filter by groups. Array of group names. E.g: ['sensors', 'actuators']").optional(),
+  ids: z.array(z.string()).describe("Filter by record IDs. Array of record IDs. E.g: ['507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012']").optional(),
   values: z
-    .union([z.string(), z.number(), z.boolean(), z.array(z.union([z.string(), z.number(), z.boolean()]))])
-    .describe("Filter by values. Can be a single value or an array of values of different types. E.g: 25.5 or [25.5, 'high', true]")
+    .array(z.union([z.string(), z.number(), z.boolean()]))
+    .describe("Filter by values. Array of values of different types. E.g: [25.5, 'high', true]")
     .optional(),
   start_date: z.union([z.string(), z.date()]).describe("Start date for filtering data. Can be a Date object or an ISO string. E.g: 'YYYY-MM-DDTHH:MM:SSZ' (ISO 8601)").optional(),
   end_date: z

@@ -1,6 +1,6 @@
 import { Resources } from "@tago-io/sdk";
 import { DataQuery, DeviceQuery } from "@tago-io/sdk/lib/types";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { toMarkdown } from "../../utils/markdown";
 import { genericIDModel } from "../../utils/global-params.model";
@@ -10,6 +10,10 @@ import { deviceDataModel, deviceListModel } from "./devices.model";
  * @description Get all devices and returns a Markdown-formatted response.
  */
 async function _getDevices(resources: Resources, query?: DeviceQuery) {
+  if (query?.filter?.name) {
+    query.filter.name = `*${query.filter.name}*`;
+  }
+
   const amount = query?.amount || 200;
   const fields = query?.fields || ["id", "active", "name", "description", "created_at", "updated_at", "connector", "network", "type"];
 
@@ -32,6 +36,7 @@ async function _getDevices(resources: Resources, query?: DeviceQuery) {
  * @description Get data from a device and returns a Markdown-formatted response.
  */
 async function _getDeviceData(resources: Resources, deviceID: string, query?: DataQuery) {
+  console.log(query);
   const data = await resources.devices.getDeviceData(deviceID, query).catch((error) => {
     throw `**Error to get device data:** ${error}`;
   });

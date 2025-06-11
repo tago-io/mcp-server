@@ -45,9 +45,10 @@
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.12.1",
-		"dotenv": "^16.5.0",
-		"shx": "^0.4.0",
 		"@tago-io/sdk": "^11.3.9",
+		"dotenv": "^16.5.0",
+		"mcps-logger": "^1.0.0",
+		"shx": "^0.4.0",
 		"zod": "^3.25.28"
 	}
 }

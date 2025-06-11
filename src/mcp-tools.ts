@@ -1,5 +1,5 @@
 import { Resources } from "@tago-io/sdk";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { handlerUsersTools } from "./services/run-users/users";
 import { handlerActionsTools } from "./services/actions/actions";

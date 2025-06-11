@@ -8,6 +8,10 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { handlerTools } from "./mcp-tools";
 import { environmentModel, IEnvironmentModel } from "./utils/config.model";
 
+if (process.env.NODE_ENV !== "production") {
+  import("mcps-logger/console");
+}
+
 // Load environment variables from .env file.
 dotenv.config();
 
