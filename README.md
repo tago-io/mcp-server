@@ -1,122 +1,128 @@
-# MCP Server for TagoIO
+<br/>
+<p align="center">
+  <img src="https://assets.tago.io/tagoio/tagoio.png" width="250px" alt="TagoIO"></img>
+</p>
 
-A Model Context Protocol (MCP) server implementation for TagoIO data and analytics. This server enables AI models to interact with TagoIO's data and analytics capabilities through the Model Context Protocol.
+# TagoIO | MCP Server
 
-## For Developers - Getting Started
+The TagoIO MCP Server enables AI models to interact directly with your TagoIO account, providing contextual access to devices, data, and platform resources for enhanced development workflows and intelligent data analysis.
 
-1. Clone the repository:
+## Features
 
-```bash
-git clone <repository-url>
-cd test-mcp-server
-```
+- **Device Management**: Access device information, configurations, and real-time data
+- **Data Analysis**: Perform statistical operations (sums, averages, reports) on stored data
+- **Platform Integration**: Retrieve users, actions, analysis scripts, and account statistics
+- **Code Generation**: AI-powered TagoIO Analysis script generation with proper context
+- **Development Support**: Debug assistance and tag relationship analysis
 
-2. Install dependencies:
+## Quick Start
 
-```bash
-npm install
-```
+### Prerequisites
+- TagoIO account with valid profile token
+- Compatible AI platform or IDE (see [Supported Platforms](#supported-platforms))
 
-3. Create a `.env` file in the root directory with the following variables:
+### Installation
 
-```env
-PORT=8000
-LOG_LEVEL=DEBUG
-```
+#### Cursor IDE (One-click)
+[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=%40tago-io%2Fmcp&config=eyJjb21tYW5kIjoibnB4IC15IEB0YWdvLWlvL21jcC1zZXJ2ZXIiLCJlbnYiOnsiVEFHT0lPX1RPS0VOIjoiWU9VUi1QUk9GSUxFLVRPS0VOIiwiVEFHT0lPX0FQSSI6Imh0dHBzOi8vYXBpLnVzLWUxLnRhZ28uaW8ifX0%3D)
+[![Install with NPX in VS Code](https://img.shields.io/badge/VS_Code-NPM-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=%40tago-io%2Fmcp&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40tago-io%2Fmcp-server%22%5D%2C%22env%22%3A%7B%22TAGOIO_TOKEN%22%3A%22%24%7Binput%3AtagoToken%7D%22%2C%22TAGOIO_API%22%3A%22https%3A%2F%2Fapi.us-e1.tago.io%22%7D%7D&inputs=%5B%7B%22type%22%3A%22promptString%22%2C%22id%22%3A%22tagoToken%22%2C%22description%22%3A%22TagoIO%20Profile%20Token%22%2C%22password%22%3Atrue%7D%5D) [![Install with NPX in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-NPM-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=%40tago-io%2Fmcp&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40tago-io%2Fmcp-server%22%5D%2C%22env%22%3A%7B%22TAGOIO_TOKEN%22%3A%22%24%7Binput%3AtagoToken%7D%22%2C%22TAGOIO_API%22%3A%22https%3A%2F%2Fapi.us-e1.tago.io%22%7D%7D&inputs=%5B%7B%22type%22%3A%22promptString%22%2C%22id%22%3A%22tagoToken%22%2C%22description%22%3A%22TagoIO%20Profile%20Token%22%2C%22password%22%3Atrue%7D%5D&quality=insiders)
 
-## Development
 
-### Running the Server Locally
+#### Manual Configuration
 
-To start the server in development mode with hot-reload:
-
-```bash
-npm run start-fastify
-```
-
-This will start the server on `http://localhost:8000` (or the port specified in your `.env` file).
-
-### Available Scripts
-
-- `npm run start-fastify`: Start the server in development mode
-- `npm run build`: Build the TypeScript project
-- `npm run test`: Run tests using Vitest
-- `npm run linter`: Run Biome linter
-- `npm run linter-fix`: Fix linting issues automatically
-
-## Testing and Development Tools
-
-### MCP Inspector
-
-The [MCP Inspector](https://github.com/modelcontextprotocol/inspector) is a standalone tool for testing and debugging MCP servers. It provides a user interface to:
-
-- Test individual MCP tool calls
-- Monitor server responses in real-time
-- Debug protocol interactions
-- View detailed request/response logs
-- Validate MCP protocol compliance
-
-To use the MCP Inspector:
-
-1. Install the MCP Inspector tool:
-
-```bash
-npm install -g @modelcontextprotocol/inspector
-```
-
-2. Start the inspector:
-
-```bash
-mcp-inspector
-```
-
-3. Configure the inspector to connect to your local server:
-   - Set the server URL to `http://localhost:8000/mcp`
-   - Add any required environment variables
-   - Click "Connect" to start testing
-
-### Cursor IDE MCP Integration
-
-Cursor IDE provides built-in support for MCP servers, allowing you to use AI models that can interact with your MCP server directly from the editor. To configure Cursor to use your MCP server:
-
-1. Open Cursor IDE settings
-2. Navigate to the MCP configuration section
-3. Add a new MCP server configuration:
+Create or update your MCP configuration file:
 
 ```json
 {
   "mcpServers": {
-    "middleware-mcp-tagoio": {
-      "url": "http://localhost:8000/mcp",
-      "headers": {
-        "Authentication": "YOUR-PROFILE-TOKEN",
-        "TagoIO-API": "https://api.us-e1.tago.io"
+    "@tago-io/mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@tago-io/mcp-server"
+      ],
+      "env": {
+        "TAGOIO_TOKEN": "YOUR-PROFILE-TOKEN",
+        "TAGOIO_API": "https://api.us-e1.tago.io"
       }
     }
   }
 }
 ```
 
-4. Save the configuration
-5. Restart Cursor IDE to apply the changes
+**Configuration Parameters:**
+- Replace `YOUR-PROFILE-TOKEN` with your TagoIO profile token
+- Update API endpoint to `https://api.eu-w1.tago.io` for European accounts
 
-Now you can use AI models in Cursor that will interact with your MCP server. The AI will be able to:
+### Configuration File Locations
 
-- Access TagoIO data through your MCP server
-- Execute analytics operations
-- Process and transform data
-- All while maintaining the context of your development session
+| Platform | Configuration Path |
+|----------|-------------------|
+| **Cursor** | `~/.cursor/mcp.json` |
+| **Windsurf** | `~/.codeium/windsurf/mcp_config.json` |
+| **Cline** | `~/.cline/mcp_config.json` |
+| **Claude Desktop** | `~/.claude/mcp_config.json` |
 
-## Environment Variables
+### Platform-Specific Setup
 
-| Variable  | Description                                 | Default | Required |
-| --------- | ------------------------------------------- | ------- | -------- |
-| PORT      | Server port                                 | 8000    | No       |
-| LOG_LEVEL | Logging level (DEBUG, INFO, WARNING, ERROR) | WARNING | No       |
+#### Claude Desktop
+1. Download and install Claude Desktop
+2. Copy the MCP configuration above
+3. Send the prompt: _"Hey Claude, install the following MCP Server"_ with the configuration
+4. Claude will automatically install and configure the server
 
-## Headers - Client Connection
+#### Development IDEs
+Place the configuration file in the appropriate location for your IDE and restart the application.
 
-| Headers        | Description               | Default             | Required |
-| -------------- | ------------------------- | ------------------- | -------- |
-| Authentication | Your TagoIO profile token | -                   | ✅       |
-| TagoIO-API     | TagoIO API endpoint       | https://api.tago.io | No       |
+## Supported Platforms
+
+| Platform | Status | Installation Method |
+|----------|--------|-------------------|
+| **Cursor** | ✅ Supported | One-click install |
+| **Windsurf** | ✅ Supported | Manual configuration |
+| **Claude Desktop** | ✅ Supported | Manual configuration |
+| **VS Code** | ✅ Supported | One-click install |
+| **Cline** | ✅ Supported | Manual configuration |
+
+## Authentication
+
+The MCP server requires a **TagoIO Profile Token** for authentication:
+
+1. Log into your TagoIO account
+2. Navigate to **Account Settings** → **Profile Tokens**
+3. Generate a new token with appropriate permissions
+4. Replace `YOUR-PROFILE-TOKEN` in the configuration
+
+**Security Note**: Keep your profile token secure and never commit it to version control.
+
+## API Endpoints
+
+The server supports both US and European TagoIO instances:
+
+- **US East**: `https://api.us-e1.tago.io` (default)
+- **EU West**: `https://api.eu-w1.tago.io`
+
+## Troubleshooting
+
+### Common Issues
+
+**Connection Failed**
+- Verify the MCP server is running on `localhost:8000`
+- Check your profile token validity
+- Ensure correct API endpoint for your region
+
+**Authentication Error**
+- Confirm profile token has necessary permissions
+- Verify token format in configuration file
+
+**Data Access Issues**
+- Check device permissions in your TagoIO account
+- Ensure devices have recent data available
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+**Need Help?** Visit the [TagoIO Documentation](https://docs.tago.io) or contact our support team.
