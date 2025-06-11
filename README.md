@@ -107,7 +107,6 @@ The server supports both US and European TagoIO instances:
 ### Common Issues
 
 **Connection Failed**
-- Verify the MCP server is running on `localhost:8000`
 - Check your profile token validity
 - Ensure correct API endpoint for your region
 
