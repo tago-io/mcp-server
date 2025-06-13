@@ -1,7 +1,9 @@
+import { z } from "zod/v3";
 import { Resources } from "@tago-io/sdk";
 import { DeviceQuery } from "@tago-io/sdk/lib/types";
-import { toMarkdown } from "../../../utils/markdown";
-import { z } from "zod/v3";
+
+import { IDeviceToolConfig } from "../../types";
+import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { queryModel, tagsObjectModel } from "../../../utils/global-params.model";
 
 const deviceListSchema = {
@@ -19,8 +21,8 @@ const deviceListSchema = {
     .describe("Filter object to apply to the query. Available filters: id, name, active, connector, network, type, tags")
     .optional(),
   fields: z
-    .array(z.enum(["id", "active", "name", "tags", "created_at", "updated_at", "connector", "network", "type"]))
-    .describe("Specific fields to include in the device list response. Available fields: id, active, name, tags, created_at, updated_at, connector, network, type")
+    .array(z.enum(["id", "active", "name", "description", "tags", "created_at", "updated_at", "connector", "network", "type"]))
+    .describe("Specific fields to include in the device list response. Available fields: id, active, name, description, tags, created_at, updated_at, connector, network, type")
     .optional(),
 };
 
@@ -45,16 +47,25 @@ async function getDeviceListTool(resources: Resources, query?: DeviceQuery) {
       throw `**Error to get devices:** ${error}`;
     });
 
-  const markdownResponse = toMarkdown(devices);
+  const markdownResponse = convertJSONToMarkdown(devices);
 
   return markdownResponse;
 }
 
-const deviceConfigJSON = {
+const deviceListConfigJSON: IDeviceToolConfig = {
   name: "get-device-list",
-  description: "Get a list of devices",
+  description: `
+    Get a list of devices.
+
+    When filtering by name, use partial matches — the search finds devices whose names contain the specified text.
+    For example, searching for "sensor" finds devices like "Temperature Sensor" and "Humidity Sensor".
+
+    The name filter uses wildcard matching, so you do not need to specify the exact device name.
+  `,
   parameters: deviceListSchema,
+  title: "Get Device List",
   tool: getDeviceListTool,
 };
 
-export { deviceConfigJSON };
+export { deviceListConfigJSON };
+export { deviceListSchema }; // export for testing purposes

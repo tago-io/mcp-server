@@ -2,9 +2,9 @@ import { Resources } from "@tago-io/sdk";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { EntityQuery } from "@tago-io/sdk/lib/modules/Resources/entities.types";
 
-import { toMarkdown } from "../../utils/markdown";
+import { convertJSONToMarkdown } from "../../utils/markdown";
 import { entityListModel } from "./entities.model";
-import { genericIDModel } from "../../utils/global-params.model";
+import { genericIDSchema } from "../../utils/global-params.model";
 
 /**
  * @description Get entities from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.
@@ -23,7 +23,7 @@ async function _getEntities(resources: Resources, query?: EntityQuery) {
       throw `**Error to get entities:** ${error}`;
     });
 
-  const markdownResponse = toMarkdown(entities);
+  const markdownResponse = convertJSONToMarkdown(entities);
 
   return markdownResponse;
 }
@@ -36,7 +36,7 @@ async function _getEntityByID(resources: Resources, entityID: string) {
     throw `**Error to get entity by ID:** ${error}`;
   });
 
-  const markdownResponse = toMarkdown(entity);
+  const markdownResponse = convertJSONToMarkdown(entity);
 
   return markdownResponse;
 }
@@ -52,7 +52,7 @@ async function handlerEntitiesTools(server: McpServer, resources: Resources) {
     };
   });
 
-  server.tool("get-entity-by-id", "Get an entity by its ID", genericIDModel, { title: "Get Entity by ID" }, async (params) => {
+  server.tool("get-entity-by-id", "Get an entity by its ID", genericIDSchema, { title: "Get Entity by ID" }, async (params) => {
     const result = await _getEntityByID(resources, params.id);
     return {
       content: [{ type: "text", text: result }],

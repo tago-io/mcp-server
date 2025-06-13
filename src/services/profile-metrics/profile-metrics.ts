@@ -1,8 +1,8 @@
 import { Resources } from "@tago-io/sdk";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-import { toMarkdown } from "../../utils/markdown";
-import { genericIDModel } from "../../utils/global-params.model";
+import { convertJSONToMarkdown } from "../../utils/markdown";
+import { genericIDSchema } from "../../utils/global-params.model";
 import { StatisticsDate } from "@tago-io/sdk/lib/types";
 import { profileStatisticsModel } from "./profile-metrics.model";
 
@@ -15,7 +15,7 @@ async function getProfileLimitsByID(resources: Resources, profileID: string) {
     throw `**Error to get profile limits:** ${error}`;
   });
 
-  const markdownResponse = toMarkdown(limits);
+  const markdownResponse = convertJSONToMarkdown(limits);
 
   return markdownResponse;
 }
@@ -28,7 +28,7 @@ async function getProfileStatisticsByID(resources: Resources, profileID: string,
     throw `**Error to get profile statistics:** ${error}`;
   });
 
-  const markdownResponse = toMarkdown(statistics);
+  const markdownResponse = convertJSONToMarkdown(statistics);
 
   return markdownResponse;
 }
@@ -37,7 +37,7 @@ async function getProfileStatisticsByID(resources: Resources, profileID: string,
  * @description Handler for profile metrics tools to register tools in the MCP server.
  */
 async function handlerProfileMetricsTools(server: McpServer, resources: Resources) {
-  server.tool("get-profile-limits-by-id", "Get the resources limits of the profile by its ID.", genericIDModel, { title: "Get Profile Limits by ID" }, async (params) => {
+  server.tool("get-profile-limits-by-id", "Get the resources limits of the profile by its ID.", genericIDSchema, { title: "Get Profile Limits by ID" }, async (params) => {
     const result = await getProfileLimitsByID(resources, params.id);
     return { content: [{ type: "text", text: result }] };
   });

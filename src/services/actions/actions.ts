@@ -2,9 +2,9 @@ import { Resources } from "@tago-io/sdk";
 import { ActionQuery } from "@tago-io/sdk/lib/types";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-import { toMarkdown } from "../../utils/markdown";
+import { convertJSONToMarkdown } from "../../utils/markdown";
 import { actionListModel } from "./actions.model";
-import { genericIDModel } from "../../utils/global-params.model";
+import { genericIDSchema } from "../../utils/global-params.model";
 
 /**
  * Fetches actions from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.
@@ -23,7 +23,7 @@ async function _getActions(resources: Resources, query?: ActionQuery) {
       throw `**Error fetching actions:** ${(error as Error)?.message || error}`;
     });
 
-  const markdownResponse = toMarkdown(actions);
+  const markdownResponse = convertJSONToMarkdown(actions);
 
   return markdownResponse;
 }
@@ -36,7 +36,7 @@ async function _getActionByID(resources: Resources, actionID: string) {
     throw `**Error to get action by ID:** ${(error as Error)?.message || error}`;
   });
 
-  const markdownResponse = toMarkdown(action);
+  const markdownResponse = convertJSONToMarkdown(action);
 
   return markdownResponse;
 }
@@ -52,7 +52,7 @@ async function handlerActionsTools(server: McpServer, resources: Resources) {
     };
   });
 
-  server.tool("get-action-by-id", "Get an action by its ID", genericIDModel, { title: "Get Action by ID" }, async (params) => {
+  server.tool("get-action-by-id", "Get an action by its ID", genericIDSchema, { title: "Get Action by ID" }, async (params) => {
     const result = await _getActionByID(resources, params.id);
     return {
       content: [{ type: "text", text: result }],

@@ -2,9 +2,9 @@ import { Resources } from "@tago-io/sdk";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { AnalysisQuery } from "@tago-io/sdk/lib/modules/Resources/analysis.types";
 
-import { toMarkdown } from "../../utils/markdown";
+import { convertJSONToMarkdown } from "../../utils/markdown";
 import { analysisListModel } from "./analysis.model";
-import { genericIDModel } from "../../utils/global-params.model";
+import { genericIDSchema } from "../../utils/global-params.model";
 
 /**
  * @description Fetches analyses from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.
@@ -23,7 +23,7 @@ async function _getAnalyses(resources: Resources, query?: AnalysisQuery) {
       throw `**Error fetching analyses:** ${error}`;
     });
 
-  const markdownResponse = toMarkdown(analyses);
+  const markdownResponse = convertJSONToMarkdown(analyses);
 
   return markdownResponse;
 }
@@ -36,7 +36,7 @@ async function _getAnalysisByID(resources: Resources, analysisID: string) {
     throw `**Error to get analysis by ID:** ${error}`;
   });
 
-  const markdownResponse = toMarkdown(analysis);
+  const markdownResponse = convertJSONToMarkdown(analysis);
 
   return markdownResponse;
 }
@@ -50,7 +50,7 @@ async function handlerAnalysesTools(server: McpServer, resources: Resources) {
     return { content: [{ type: "text", text: result }] };
   });
 
-  server.tool("get-analysis-by-id", "Get an analysis by its ID", genericIDModel, { title: "Get Analysis by ID" }, async (params) => {
+  server.tool("get-analysis-by-id", "Get an analysis by its ID", genericIDSchema, { title: "Get Analysis by ID" }, async (params) => {
     const result = await _getAnalysisByID(resources, params.id);
     return { content: [{ type: "text", text: result }] };
   });

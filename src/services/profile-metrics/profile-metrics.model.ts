@@ -1,13 +1,13 @@
 import { z } from "zod/v3";
 
-import { genericIDModel } from "../../utils/global-params.model";
+import { genericIDSchema } from "../../utils/global-params.model";
 
 /**
  * Zod schema for profile statistics parameters
  * Based on the StatisticsDate type from @tago-io/sdk
  */
 const profileStatisticsModel = {
-  ...genericIDModel,
+  ...genericIDSchema,
   timezone: z.string().describe("Timezone to be used in the statistics entries. Default is 'UTC'. E.g: 'America/New_York', 'Europe/London'").optional(),
   date: z
     .union([z.string().datetime(), z.date()])

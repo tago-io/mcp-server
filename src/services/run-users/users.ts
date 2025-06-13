@@ -3,8 +3,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { UserQuery } from "@tago-io/sdk/lib/modules/Resources/run.types";
 
 import { userListModel } from "./users.model";
-import { toMarkdown } from "../../utils/markdown";
-import { genericIDModel } from "../../utils/global-params.model";
+import { convertJSONToMarkdown } from "../../utils/markdown";
+import { genericIDSchema } from "../../utils/global-params.model";
 
 /**
  * @description Get users list and returns a Markdown-formatted response.
@@ -23,7 +23,7 @@ async function _getUsers(resources: Resources, query?: UserQuery) {
       throw `**Error to get users:** ${error}`;
     });
 
-  const markdownResponse = toMarkdown(users);
+  const markdownResponse = convertJSONToMarkdown(users);
 
   return markdownResponse;
 }
@@ -36,7 +36,7 @@ async function _getUserByID(resources: Resources, userID: string) {
     throw `**Error to get user by ID:** ${error}`;
   });
 
-  const markdownResponse = toMarkdown(user);
+  const markdownResponse = convertJSONToMarkdown(user);
 
   return markdownResponse;
 }
@@ -50,7 +50,7 @@ async function handlerUsersTools(server: McpServer, resources: Resources) {
     return { content: [{ type: "text", text: result }] };
   });
 
-  server.tool("get-user-by-id", "Get user by ID", genericIDModel, { title: "Get User by ID" }, async (params) => {
+  server.tool("get-user-by-id", "Get user by ID", genericIDSchema, { title: "Get User by ID" }, async (params) => {
     const result = await _getUserByID(resources, params.id);
     return { content: [{ type: "text", text: result }] };
   });
