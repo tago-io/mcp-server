@@ -6,7 +6,7 @@
  * - Objects are rendered with nested tables.
  * - Primitives are rendered as strings.
  */
-export function toMarkdown(data: object | Array<object> | unknown): string {
+export function convertJSONToMarkdown(data: object | Array<object> | unknown): string {
   if (Array.isArray(data)) {
     if (data.length === 0) {
       return "_No data found._";

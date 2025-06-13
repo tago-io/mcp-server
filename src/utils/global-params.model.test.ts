@@ -1,16 +1,16 @@
 import z from "zod/v3";
 import { describe, expect, it } from "vitest";
 
-import { genericIDModel, queryModel } from "./global-params.model";
+import { genericIDSchema, queryModel } from "./global-params.model";
 
-describe("analysisgenericIDModel", () => {
+describe("analysisgenericIDSchema", () => {
   it("should validate valid ID", () => {
-    const result = genericIDModel.id.safeParse("679a6c82ccfd1f0009196a89");
+    const result = genericIDSchema.id.safeParse("679a6c82ccfd1f0009196a89");
     expect(result.success).toBe(true);
   });
 
   it("should reject ID shorter than 24 characters", () => {
-    const result = genericIDModel.id.safeParse("123");
+    const result = genericIDSchema.id.safeParse("123");
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].message).toBe("ID must be 24 characters long");
@@ -18,7 +18,7 @@ describe("analysisgenericIDModel", () => {
   });
 
   it("should reject ID longer than 24 characters", () => {
-    const result = genericIDModel.id.safeParse("679a6c82ccfd1f0009196a89extra");
+    const result = genericIDSchema.id.safeParse("679a6c82ccfd1f0009196a89extra");
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].message).toBe("ID must be 24 characters long");
@@ -26,7 +26,7 @@ describe("analysisgenericIDModel", () => {
   });
 
   it("should reject empty ID", () => {
-    const result = genericIDModel.id.safeParse("");
+    const result = genericIDSchema.id.safeParse("");
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].message).toBe("ID must be 24 characters long");
@@ -37,7 +37,7 @@ describe("analysisgenericIDModel", () => {
     const validObject = {
       id: "679a6c82ccfd1f0009196a89",
     };
-    const schema = z.object(genericIDModel);
+    const schema = z.object(genericIDSchema);
     const result = schema.safeParse(validObject);
     expect(result.success).toBe(true);
   });

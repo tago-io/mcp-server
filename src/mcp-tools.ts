@@ -3,7 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { handlerUsersTools } from "./services/run-users/users";
 import { handlerActionsTools } from "./services/actions/actions";
-import { handlerDevicesTools } from "./services/devices/devices";
+import { handlerDevicesTools } from "./services/devices";
 import { handlerAnalysesTools } from "./services/analysis/analysis";
 import { handlerEntitiesTools } from "./services/entities/entities";
 import { handlerProfileMetricsTools } from "./services/profile-metrics/profile-metrics";

@@ -1,6 +1,6 @@
 import z from "zod/v3";
 
-const genericIDModel = {
+const genericIDSchema = {
   id: z.string({ message: "ID is required" }).describe("ID used on TagoIO, string with 24 characters").length(24, "ID must be 24 characters long"),
 };
 
@@ -17,4 +17,4 @@ const tagsObjectModel = z.object({
   value: z.string().describe("Tag value"),
 });
 
-export { genericIDModel, queryModel, tagsObjectModel };
+export { genericIDSchema, queryModel, tagsObjectModel };
