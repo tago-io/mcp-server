@@ -1,7 +1,7 @@
 import z from "zod/v3";
 import { describe, expect, it } from "vitest";
 
-import { genericIDSchema, queryModel } from "./global-params.model";
+import { genericIDSchema, querySchema } from "./global-params.model";
 
 describe("analysisgenericIDSchema", () => {
   it("should validate valid ID", () => {
@@ -43,16 +43,16 @@ describe("analysisgenericIDSchema", () => {
   });
 });
 
-describe("queryModel", () => {
+describe("querySchema", () => {
   describe("page field", () => {
     it("should validate valid page number", () => {
-      const schema = z.object(queryModel);
+      const schema = z.object(querySchema);
       const result = schema.safeParse({ page: 1 });
       expect(result.success).toBe(true);
     });
 
     it("should reject page number less than 1", () => {
-      const schema = z.object(queryModel);
+      const schema = z.object(querySchema);
       const result = schema.safeParse({ page: 0 });
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -61,7 +61,7 @@ describe("queryModel", () => {
     });
 
     it("should accept undefined page", () => {
-      const schema = z.object(queryModel);
+      const schema = z.object(querySchema);
       const result = schema.safeParse({});
       expect(result.success).toBe(true);
     });
@@ -69,13 +69,13 @@ describe("queryModel", () => {
 
   describe("amount field", () => {
     it("should validate valid amount", () => {
-      const schema = z.object(queryModel);
+      const schema = z.object(querySchema);
       const result = schema.safeParse({ amount: 100 });
       expect(result.success).toBe(true);
     });
 
     it("should reject amount less than 1", () => {
-      const schema = z.object(queryModel);
+      const schema = z.object(querySchema);
       const result = schema.safeParse({ amount: 0 });
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -84,7 +84,7 @@ describe("queryModel", () => {
     });
 
     it("should reject amount greater than 10000", () => {
-      const schema = z.object(queryModel);
+      const schema = z.object(querySchema);
       const result = schema.safeParse({ amount: 10001 });
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -95,13 +95,13 @@ describe("queryModel", () => {
 
   describe("fields field", () => {
     it("should validate valid fields array", () => {
-      const schema = z.object(queryModel);
+      const schema = z.object(querySchema);
       const result = schema.safeParse({ fields: ["name", "email"] });
       expect(result.success).toBe(true);
     });
 
     it("should reject non-string array elements", () => {
-      const schema = z.object(queryModel);
+      const schema = z.object(querySchema);
       const result = schema.safeParse({ fields: ["name", 123] });
       expect(result.success).toBe(false);
     });
@@ -109,13 +109,13 @@ describe("queryModel", () => {
 
   describe("filter field", () => {
     it("should validate valid filter object", () => {
-      const schema = z.object(queryModel);
+      const schema = z.object(querySchema);
       const result = schema.safeParse({ filter: { name: "test", age: 25 } });
       expect(result.success).toBe(true);
     });
 
     it("should accept empty filter object", () => {
-      const schema = z.object(queryModel);
+      const schema = z.object(querySchema);
       const result = schema.safeParse({ filter: {} });
       expect(result.success).toBe(true);
     });
