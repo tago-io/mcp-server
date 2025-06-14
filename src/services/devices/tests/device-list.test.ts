@@ -1,7 +1,7 @@
 import { z } from "zod/v3";
 import { describe, it, expect } from "vitest";
 
-import { deviceListSchema } from "../tools/device-list";
+import { deviceListSchema } from "../tools/device-lookup";
 
 describe("deviceListModel", () => {
   const schema = z.object(deviceListSchema);
@@ -26,7 +26,7 @@ describe("deviceListModel", () => {
 
   it("should validate a valid device list query with fields", () => {
     const validInput = {
-      fields: ["id", "active", "name", "description", "tags", "created_at", "updated_at", "connector", "network", "type"],
+      fields: ["id", "active", "name", "tags", "created_at", "updated_at", "connector", "network", "type"],
     };
     expect(() => schema.parse(validInput)).not.toThrow();
   });
@@ -92,5 +92,38 @@ describe("deviceListModel", () => {
       filter: undefined,
     };
     expect(() => schema.parse(validInput)).not.toThrow();
+  });
+
+  it("should validate include_data_amount", () => {
+    const validInput = {
+      include_data_amount: true,
+    };
+    expect(() => schema.parse(validInput)).not.toThrow();
+  });
+
+  it("should reject invalid include_data_amount", () => {
+    const invalidInput = {
+      include_data_amount: "true",
+    };
+    expect(() => schema.parse(invalidInput)).toThrow();
+  });
+
+  it("should transform name filter with wildcard matching", () => {
+    const validInput = {
+      filter: {
+        name: "sensor",
+      },
+    };
+    const result = schema.parse(validInput);
+    expect(result.filter?.name).toBe("*sensor*");
+  });
+
+  it("should reject invalid name filter type", () => {
+    const invalidInput = {
+      filter: {
+        name: 123,
+      },
+    };
+    expect(() => schema.parse(invalidInput)).toThrow();
   });
 });
