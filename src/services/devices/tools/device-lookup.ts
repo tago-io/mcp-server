@@ -1,13 +1,12 @@
 import { z } from "zod/v3";
 import { Resources } from "@tago-io/sdk";
-import { DeviceQuery, DeviceListItem } from "@tago-io/sdk/lib/types";
+import { DeviceListItem } from "@tago-io/sdk/lib/types";
 
 import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { querySchema, tagsObjectModel } from "../../../utils/global-params.model";
 
-const deviceListSchema = {
-  ...querySchema,
+const deviceListSchema = querySchema.extend({
   filter: z
     .object({
       id: z.string().describe("Filter by device ID. E.g: 'device_id'").length(24, "Device ID must be 24 characters long").optional(),
@@ -35,14 +34,14 @@ const deviceListSchema = {
     .boolean()
     .describe("If true, includes the amount of data for each device in the response. This option is only available when filtering by a single device. Default: false.")
     .optional(),
-};
+});
 
 type DeviceWithDataAmount = DeviceListItem & { data_amount?: number };
-
+type DeviceRequestSchema = z.infer<typeof deviceListSchema>;
 /**
  * @description Get all devices and returns a Markdown-formatted response.
  */
-async function getDeviceLookupTool(resources: Resources, query?: DeviceQuery & { include_data_amount?: boolean }) {
+async function getDeviceLookupTool(resources: Resources, query?: DeviceRequestSchema) {
   const amount = query?.amount || 200;
   const fields = query?.fields || ["id", "active", "name", "created_at", "updated_at", "connector", "network", "type"];
 
@@ -78,7 +77,7 @@ const deviceLookupConfigJSON: IDeviceToolConfig = {
     If the parameter 'include_data_amount' is set to true, the response will include the amount of data for the device (field: data_amount).
     Note: This option is only available when filtering by a single device.
   `,
-  parameters: deviceListSchema,
+  parameters: deviceListSchema.shape,
   title: "Device Lookup",
   tool: getDeviceLookupTool,
 };

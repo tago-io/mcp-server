@@ -1,31 +1,29 @@
-import { z } from "zod/v3";
 import { describe, it, expect } from "vitest";
 
 import { getDeviceDataSchema } from "../tools/get-device-data";
 
 describe("getDeviceDataSchema", () => {
-  const schema = z.object(getDeviceDataSchema);
   const validDeviceID = "d".repeat(24);
 
   it("should validate a minimal valid device data query", () => {
     const validInput = {
       deviceID: validDeviceID,
     };
-    expect(() => schema.parse(validInput)).not.toThrow();
+    expect(() => getDeviceDataSchema.parse(validInput)).not.toThrow();
   });
 
   it("should reject deviceID with less than 24 chars", () => {
     const invalidInput = {
       deviceID: "shortid",
     };
-    expect(() => schema.parse(invalidInput)).toThrow();
+    expect(() => getDeviceDataSchema.parse(invalidInput)).toThrow();
   });
 
   it("should reject deviceID with more than 24 chars", () => {
     const invalidInput = {
       deviceID: "x".repeat(25),
     };
-    expect(() => schema.parse(invalidInput)).toThrow();
+    expect(() => getDeviceDataSchema.parse(invalidInput)).toThrow();
   });
 
   it("should validate a complete valid device data query", () => {
@@ -43,7 +41,7 @@ describe("getDeviceDataSchema", () => {
       function: "avg",
       value: 10,
     };
-    expect(() => schema.parse(validInput)).not.toThrow();
+    expect(() => getDeviceDataSchema.parse(validInput)).not.toThrow();
   });
 
   it("should validate single string values for variables, groups, and ids", () => {
@@ -53,14 +51,14 @@ describe("getDeviceDataSchema", () => {
       groups: ["group1"],
       ids: ["id1"],
     };
-    expect(() => schema.parse(validInput)).not.toThrow();
+    expect(() => getDeviceDataSchema.parse(validInput)).not.toThrow();
   });
 
   it("should reject missing required deviceID", () => {
     const invalidInput = {
       variables: ["temp"],
     };
-    expect(() => schema.parse(invalidInput)).toThrow("Device ID is required");
+    expect(() => getDeviceDataSchema.parse(invalidInput)).toThrow("Device ID is required");
   });
 
   it("should validate string dates for start_date and end_date", () => {
@@ -69,7 +67,7 @@ describe("getDeviceDataSchema", () => {
       start_date: "2024-03-20T00:00:00Z",
       end_date: "2024-03-20T23:59:59Z",
     };
-    expect(() => schema.parse(validInput)).not.toThrow();
+    expect(() => getDeviceDataSchema.parse(validInput)).not.toThrow();
   });
 
   it("should reject non-string values in values array", () => {
@@ -77,7 +75,7 @@ describe("getDeviceDataSchema", () => {
       deviceID: validDeviceID,
       values: [25.5, "high", true], // numbers and booleans should be rejected now
     };
-    expect(() => schema.parse(invalidInput)).toThrow();
+    expect(() => getDeviceDataSchema.parse(invalidInput)).toThrow();
   });
 
   it("should accept string values in values array", () => {
@@ -85,7 +83,7 @@ describe("getDeviceDataSchema", () => {
       deviceID: validDeviceID,
       values: ["25.5", "high", "true"], // all strings should be accepted
     };
-    expect(() => schema.parse(validInput)).not.toThrow();
+    expect(() => getDeviceDataSchema.parse(validInput)).not.toThrow();
   });
 
   it("should reject invalid qty type", () => {
@@ -93,7 +91,7 @@ describe("getDeviceDataSchema", () => {
       deviceID: validDeviceID,
       qty: "100",
     };
-    expect(() => schema.parse(invalidInput)).toThrow();
+    expect(() => getDeviceDataSchema.parse(invalidInput)).toThrow();
   });
 
   it("should reject qty above 10000", () => {
@@ -101,7 +99,7 @@ describe("getDeviceDataSchema", () => {
       deviceID: validDeviceID,
       qty: 10001,
     };
-    expect(() => schema.parse(invalidInput)).toThrow();
+    expect(() => getDeviceDataSchema.parse(invalidInput)).toThrow();
   });
 
   it("should reject qty below 1", () => {
@@ -109,7 +107,7 @@ describe("getDeviceDataSchema", () => {
       deviceID: validDeviceID,
       qty: 0,
     };
-    expect(() => schema.parse(invalidInput)).toThrow();
+    expect(() => getDeviceDataSchema.parse(invalidInput)).toThrow();
   });
 
   it("should reject negative qty", () => {
@@ -117,7 +115,7 @@ describe("getDeviceDataSchema", () => {
       deviceID: validDeviceID,
       qty: -1,
     };
-    expect(() => schema.parse(invalidInput)).toThrow();
+    expect(() => getDeviceDataSchema.parse(invalidInput)).toThrow();
   });
 
   it("should reject invalid ordination", () => {
@@ -125,7 +123,7 @@ describe("getDeviceDataSchema", () => {
       deviceID: validDeviceID,
       ordination: "random",
     };
-    expect(() => schema.parse(invalidInput)).toThrow();
+    expect(() => getDeviceDataSchema.parse(invalidInput)).toThrow();
   });
 
   it("should reject invalid interval", () => {
@@ -133,7 +131,7 @@ describe("getDeviceDataSchema", () => {
       deviceID: validDeviceID,
       interval: "week",
     };
-    expect(() => schema.parse(invalidInput)).toThrow();
+    expect(() => getDeviceDataSchema.parse(invalidInput)).toThrow();
   });
 
   it("should reject invalid function", () => {
@@ -141,7 +139,7 @@ describe("getDeviceDataSchema", () => {
       deviceID: validDeviceID,
       function: "median",
     };
-    expect(() => schema.parse(invalidInput)).toThrow();
+    expect(() => getDeviceDataSchema.parse(invalidInput)).toThrow();
   });
 
   it("should reject value as non-number", () => {
@@ -149,7 +147,7 @@ describe("getDeviceDataSchema", () => {
       deviceID: validDeviceID,
       value: "not-a-number",
     };
-    expect(() => schema.parse(invalidInput)).toThrow();
+    expect(() => getDeviceDataSchema.parse(invalidInput)).toThrow();
   });
 
   it("should validate optional fields as undefined", () => {
@@ -168,6 +166,6 @@ describe("getDeviceDataSchema", () => {
       function: undefined,
       value: undefined,
     };
-    expect(() => schema.parse(validInput)).not.toThrow();
+    expect(() => getDeviceDataSchema.parse(validInput)).not.toThrow();
   });
 });

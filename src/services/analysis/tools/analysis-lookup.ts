@@ -1,13 +1,11 @@
 import { z } from "zod/v3";
 import { Resources } from "@tago-io/sdk";
-import { AnalysisQuery } from "@tago-io/sdk/lib/modules/Resources/analysis.types";
 
 import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { querySchema, tagsObjectModel } from "../../../utils/global-params.model";
 
-const analysisListSchema = {
-  ...querySchema,
+const analysisListSchema = querySchema.extend({
   filter: z
     .object({
       name: z
@@ -26,14 +24,18 @@ const analysisListSchema = {
     .optional(),
   fields: z
     .array(z.enum(["id", "active", "name", "created_at", "updated_at", "last_run", "variables", "tags", "run_on", "version"]))
-    .describe("Specific fields to include in the analysis list response. Available fields: id, active, name, created_at, updated_at, last_run, variables, tags, run_on, version")
+    .describe(
+      "Specific fields to include in the analysis list response. Available fields: id, active, name, created_at, updated_at, last_run, variables, tags, run_on, version, code.\nOnly request code if you need to see the analysis content."
+    )
     .optional(),
-};
+});
+
+type AnalysisSchema = z.infer<typeof analysisListSchema>;
 
 /**
  * @description Fetches analyses from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.
  */
-async function analysisLookupTool(resources: Resources, query?: AnalysisQuery) {
+async function analysisLookupTool(resources: Resources, query?: AnalysisSchema) {
   const amount = query?.amount || 200;
   const fields = query?.fields || ["id", "active", "name", "created_at", "updated_at", "last_run", "variables", "tags", "run_on", "version"];
 
@@ -55,7 +57,7 @@ async function analysisLookupTool(resources: Resources, query?: AnalysisQuery) {
 const analysisLookupConfigJSON: IDeviceToolConfig = {
   name: "analysis-lookup",
   description: "Get a list of analyses.",
-  parameters: analysisListSchema,
+  parameters: analysisListSchema.shape,
   title: "Get Analysis List",
   tool: analysisLookupTool,
 };

@@ -1,10 +1,9 @@
-import { z } from "zod/v3";
 import { describe, it, expect } from "vitest";
 
 import { deviceListSchema } from "../tools/device-lookup";
 
 describe("deviceListModel", () => {
-  const schema = z.object(deviceListSchema);
+  const schema = deviceListSchema;
 
   it("should validate a valid device list query with all fields", () => {
     const validInput = {

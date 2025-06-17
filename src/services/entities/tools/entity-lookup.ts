@@ -6,8 +6,7 @@ import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { querySchema, tagsObjectModel } from "../../../utils/global-params.model";
 
-const entityListSchema = {
-  ...querySchema,
+const entityListSchema = querySchema.extend({
   filter: z
     .object({
       id: z.string().describe("Filter entity by ID. E.g: '123456789012345678901234'").length(24, "ID must be 24 characters long").optional(),
@@ -27,7 +26,7 @@ const entityListSchema = {
     .array(z.enum(["id", "name", "schema", "index", "tags", "payload_decoder", "created_at", "updated_at"]))
     .describe("Specific fields to include in the entity list response. Available fields: id, name, schema, index, tags, payload_decoder, created_at, updated_at")
     .optional(),
-};
+});
 
 /**
  * @description Fetches entities from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.
@@ -54,7 +53,7 @@ async function entityLookupTool(resources: Resources, query?: EntityQuery) {
 const entityLookupConfigJSON: IDeviceToolConfig = {
   name: "entity-lookup",
   description: "Get a list of entities.",
-  parameters: entityListSchema,
+  parameters: entityListSchema.shape,
   title: "Get Entity List",
   tool: entityLookupTool,
 };

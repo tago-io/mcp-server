@@ -1,4 +1,3 @@
-import { z } from "zod/v3";
 import { describe, it, expect } from "vitest";
 
 import { actionListSchema } from "../tools/action-lookup";
@@ -6,12 +5,12 @@ import { actionListSchema } from "../tools/action-lookup";
 describe("Actions Models", () => {
   describe("actionListSchema", () => {
     it("should validate valid fields array", () => {
-      const result = actionListSchema.fields.safeParse(["name", "active", "created_at"]);
+      const result = actionListSchema.shape.fields.safeParse(["name", "active", "created_at"]);
       expect(result.success).toBe(true);
     });
 
     it("should reject invalid fields", () => {
-      const result = actionListSchema.fields.safeParse(["invalid_field"]);
+      const result = actionListSchema.shape.fields.safeParse(["invalid_field"]);
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.issues[0].message).toContain("Invalid enum value");
@@ -19,7 +18,7 @@ describe("Actions Models", () => {
     });
 
     it("should accept undefined fields", () => {
-      const result = actionListSchema.fields.safeParse(undefined);
+      const result = actionListSchema.shape.fields.safeParse(undefined);
       expect(result.success).toBe(true);
     });
 
@@ -28,8 +27,7 @@ describe("Actions Models", () => {
         amount: 100,
         fields: ["name", "active", "created_at"],
       };
-      const schema = z.object(actionListSchema);
-      const result = schema.safeParse(validObject);
+      const result = actionListSchema.safeParse(validObject);
       expect(result.success).toBe(true);
     });
 
@@ -39,8 +37,7 @@ describe("Actions Models", () => {
           name: "notification",
         },
       };
-      const schema = z.object(actionListSchema);
-      const result = schema.safeParse(validInput);
+      const result = actionListSchema.safeParse(validInput);
       expect(result.success).toBe(true);
       expect(result.data?.filter?.name).toBe("*notification*");
     });

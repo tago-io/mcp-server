@@ -6,7 +6,7 @@ import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 
 // Device data model as a raw shape object compatible with server.tool
-const getDeviceDataSchema = {
+const getDeviceDataSchema = z.object({
   deviceID: z.string({ required_error: "Device ID is required" }).length(24, "Device ID must be 24 characters long").describe("Unique identifier for the device"),
 
   // Query parameters
@@ -101,7 +101,7 @@ const getDeviceDataSchema = {
 
   // Conditional query parameters
   value: z.number().describe("Value to compare against. Used with query='conditional'. E.g: 25.5").optional(),
-};
+});
 
 /**
  * @description Get data from a device and returns a Markdown-formatted response.
@@ -125,7 +125,7 @@ const getDeviceDataConfigJSON: IDeviceToolConfig = {
     For queries 'min', 'max', 'count', 'avg', and 'sum', if the requested period exceeds one month,
     the request must be split into parts, each covering a maximum interval of one month.
   `,
-  parameters: getDeviceDataSchema,
+  parameters: getDeviceDataSchema.shape,
   title: "Get Device Data",
   tool: getDeviceDataTool,
 };

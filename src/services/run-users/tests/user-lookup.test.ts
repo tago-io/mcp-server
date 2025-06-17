@@ -1,4 +1,3 @@
-import { z } from "zod/v3";
 import { describe, it, expect } from "vitest";
 
 import { userListSchema } from "../tools/user-lookup";
@@ -6,12 +5,12 @@ import { userListSchema } from "../tools/user-lookup";
 describe("User Models", () => {
   describe("userListSchema", () => {
     it("should validate valid fields array", () => {
-      const result = userListSchema.fields.safeParse(["name", "email", "active"]);
+      const result = userListSchema.shape.fields.safeParse(["name", "email", "active"]);
       expect(result.success).toBe(true);
     });
 
     it("should reject invalid fields", () => {
-      const result = userListSchema.fields.safeParse(["invalid_field"]);
+      const result = userListSchema.shape.fields.safeParse(["invalid_field"]);
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.issues[0].message).toContain("Invalid enum value");
@@ -19,7 +18,7 @@ describe("User Models", () => {
     });
 
     it("should accept undefined fields", () => {
-      const result = userListSchema.fields.safeParse(undefined);
+      const result = userListSchema.shape.fields.safeParse(undefined);
       expect(result.success).toBe(true);
     });
 
@@ -28,8 +27,7 @@ describe("User Models", () => {
         amount: 100,
         fields: ["name", "email", "active"],
       };
-      const schema = z.object(userListSchema);
-      const result = schema.safeParse(validObject);
+      const result = userListSchema.safeParse(validObject);
       expect(result.success).toBe(true);
     });
 
@@ -39,8 +37,7 @@ describe("User Models", () => {
           name: "john",
         },
       };
-      const schema = z.object(userListSchema);
-      const result = schema.safeParse(validInput);
+      const result = userListSchema.safeParse(validInput);
       expect(result.success).toBe(true);
       expect(result.data?.filter?.name).toBe("*john*");
     });
@@ -51,8 +48,7 @@ describe("User Models", () => {
           email: "gmail",
         },
       };
-      const schema = z.object(userListSchema);
-      const result = schema.safeParse(validInput);
+      const result = userListSchema.safeParse(validInput);
       expect(result.success).toBe(true);
       expect(result.data?.filter?.email).toBe("*gmail*");
     });
@@ -63,8 +59,7 @@ describe("User Models", () => {
           id: "123456789012345678901234",
         },
       };
-      const schema = z.object(userListSchema);
-      const result = schema.safeParse(validInput);
+      const result = userListSchema.safeParse(validInput);
       expect(result.success).toBe(true);
     });
 
@@ -74,8 +69,7 @@ describe("User Models", () => {
           id: "123",
         },
       };
-      const schema = z.object(userListSchema);
-      const result = schema.safeParse(invalidInput);
+      const result = userListSchema.safeParse(invalidInput);
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.issues[0].message).toContain("ID must be 24 characters long");
@@ -88,8 +82,7 @@ describe("User Models", () => {
           active: true,
         },
       };
-      const schema = z.object(userListSchema);
-      const result = schema.safeParse(validInput);
+      const result = userListSchema.safeParse(validInput);
       expect(result.success).toBe(true);
     });
   });

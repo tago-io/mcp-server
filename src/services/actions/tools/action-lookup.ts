@@ -6,8 +6,7 @@ import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { querySchema, tagsObjectModel } from "../../../utils/global-params.model";
 
-const actionListSchema = {
-  ...querySchema,
+const actionListSchema = querySchema.extend({
   filter: z
     .object({
       name: z
@@ -27,7 +26,7 @@ const actionListSchema = {
     .array(z.enum(["id", "active", "name", "created_at", "updated_at", "last_triggered", "tags", "type", "action"]))
     .describe("Specific fields to include in the action list response. Available fields: id, active, name, created_at, updated_at, last_triggered, tags, type, action")
     .optional(),
-};
+});
 
 /**
  * @description Fetches actions from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.
@@ -54,7 +53,7 @@ async function actionLookupTool(resources: Resources, query?: ActionQuery) {
 const actionLookupConfigJSON: IDeviceToolConfig = {
   name: "action-lookup",
   description: "Get a list of actions.",
-  parameters: actionListSchema,
+  parameters: actionListSchema.shape,
   title: "Get Action List",
   tool: actionLookupTool,
 };
