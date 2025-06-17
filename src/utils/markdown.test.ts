@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { toMarkdown } from "./markdown";
+import { convertJSONToMarkdown } from "./markdown";
 import { ActionInfo } from "@tago-io/sdk/lib/types";
 
 const actions: ActionInfo[] = [
@@ -29,9 +29,9 @@ const actions: ActionInfo[] = [
   },
 ];
 
-describe("toMarkdown", () => {
+describe("convertJSONToMarkdown", () => {
   it("should convert an array of actions to a Markdown table", () => {
-    const md = toMarkdown(actions);
+    const md = convertJSONToMarkdown(actions);
     expect(md).toContain("| id | active | name | description | created_at | updated_at | last_triggered | tags | type | action |");
     expect(md).toContain("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
     expect(md).toContain(
@@ -46,21 +46,21 @@ describe("toMarkdown", () => {
   });
 
   it("should handle an empty array", () => {
-    expect(toMarkdown([])).toBe("_No data found._");
+    expect(convertJSONToMarkdown([])).toBe("_No data found._");
   });
 
   it("should convert a simple object to a Markdown list", () => {
     const obj = { foo: "bar", num: 42 };
-    const md = toMarkdown(obj);
+    const md = convertJSONToMarkdown(obj);
     expect(md).toContain("**foo**: bar");
     expect(md).toContain("**num**: 42");
   });
 
   it("should convert a primitive to string", () => {
-    expect(toMarkdown(123)).toBe("123");
-    expect(toMarkdown(true)).toBe("true");
-    expect(toMarkdown(null)).toBe("_empty_");
-    expect(toMarkdown(undefined)).toBe("_empty_");
+    expect(convertJSONToMarkdown(123)).toBe("123");
+    expect(convertJSONToMarkdown(true)).toBe("true");
+    expect(convertJSONToMarkdown(null)).toBe("_empty_");
+    expect(convertJSONToMarkdown(undefined)).toBe("_empty_");
   });
 });
 
@@ -96,7 +96,7 @@ const deviceResponse = {
 
 describe("Device object formatting", () => {
   it("should format a device response object correctly", () => {
-    const md = toMarkdown(deviceResponse);
+    const md = convertJSONToMarkdown(deviceResponse);
 
     // Test primitive fields in result
     expect(md).toContain("**active**: true");
@@ -120,7 +120,7 @@ describe("Device object formatting", () => {
   });
 
   it("should format the device result object directly", () => {
-    const md = toMarkdown(deviceResponse);
+    const md = convertJSONToMarkdown(deviceResponse);
 
     // Test primitive fields
     expect(md).toContain("**active**: true");
@@ -140,7 +140,7 @@ describe("Device object formatting", () => {
   });
 
   it("should format date strings correctly", () => {
-    const md = toMarkdown(deviceResponse);
+    const md = convertJSONToMarkdown(deviceResponse);
 
     // Date strings should be displayed as strings, not wrapped in quotes
     expect(md).toContain("**created_at**: 2024-07-02T14:59:30.069Z");
@@ -203,7 +203,7 @@ const entityResponse = {
 
 describe("Schema model formatting", () => {
   it("should format schema model correctly with nested objects and arrays", () => {
-    const md = toMarkdown(entityResponse);
+    const md = convertJSONToMarkdown(entityResponse);
 
     // Check basic properties
     expect(md).toContain("**id**: 6790f8ef61a81600089e99c4");
