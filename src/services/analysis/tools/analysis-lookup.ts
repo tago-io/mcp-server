@@ -44,7 +44,7 @@ async function analysisLookupTool(resources: Resources, query?: AnalysisQuery) {
       ...query,
     })
     .catch((error) => {
-      throw `**Error fetching analyses:** ${error}`;
+      throw new Error(`Error fetching analyses: ${error}`);
     });
 
   const markdownResponse = convertJSONToMarkdown(analyses);
