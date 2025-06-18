@@ -222,17 +222,13 @@ async function deviceDataTool(resources: Resources, params: DeviceDataOperation)
   const { operation, deviceID } = validatedParams;
 
   const api = ENV.TAGOIO_API;
-  const sse = ENV.TAGOIO_API.replace("api", "sse");
-  const sanitizedSse = new URL(sse);
-  sanitizedSse.pathname = "/events";
 
   const [deviceToken] = await resources.devices.tokenList(deviceID);
   const device = new Device({
     token: deviceToken.token,
     region: {
       api,
-      sse: sanitizedSse.toString()
-    }
+    } as any
   })
 
   switch (operation) {
@@ -273,8 +269,8 @@ async function deviceDataTool(resources: Resources, params: DeviceDataOperation)
 }
 
 const deviceDataConfigJSON: IDeviceToolConfig = {
-  name: "device-data-crud",
-  description: `Perform CRUD operations on device data. 
+  name: "device-data-operations",
+  description: `Perform operations on device data. It can be used to create, update, read and delete data from a device.
   
   **Data Edit and Data Delete require the device to be of the mutable type.**
   
