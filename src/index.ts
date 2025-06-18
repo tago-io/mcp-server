@@ -8,7 +8,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { handlerTools } from "./mcp-tools";
 import { environmentModel, IEnvironmentModel } from "./utils/config.model";
 
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV === "dev") {
   import("mcps-logger/console");
 }
 
