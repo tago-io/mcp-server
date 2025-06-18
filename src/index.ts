@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 
 import * as dotenv from "dotenv";
-import { Resources } from "@tago-io/sdk";
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { Resources } from "@tago-io/sdk";
 
 import { handlerTools } from "./mcp-tools";
 import { environmentModel, IEnvironmentModel } from "./utils/config.model";
 
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV === "dev") {
   import("mcps-logger/console");
 }
 
