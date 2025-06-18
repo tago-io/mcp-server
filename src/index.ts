@@ -1,26 +1,16 @@
 #!/usr/bin/env node
 
-import * as dotenv from "dotenv";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { Resources } from "@tago-io/sdk";
 
 import { handlerTools } from "./mcp-tools";
-import { environmentModel, IEnvironmentModel } from "./utils/config.model";
+import { ENV } from "./utils/get-env-variables";
 
 if (process.env.NODE_ENV === "dev") {
   import("mcps-logger/console");
 }
-
-// Load environment variables from .env file.
-dotenv.config();
-
-const ENV: IEnvironmentModel = environmentModel.parse({
-  LOG_LEVEL: process.env.LOG_LEVEL,
-  TAGOIO_TOKEN: process.env.TAGOIO_TOKEN,
-  TAGOIO_API: process.env.TAGOIO_API,
-});
 
 /**
  * @description Start the MCP server using stdio transport.

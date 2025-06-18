@@ -1,9 +1,10 @@
 import { z } from "zod/v3";
 
-import { Resources } from "@tago-io/sdk";
+import { Device, Resources } from "@tago-io/sdk";
 import { DataCreate, DataEdit } from "@tago-io/sdk/lib/common/common.types";
 import { DataQuery } from "@tago-io/sdk/lib/modules/Device/device.types";
 
+import { ENV } from "../../../../utils/get-env-variables";
 import { convertJSONToMarkdown } from "../../../../utils/markdown";
 import { IDeviceToolConfig } from "../../../types";
 
@@ -220,6 +221,20 @@ async function deviceDataTool(resources: Resources, params: DeviceDataOperation)
   const validatedParams = deviceDataSchema.parse(params);
   const { operation, deviceID } = validatedParams;
 
+  const api = ENV.TAGOIO_API;
+  const sse = ENV.TAGOIO_API.replace("api", "sse");
+  const sanitizedSse = new URL(sse);
+  sanitizedSse.pathname = "/events";
+
+  const [deviceToken] = await resources.devices.tokenList(deviceID);
+  const device = new Device({
+    token: deviceToken.token,
+    region: {
+      api,
+      sse: sanitizedSse.toString()
+    }
+  })
+
   switch (operation) {
     case "create": {
       // Use type guard to ensure type safety
@@ -227,10 +242,7 @@ async function deviceDataTool(resources: Resources, params: DeviceDataOperation)
         throw new Error("Invalid create operation: createData is required");
       }
       // Safe type assertion to SDK type - our validation guarantees correct structure
-      const result = await resources.devices.sendDeviceData(
-        deviceID,
-        validatedParams.createData as DataCreate[]
-      );
+      const result = await device.sendData(validatedParams.createData as DataCreate[]);
       const markdown = convertJSONToMarkdown(result);
       return markdown;
     }
@@ -240,22 +252,20 @@ async function deviceDataTool(resources: Resources, params: DeviceDataOperation)
         throw new Error("Invalid update operation: editData is required");
       }
       // Safe type assertion to SDK type - our validation guarantees correct structure
-      const result = await resources.devices.editDeviceData(
-        deviceID,
-        validatedParams.editData as DataEdit[]
-      );
+      const result = await device.editData(validatedParams.editData as DataEdit[]);
       const markdown = convertJSONToMarkdown(result);
       return markdown;
     }
     case "read": {
       const query = validateDeviceDataQuery(validatedParams.query);
-      const result = await resources.devices.getDeviceData(deviceID, query);
+      // @ts-expect-error - The getData method is not typed according to the DataQuery type from the Resources.
+      const result = await device.getData(query);
       const markdown = convertJSONToMarkdown(result);
       return markdown;
     }
     case "delete": {
       const query = validateDeviceDataQuery(validatedParams.query);
-      const result = await resources.devices.deleteDeviceData(deviceID, query);
+      const result = await device.deleteData(query);
       const markdown = convertJSONToMarkdown(result);
       return markdown;
     }
