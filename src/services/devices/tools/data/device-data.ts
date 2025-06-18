@@ -274,7 +274,34 @@ async function deviceDataTool(resources: Resources, params: DeviceDataOperation)
 
 const deviceDataConfigJSON: IDeviceToolConfig = {
   name: "device-data-crud",
-  description: "Perform CRUD operations on device data. Data Edit and Data Delete require the device to be of the mutable type.",
+  description: `Perform CRUD operations on device data. 
+  
+  **Data Edit and Data Delete require the device to be of the mutable type.**
+  
+  - NEVER use spaces in variable names. They should always use snake_case.
+  - NEVER use special characters in variable names. They should always use alphanumeric characters.
+  - Variables should contain the unit of measurement in the unit field whenever possible.
+  - ALWAYS use descriptive property names inside the metadata field.
+
+  <example>
+    {
+      "operation": "create",
+      "deviceID": "68531cc713af9d000af75d5c",
+      "createData": [
+        {
+          "variable": "temperature",
+          "value": 25.5,
+          "unit": "°C",
+          "metadata": {
+            "description": "Temperature in Celsius",
+            "source": "sensor"
+          }
+        }
+      ]
+    }
+  </example>
+
+  `,
   parameters: deviceDataBaseSchema.shape,
   title: "Device Data Operations",
   tool: deviceDataTool,
