@@ -99,11 +99,11 @@ const actionUpdateSchema = actionCreateSchema.partial().describe("Schema for the
 
 // Base schema without refinement - this provides the .shape property needed by MCP
 const actionBaseSchema = z.object({
-  operation: z.enum(["create", "update", "list", "delete", "info"]).describe("The type of operation to perform on the action."),
+  operation: z.enum(["create", "update", "delete", "lookup"]).describe("The type of operation to perform on the action."),
   actionID: z.string().describe("The ID of the action to perform the operation on.").optional(),
   // Separate fields for different operations to maintain type safety
   createAction: actionCreateSchema.describe("The action to be created. Required for create operations.").optional(),
-  listAction: actionListSchema.describe("The action to be listed. Required for list operations.").optional(),
+  lookupAction: actionListSchema.describe("The action to be listed. Required for list operations.").optional(),
   updateAction: actionUpdateSchema.describe("The action to be updated. Required for update operations.").optional(),
 }).describe("Schema for the action operation.");
 
@@ -150,8 +150,13 @@ async function actionLookupTool(resources: Resources, params: ActionOperation) {
   const { operation, actionID } = validatedParams;
 
   switch (operation) {
-    case "list": {
-      const validatedQuery = validateActionQuery(validatedParams.listAction);
+    case "lookup": {
+      if (actionID) {
+        const result = await resources.actions.info(actionID as string);
+        const markdownResponse = convertJSONToMarkdown(result);
+        return markdownResponse;
+      }
+      const validatedQuery = validateActionQuery(validatedParams.lookupAction);
       const actions = await resources.actions
         .list(validatedQuery)
         .catch((error) => {
@@ -172,11 +177,6 @@ async function actionLookupTool(resources: Resources, params: ActionOperation) {
     }
     case "update": {
       const result = await resources.actions.edit(actionID as string, validatedParams.updateAction as Partial<ActionCreateInfo>);
-      const markdownResponse = convertJSONToMarkdown(result);
-      return markdownResponse;
-    }
-    case "info": {
-      const result = await resources.actions.info(actionID as string);
       const markdownResponse = convertJSONToMarkdown(result);
       return markdownResponse;
     }

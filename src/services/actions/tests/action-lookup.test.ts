@@ -4,7 +4,7 @@ import { actionBaseSchema } from "../tools/action-lookup";
 describe("actionBaseSchema Parse", () => {
   describe("Operation Validation", () => {
     it("should accept valid operation types", () => {
-      const validOperations = ["create", "update", "list", "delete", "info"];
+      const validOperations = ["create", "update", "delete", "lookup"];
       
       for (const operation of validOperations) {
         const result = actionBaseSchema.safeParse({ operation });
@@ -53,7 +53,7 @@ describe("actionBaseSchema Parse", () => {
 
     it("should accept undefined actionID", () => {
       const result = actionBaseSchema.safeParse({
-        operation: "list",
+        operation: "lookup",
       });
       expect(result.success).toBe(true);
       if (result.success) {
@@ -195,8 +195,8 @@ describe("actionBaseSchema Parse", () => {
       };
 
       const result = actionBaseSchema.safeParse({
-        operation: "list",
-        listAction: validListAction,
+        operation: "lookup",
+        lookupAction: validListAction,
       });
 
       expect(result.success).toBe(true);
@@ -210,7 +210,7 @@ describe("actionBaseSchema Parse", () => {
             tags: [{ key: "category", value: "notification" }],
           },
         };
-        expect(result.data.listAction).toEqual(returnListAction);
+        expect(result.data.lookupAction).toEqual(returnListAction);
       }
     });
 
@@ -220,13 +220,13 @@ describe("actionBaseSchema Parse", () => {
       };
 
       const result = actionBaseSchema.safeParse({
-        operation: "list",
-        listAction: minimalListAction,
+        operation: "lookup",
+        lookupAction: minimalListAction,
       });
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.listAction).toEqual(minimalListAction);
+        expect(result.data.lookupAction).toEqual(minimalListAction);
       }
     });
 
@@ -236,14 +236,14 @@ describe("actionBaseSchema Parse", () => {
       };
 
       const result = actionBaseSchema.safeParse({
-        operation: "list",
-        listAction: invalidListAction,
+        operation: "lookup",
+        lookupAction: invalidListAction,
       });
 
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.issues[0].code).toBe("invalid_enum_value");
-        expect(result.error.issues[0].path).toEqual(["listAction", "fields", 0]);
+        expect(result.error.issues[0].path).toEqual(["lookupAction", "fields", 0]);
       }
     });
   });
@@ -320,7 +320,7 @@ describe("actionBaseSchema Parse", () => {
             },
           ],
         },
-        listAction: {
+        lookupAction: {
           amount: 100,
           fields: ["id", "name"],
         },
@@ -332,7 +332,7 @@ describe("actionBaseSchema Parse", () => {
         expect(result.data.operation).toBe("create");
         expect(result.data.actionID).toBe("123456789012345678901234");
         expect(result.data.createAction?.name).toBe("Complex Action");
-        expect(result.data.listAction?.amount).toBe(100);
+        expect(result.data.lookupAction?.amount).toBe(100);
       }
     });
 
@@ -400,7 +400,7 @@ describe("actionBaseSchema Parse", () => {
   describe("Edge Cases", () => {
     it("should handle null values", () => {
       const result = actionBaseSchema.safeParse({
-        operation: "list",
+        operation: "lookup",
         actionID: null,
       });
       expect(result.success).toBe(false);
@@ -422,7 +422,7 @@ describe("actionBaseSchema Parse", () => {
 
     it("should handle extra unknown fields", () => {
       const result = actionBaseSchema.safeParse({
-        operation: "list",
+        operation: "lookup",
         unknownField: "should be ignored",
       });
       expect(result.success).toBe(true);
