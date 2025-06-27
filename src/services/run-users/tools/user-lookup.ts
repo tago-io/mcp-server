@@ -1,9 +1,9 @@
 import { z } from "zod/v3";
 import { Resources } from "@tago-io/sdk";
-
 import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { querySchema, tagsObjectModel } from "../../../utils/global-params.model";
+import { UserQuery } from "@tago-io/sdk/lib/modules/Resources/run.types";
 
 const userListSchema = querySchema.extend({
   filter: z
@@ -38,37 +38,88 @@ const userListSchema = querySchema.extend({
     .optional(),
 });
 
-type UserListSchema = z.infer<typeof userListSchema>;
+// Base schema without refinement - this provides the .shape property needed by MCP
+const userBaseSchema = z.object({
+  operation: z.enum(["lookup"]).describe("The type of operation to perform on the user."),
+  runUserID: z.string().describe("The ID of the user to perform the operation on.").length(24, "ID must be 24 characters long").optional(),
+  // Separate fields for different operations to maintain type safety
+  lookupUser: userListSchema.describe("The user to be listed. Required for list operations.").optional(),
+}).describe("Schema for the user operation.");
+
+const userSchema = userBaseSchema.refine(() => {
+  // list and info operations are valid with or without query
+  return true;
+}, {
+  message: "Invalid data structure for the specified operation. Create requires createAnalysis, update requires updateAnalysis.",
+});
+
+type UserSchema = z.infer<typeof userSchema>;
+
+function validateUserQuery(query: any): UserQuery {
+  if (!query) {
+    throw new Error("Query is required");
+  };
+
+  const amount = query.amount || 200;
+  const fields = query.fields || ["id", "name", "email", "timezone", "company", "phone", "language", "tags", "active", "last_login", "created_at", "updated_at"];
+
+  return {
+    amount,
+    fields,
+    ...query,
+  };
+}
 
 /**
  * @description Fetches users from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.
  */
-async function userLookupTool(resources: Resources, query?: UserListSchema) {
-  const amount = query?.amount || 200;
-  const fields = query?.fields || ["id", "name", "email", "timezone", "company", "phone", "language", "tags", "active", "last_login", "created_at", "updated_at"];
+async function userLookupTool(resources: Resources, params: UserSchema) {
+  const validatedParams = userSchema.parse(params);
+  const { operation, runUserID } = validatedParams;
 
-  const users = await resources.run
-    .listUsers({
-      amount,
-      fields,
-      ...query,
-    })
-    .catch((error) => {
-      throw `**Error fetching users:** ${error}`;
-    });
-
-  const markdownResponse = convertJSONToMarkdown(users);
-
-  return markdownResponse;
+  switch (operation) {
+    case "lookup": {
+      if (runUserID) {
+        const result = await resources.run.userInfo(runUserID as string);
+        const markdownResponse = convertJSONToMarkdown(result);
+        return markdownResponse;
+      }
+      const validatedQuery = validateUserQuery(validatedParams.lookupUser);
+      const users = await resources.run
+        .listUsers(validatedQuery)
+        .catch((error) => {
+          throw `**Error fetching users:** ${(error as Error)?.message || error}`;
+        });
+      const markdownResponse = convertJSONToMarkdown(users);
+      return markdownResponse;
+    }
+  }
 }
 
 const userLookupConfigJSON: IDeviceToolConfig = {
-  name: "user-lookup",
-  description: "Get a list of run users registered in the current profile.",
-  parameters: userListSchema.shape,
-  title: "Get User List",
+  name: "run-user-operations",
+  description: `Perform operations on run users. It can be used to list users.
+  
+  <example>
+    {
+      "operation": "lookup",
+      "runUserID": "123456789012345678901234",
+      "lookupUser": {
+        "amount": 100,
+        "fields": ["id", "name", "email", "timezone", "company", "phone", "language", "tags", "active", "last_login", "created_at", "updated_at"],
+        "filter": {
+          "name": "john",
+          "tags": [{ "key": "user_type", "value": "admin" }]
+        }
+      }
+    }
+  </example>
+
+  `,
+  parameters: userBaseSchema.shape,
+  title: "Run User Operations",
   tool: userLookupTool,
 };
 
 export { userLookupConfigJSON };
-export { userListSchema }; // export for testing purposes
+export { userBaseSchema }; // export for testing purposes
