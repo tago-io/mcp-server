@@ -1,6 +1,6 @@
 import { z } from "zod/v3";
 import { Resources } from "@tago-io/sdk";
-import { DeviceListItem } from "@tago-io/sdk/lib/types";
+import { DeviceListItem, DeviceQuery } from "@tago-io/sdk/lib/types";
 
 import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
@@ -36,51 +36,104 @@ const deviceListSchema = querySchema.extend({
     .optional(),
 });
 
+
 type DeviceWithDataAmount = DeviceListItem & { data_amount?: number };
-type DeviceRequestSchema = z.infer<typeof deviceListSchema>;
+
+const deviceBaseSchema = z.object({
+  operation: z.enum(["lookup", "delete"]).describe("The type of operation to perform on the device."),
+  deviceID: z.string().describe("The ID of the device to perform the operation on.").optional(),
+  // Separate fields for different operations to maintain type safety
+  lookupDevice: deviceListSchema.describe("The device to be listed. Required for list operations.").optional(),
+}).describe("Schema for the device operation.");
+
+const deviceSchema = deviceBaseSchema.refine(() => {
+  // list and info operations are valid with or without query
+  return true;
+}, {
+  message: "Invalid data structure for the specified operation. Create requires createDevice, update requires updateDevice.",
+});
+
+type DeviceSchema = z.infer<typeof deviceSchema>;
+
+function validateDeviceQuery(query: any): DeviceQuery | undefined {
+  if (!query) {
+    return undefined;
+  };
+
+  const amount = query.amount || 200;
+  const fields = query.fields || ["id", "active", "name", "created_at", "updated_at", "connector", "network", "type"];
+
+  return {
+    amount,
+    fields,
+    ...query,
+  };
+}
+
 /**
  * @description Get all devices and returns a Markdown-formatted response.
  */
-async function getDeviceLookupTool(resources: Resources, query?: DeviceRequestSchema) {
-  const amount = query?.amount || 200;
-  const fields = query?.fields || ["id", "active", "name", "created_at", "updated_at", "connector", "network", "type"];
+async function deviceLookupTool(resources: Resources, params: DeviceSchema) {
+  const validatedParams = deviceSchema.parse(params);
+  const { operation, deviceID } = validatedParams;
 
-  const devices = await resources.devices
-    .list({
-      amount,
-      fields,
-      ...query,
-    })
-    .catch((error) => {
-      throw `**Error to get devices:** ${error}`;
-    });
+  switch (operation) {
+    case "lookup": {
+      if (deviceID) {
+        const result = await resources.devices.info(deviceID as string);
+        const markdownResponse = convertJSONToMarkdown(result);
+        return markdownResponse;
+      }
+      const validatedQuery = validateDeviceQuery(validatedParams.lookupDevice);
+      const devices = await resources.devices
+        .list(validatedQuery)
+        .catch((error) => {
+          throw `**Error fetching devices:** ${(error as Error)?.message || error}`;
+        });
+        let devicesWithDataAmount: DeviceWithDataAmount[] = devices;
 
-  let devicesWithDataAmount: DeviceWithDataAmount[] = devices;
-
-  if (query?.include_data_amount && devices.length === 1) {
-    const dataAmount = await resources.devices.amount(devices[0].id);
-    devicesWithDataAmount = [{ ...devices[0], data_amount: dataAmount }];
-  } else if (query?.include_data_amount && devices.length !== 1) {
-    throw "The 'include_data_amount' option is only available when filtering by a single device.";
+        if (validatedParams.lookupDevice?.include_data_amount && devices.length === 1) {
+          const dataAmount = await resources.devices.amount(devices[0].id);
+          devicesWithDataAmount = [{ ...devices[0], data_amount: dataAmount }];
+        } else if (validatedParams.lookupDevice?.include_data_amount && devices.length !== 1) {
+          throw "The 'include_data_amount' option is only available when filtering by a single device.";
+        }
+        const markdownResponse = convertJSONToMarkdown(devicesWithDataAmount);
+        return markdownResponse;
+    }
+    case "delete": {
+      const result = await resources.devices.delete(deviceID as string);
+      const markdownResponse = convertJSONToMarkdown(result);
+      return markdownResponse;
+    }
   }
-
-  const markdownResponse = convertJSONToMarkdown(devicesWithDataAmount);
-
-  return markdownResponse;
 }
 
 const deviceLookupConfigJSON: IDeviceToolConfig = {
-  name: "device-lookup",
-  description: `
-    Get a list of devices.
+  name: "device-operations",
+  description: `Perform operations on devices. It can be used to list, create, update and delete devices.
+  
+  <example>
+    {
+      "operation": "list",
+      "device": {
+        "name": "My Device",
+        "type": "mutable",
+        "tags": [{ "key": "device_type", "value": "sensor" }],
+        "fields": ["id", "active", "name", "created_at", "updated_at", "connector", "network", "type"],
+        "filter": {
+          "name": "My Device",
+          "tags": [{ "key": "device_type", "value": "sensor" }]
+        }
+      }
+    }
+  </example>
 
-    If the parameter 'include_data_amount' is set to true, the response will include the amount of data for the device (field: data_amount).
-    Note: This option is only available when filtering by a single device.
   `,
-  parameters: deviceListSchema.shape,
-  title: "Device Lookup",
-  tool: getDeviceLookupTool,
+  parameters: deviceBaseSchema.shape,
+  title: "Device Operations",
+  tool: deviceLookupTool,
 };
 
 export { deviceLookupConfigJSON };
-export { deviceListSchema }; // export for testing purposes
+export { deviceBaseSchema }; // export for testing purposes

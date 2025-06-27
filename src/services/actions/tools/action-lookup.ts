@@ -52,7 +52,7 @@ const triggerSchema = z.union([
 
 const actionCreateSchema = z.object({
   name: z.string().describe("The name for action. (Required)"),
-  type: z.enum(["condition", "resource", "interval", "schedule", "mqtt_topic", "usage_alert"]).describe("The type of trigger of the action. (Required)"),
+  type: z.enum(["condition", "resource", "interval", "schedule", "mqtt_topic", "usage_alert", "condition_geofence"]).describe("The type of trigger of the action. (Required)"),
   action: z.object({
     type: z.enum(["script", "notification", "email", "sms", "mqtt", "post"]).describe("The type of the action. (Required)"),
     script: z.array(z.string()).describe("The script of the action if type is script. (Required)").optional(),
