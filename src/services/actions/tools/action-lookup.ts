@@ -108,7 +108,7 @@ const actionCreateSchema = z.object({
     subject: z.string().describe("The subject of the email or notification to be sent. Required for actions with type email, notification, notification_run, email-sendgrid, email-smtp.").optional(),
     run_user: z.string().describe("The run_user ID of the user that will receive the notification. Required for actions with type notification_run.").optional(),
     to: z.string().describe("The phone number or email address to send the message to. Required for actions with type email, sms, sms-twilio, whatsapp-twilio, email-sendgrid, email-smtp.").optional(),
-    from: z.string().describe("The phone number or email address to send the message from. Required for actions with type sms-twilio, whatsapp-twilio, email-sendgrid, email-smtp.").optional(),
+    from: z.string().describe("The phone number or email address that will be used to send the message. Required for actions with type sms-twilio, whatsapp-twilio, email-sendgrid, email-smtp.").optional(),
     bucket: z.string().describe("The device ID to receive MQTT published message. Required for actions with type mqtt.").optional(),
     payload: z.string().describe("The message that will be published to the MQTT topic. Required for actions with type mqtt.").optional(),
     topic: z.string().describe("The topic of the MQTT message. Required for actions with type mqtt.").optional(),
