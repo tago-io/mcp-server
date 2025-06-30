@@ -30,11 +30,12 @@ const entityListSchema = querySchema.extend({
 // Base schema without refinement - this provides the .shape property needed by MCP
 const entityBaseSchema = z.object({
   operation: z.enum(["lookup"]).describe("The type of operation to perform on the entity."),
-  entityID: z.string().describe("The ID of the entity to perform the operation on.").optional(),
+  entityID: z.string().describe("The ID of the entity to perform the operation on. Optional for lookup and create, but required for update and delete operations.").optional(),
   // Separate fields for different operations to maintain type safety
-  lookupEntity: entityListSchema.describe("The entity to be listed. Required for list operations.").optional(),
-}).describe("Schema for the analysis operation.");
+  lookupEntity: entityListSchema.describe("The entity to be listed. Required for lookup operations.").optional(),
+}).describe("Schema for the entity operation. The delete operation only requires the entityID.");
 
+//TODO: add refine for create and update operations
 const entitySchema = entityBaseSchema.refine(() => {
   // list and info operations are valid with or without query
   return true;
@@ -62,7 +63,7 @@ function validateEntityQuery(query: any): EntityQuery | undefined {
 /**
  * @description Fetches entities from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.
  */
-async function entityLookupTool(resources: Resources, params: EntitySchema) {
+async function entityOperationsTool(resources: Resources, params: EntitySchema) {
   const validatedParams = entitySchema.parse(params);
   const { operation, entityID } = validatedParams;
 
@@ -92,7 +93,6 @@ const entityLookupConfigJSON: IDeviceToolConfig = {
   <example>
     {
       "operation": "lookup",
-      "entityID": "1234567890",
       "lookupEntity": {
         "amount": 100,
         "fields": ["id", "name", "schema", "index", "tags", "payload_decoder", "created_at", "updated_at"],
@@ -107,7 +107,7 @@ const entityLookupConfigJSON: IDeviceToolConfig = {
   `,
   parameters: entityBaseSchema.shape,
   title: "Entities Operations",
-  tool: entityLookupTool,
+  tool: entityOperationsTool,
 };
 
 export { entityLookupConfigJSON };

@@ -41,11 +41,13 @@ const userListSchema = querySchema.extend({
 // Base schema without refinement - this provides the .shape property needed by MCP
 const userBaseSchema = z.object({
   operation: z.enum(["lookup"]).describe("The type of operation to perform on the user."),
-  runUserID: z.string().describe("The ID of the user to perform the operation on.").length(24, "ID must be 24 characters long").optional(),
+  runUserID: z.string().describe("The ID of the user to perform the operation on. Optional for lookup and create, but required for update and delete operations.")
+    .length(24, "ID must be 24 characters long").optional(),
   // Separate fields for different operations to maintain type safety
-  lookupUser: userListSchema.describe("The user to be listed. Required for list operations.").optional(),
-}).describe("Schema for the user operation.");
+  lookupUser: userListSchema.describe("The user to be listed. Required for lookup operations.").optional(),
+}).describe("Schema for the user operation. The delete operation only requires the runUserID.");
 
+//TODO: add refine for create and update operations
 const userSchema = userBaseSchema.refine(() => {
   // list and info operations are valid with or without query
   return true;
@@ -73,7 +75,7 @@ function validateUserQuery(query: any): UserQuery {
 /**
  * @description Fetches users from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.
  */
-async function userLookupTool(resources: Resources, params: UserSchema) {
+async function userOperationsTool(resources: Resources, params: UserSchema) {
   const validatedParams = userSchema.parse(params);
   const { operation, runUserID } = validatedParams;
 
@@ -103,7 +105,6 @@ const userLookupConfigJSON: IDeviceToolConfig = {
   <example>
     {
       "operation": "lookup",
-      "runUserID": "123456789012345678901234",
       "lookupUser": {
         "amount": 100,
         "fields": ["id", "name", "email", "timezone", "company", "phone", "language", "tags", "active", "last_login", "created_at", "updated_at"],
@@ -118,7 +119,7 @@ const userLookupConfigJSON: IDeviceToolConfig = {
   `,
   parameters: userBaseSchema.shape,
   title: "Run User Operations",
-  tool: userLookupTool,
+  tool: userOperationsTool,
 };
 
 export { userLookupConfigJSON };
