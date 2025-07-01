@@ -1,12 +1,18 @@
 import { z } from "zod/v3";
 import { Resources } from "@tago-io/sdk";
-import { DeviceListItem, DeviceQuery } from "@tago-io/sdk/lib/types";
-
+import { DeviceCreateInfo, DeviceEditInfo, DeviceListItem, DeviceQuery } from "@tago-io/sdk/lib/types";
 import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { querySchema, tagsObjectModel } from "../../../utils/global-params.model";
 
-const deviceListSchema = querySchema.extend({
+const configParamSchema = z.object({
+  id: z.string().describe("The ID of the configuration parameter.").optional(),
+  sent: z.boolean().describe("The sent status of the configuration parameter."),
+  key: z.string().describe("The key of the configuration parameter."),
+  value: z.string().describe("The value of the configuration parameter."),
+}).describe("The configuration parameter of the device.");
+
+const deviceLookupSchema = querySchema.extend({
   filter: z
     .object({
       id: z.string().describe("Filter by device ID. E.g: 'device_id'").length(24, "Device ID must be 24 characters long").optional(),
@@ -36,17 +42,62 @@ const deviceListSchema = querySchema.extend({
     .optional(),
 });
 
+const deviceCreateSchema = z.object({
+  name: z.string().describe("The name of the device."),
+  connector: z.string().describe(`The connector ID of the device. 
+    If given a name you can search a connector by using the connector-lookup operation.
+    If not given the ID or name use the default connector ID.
+    Default: 62333bd36977fc001a2990c8
+  `).default("62333bd36977fc001a2990c8"),
+  network: z.string().describe(`The network ID of the device. 
+    If given a name you can search a network by using the network-lookup operation.
+    If not given the ID or name use the default network ID.
+    Default: 62336c32ab6e0d0012e06c04
+  `).default("62336c32ab6e0d0012e06c04"),
+  type: z.enum(["mutable", "immutable"]).describe("The type of data storage of the device."),
+  tags: z.array(tagsObjectModel).describe("The tags for the device. E.g: [{ key: 'device_type', value: 'sensor' }]").optional(),
+  description: z.string().describe("The description of the device.").optional(),
+  active: z.boolean().describe("The active status of the device.").optional(),
+  visible: z.boolean().describe("The visible status of the device.").optional(),
+  configuration_params: z.array(configParamSchema).describe("The configuration parameters of the device. E.g: [{ key: 'dashboard_url', value: 'https://admin.tago.io' }]").optional(),
+  parse_function: z.string().describe("The parse function of the device.").optional(),
+  connector_parse: z.boolean().describe("The connector parse status of the device.").optional(),
+  serie_number: z.string().describe("The serial number of the device.").optional(),
+  chunk_period: z.enum(["day", "week", "month", "quarter"]).describe("The chunk period of the device. This defines the period of time for the data to be stored in the database. Required for immutable devices.").optional(),
+  chunk_retention: z.number().describe("The chunk retention of the device. This defines the number of days, weeks, months or quarters to keep the data in the database. Required for immutable devices.").optional(),
+});
+
+const deviceUpdateSchema = deviceCreateSchema.partial().describe("Schema for the device update operation.").optional()
+  .describe("Schema for the device update operation.");
 
 type DeviceWithDataAmount = DeviceListItem & { data_amount?: number };
 
 const deviceBaseSchema = z.object({
-  operation: z.enum(["lookup", "delete"]).describe("The type of operation to perform on the device."),
-  deviceID: z.string().describe("The ID of the device to perform the operation on.").optional(),
+  operation: z.enum(["lookup", "delete", "create", "update", "parameter-list"]).describe(`The type of operation to perform on the device.
+    lookup: Get the information of a device by its ID or a list of devices by a query.
+    delete: Delete a device by its ID.
+    create: Create a new device.
+    update: Update a device by its ID.
+    parameter-list: Get a list of the configuration parameters of a device by its ID.
+  `),
+  deviceID: z.string().describe("The ID of the Device to perform the operation on. Optional for lookup and create, but required for update, delete and parameter-list operations.").optional(),
   // Separate fields for different operations to maintain type safety
-  lookupDevice: deviceListSchema.describe("The device to be listed. Required for list operations.").optional(),
-}).describe("Schema for the device operation.");
+  lookupDevice: deviceLookupSchema.describe("The device to be listed. Required for lookup operations.").optional(),
+  createDevice: deviceCreateSchema.describe("The device to be created. Required for create operations.").optional(),
+  updateDevice: deviceUpdateSchema.describe("The device to be updated. Required for update operations.").optional(),
+}).describe("Schema for the device operation. The delete operation only requires the deviceID.");
 
-const deviceSchema = deviceBaseSchema.refine(() => {
+const deviceSchema = deviceBaseSchema.refine((data) => {
+  // Validation for create operation
+  if (data.operation === "create") {
+    return !!data.createDevice;
+  }
+
+  // Validation for update operation
+  if (data.operation === "update") {
+    return !!data.updateDevice;
+  }
+
   // list and info operations are valid with or without query
   return true;
 }, {
@@ -73,7 +124,7 @@ function validateDeviceQuery(query: any): DeviceQuery | undefined {
 /**
  * @description Get all devices and returns a Markdown-formatted response.
  */
-async function deviceLookupTool(resources: Resources, params: DeviceSchema) {
+async function deviceOperationsTool(resources: Resources, params: DeviceSchema) {
   const validatedParams = deviceSchema.parse(params);
   const { operation, deviceID } = validatedParams;
 
@@ -101,8 +152,23 @@ async function deviceLookupTool(resources: Resources, params: DeviceSchema) {
         const markdownResponse = convertJSONToMarkdown(devicesWithDataAmount);
         return markdownResponse;
     }
+    case "create": {
+      const result = await resources.devices.create(validatedParams.createDevice as DeviceCreateInfo);
+      const markdownResponse = convertJSONToMarkdown(result);
+      return markdownResponse;
+    }
+    case "update": {
+      const result = await resources.devices.edit(deviceID as string, validatedParams.updateDevice as DeviceEditInfo);
+      const markdownResponse = convertJSONToMarkdown(result);
+      return markdownResponse;
+    }
     case "delete": {
       const result = await resources.devices.delete(deviceID as string);
+      const markdownResponse = convertJSONToMarkdown(result);
+      return markdownResponse;
+    }
+    case "parameter-list": {
+      const result = await resources.devices.paramList(deviceID as string);
       const markdownResponse = convertJSONToMarkdown(result);
       return markdownResponse;
     }
@@ -132,7 +198,7 @@ const deviceLookupConfigJSON: IDeviceToolConfig = {
   `,
   parameters: deviceBaseSchema.shape,
   title: "Device Operations",
-  tool: deviceLookupTool,
+  tool: deviceOperationsTool,
 };
 
 export { deviceLookupConfigJSON };
