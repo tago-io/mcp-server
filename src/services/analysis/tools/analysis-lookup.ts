@@ -33,11 +33,12 @@ const analysisListSchema = querySchema.extend({
 // Base schema without refinement - this provides the .shape property needed by MCP
 const analysisBaseSchema = z.object({
   operation: z.enum(["lookup"]).describe("The type of operation to perform on the analysis."),
-  analysisID: z.string().describe("The ID of the analysis to perform the operation on.").optional(),
+  analysisID: z.string().describe("The ID of the analysis to perform the operation on. Optional for lookup and create, but required for update and delete operations.").optional(),
   // Separate fields for different operations to maintain type safety
-  lookupAnalysis: analysisListSchema.describe("The analysis to be listed. Required for list operations.").optional(),
-}).describe("Schema for the analysis operation.");
+  lookupAnalysis: analysisListSchema.describe("The analysis to be listed. Required for lookup operations.").optional(),
+}).describe("Schema for the analysis operation. The delete operation only requires the analysisID.");
 
+//TODO: add refine for create and update operations
 const analysisSchema = analysisBaseSchema.refine(() => {
   // list and info operations are valid with or without query
   return true;
@@ -65,7 +66,7 @@ function validateAnalysisQuery(query: any): AnalysisQuery | undefined {
 /**
  * @description Fetches analyses from the account, applies deterministic filters if provided, and returns a Markdown-formatted response.
  */
-async function analysisLookupTool(resources: Resources, params: AnalysisSchema) {
+async function analysisOperationsTool(resources: Resources, params: AnalysisSchema) {
   const validatedParams = analysisSchema.parse(params);
   const { operation, analysisID } = validatedParams;
 
@@ -95,7 +96,6 @@ const analysisLookupConfigJSON: IDeviceToolConfig = {
   <example>
     {
       "operation": "lookup",
-      "analysisID": "1234567890",
       "lookupAnalysis": {
         "amount": 100,
         "fields": ["id", "active", "name", "created_at", "updated_at", "last_run", "variables", "tags", "run_on", "version"],
@@ -112,7 +112,7 @@ const analysisLookupConfigJSON: IDeviceToolConfig = {
   `,
   parameters: analysisBaseSchema.shape,
   title: "Analyses Operations",
-  tool: analysisLookupTool,
+  tool: analysisOperationsTool,
 };
 
 export { analysisLookupConfigJSON };
