@@ -132,7 +132,7 @@ describe("connectorBaseSchema Parse", () => {
     });
 
     it("should accept lookupConnector with valid fields array", () => {
-      const validFields = ["id", "name", "description", "networks", "created_at", "updated_at"];
+      const validFields = ["id", "name", "description", "networks"];
       
       for (const field of validFields) {
         const result = connectorBaseSchema.safeParse({
@@ -420,7 +420,7 @@ describe("connectorBaseSchema Parse", () => {
         lookupConnector: {
           amount: 100,
           page: 2,
-          fields: ["id", "name", "description", "networks", "created_at", "updated_at"],
+          fields: ["id", "name", "description", "networks"],
           filter: {
             id: "123456789012345678901234",
             name: "http connector",

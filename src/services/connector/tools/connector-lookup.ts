@@ -21,8 +21,8 @@ const connectorListSchema = querySchema.extend({
     .describe("Filter object to apply to the query. Available filters: id, name")
     .optional(),
   fields: z
-    .array(z.enum(["id", "name", "description", "networks", "created_at", "updated_at"]))
-    .describe("Specific fields to include in the connector list response. Available fields: id, name, description, networks, created_at, updated_at")
+    .array(z.enum(["id", "name", "description", "networks"]))
+    .describe("Specific fields to include in the connector list response. Available fields: id, name, description, networks")
     .optional(),
 });
 
@@ -50,7 +50,7 @@ function validateConnectorQuery(query: any): ConnectorQuery | undefined {
   };
 
   const amount = query.amount || 200;
-  const fields = query.fields || ["id", "name", "description", "networks", "created_at", "updated_at"];
+  const fields = query.fields || ["id", "name", "description", "networks"];
 
   return {
     amount,
@@ -94,7 +94,7 @@ const connectorLookupConfigJSON: IDeviceToolConfig = {
       "operation": "lookup",
       "lookupConnector": {
         "amount": 100,
-        "fields": ["id", "name", "description", "device_parameters", "public", "created_at", "updated_at"],
+        "fields": ["id", "name", "description", "device_parameters", "public"],
         "filter": {
           "name": "sensor",
           "tags": [{ "key": "entity_type", "value": "sensor" }]
