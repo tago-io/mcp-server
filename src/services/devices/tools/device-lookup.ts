@@ -45,14 +45,14 @@ const deviceLookupSchema = querySchema.extend({
 const deviceCreateSchema = z.object({
   name: z.string().describe("The name of the device."),
   connector: z.string().describe(`The connector ID of the device. 
-    If given a name you can search a connector by using the connector-lookup operation.
+    If given a name you can search a connector by using the integration-lookup operation.
     If not given the ID or name use the default connector ID.
     If has been given connector name or ID and network name or ID, the network ID must be same as the connector network ID.
     If network ID or name is not given, the network ID will be the same as the connector network ID.
     Default: 62333bd36977fc001a2990c8
   `).default("62333bd36977fc001a2990c8"),
   network: z.string().describe(`The network ID of the device. 
-    If given a name you can search a network by using the network-lookup operation.
+    If given a name you can search a network by using the integration-lookup operation.
     If not given the ID or name use the default network ID.
     If has been given connector name or ID and network name or ID, the network ID must be same as the connector network ID.
     If network ID or name is not given, the network ID will be the same as the connector network ID.

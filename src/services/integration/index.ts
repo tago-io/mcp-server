@@ -1,12 +1,12 @@
 import { Resources } from "@tago-io/sdk";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { connectorTools } from "./tools";
+import { integrationTools } from "./tools";
 
 /**
- * @description Handler for connector tools to register tools in the MCP server.
+ * @description Handler for network tools to register tools in the MCP server.
  */
-async function handlerConnectorTools(server: McpServer, resources: Resources) {
-  for (const toolConfig of connectorTools) {
+async function handlerIntegrationTools(server: McpServer, resources: Resources) {
+  for (const toolConfig of integrationTools) {
     server.tool(toolConfig.name, toolConfig.description, toolConfig.parameters, { title: toolConfig.title }, async (params) => {
       const result = await toolConfig.tool(resources, params);
       return { content: [{ type: "text", text: result }] };
@@ -14,4 +14,4 @@ async function handlerConnectorTools(server: McpServer, resources: Resources) {
   }
 }
 
-export { handlerConnectorTools };
+export { handlerIntegrationTools };

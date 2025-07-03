@@ -7,8 +7,7 @@ import { handlerUsersTools } from "./services/run-users/index";
 import { handlerEntitiesTools } from "./services/entities/index";
 import { handlerAnalysesTools } from "./services/analysis/index";
 import { handlerProfileMetricsTools } from "./services/profile-metrics/index";
-import { handlerNetworkTools } from "./services/network";
-import { handlerConnectorTools } from "./services/connector";
+import { handlerIntegrationTools } from "./services/integration/index";
 
 /**
  * @description Register tools for the MCP server.
@@ -26,10 +25,8 @@ async function handlerTools(server: McpServer, resources: Resources) {
   await handlerUsersTools(server, resources);
   // Tools for TagoIO profile metrics
   await handlerProfileMetricsTools(server, resources);
-  // Tools for TagoIO network
-  await handlerNetworkTools(server, resources);
-  // Tools for TagoIO connector
-  await handlerConnectorTools(server, resources);
+  // Tools for TagoIO integration
+  await handlerIntegrationTools(server, resources);
 }
 
 export { handlerTools };
