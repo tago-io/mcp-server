@@ -15,13 +15,13 @@ const triggerSchema = z.union([
   z.object({
     interval: z.string().describe(`This is the time between each trigger.
       This is the time between each trigger. Could be in:
-      - minutes
-      - hours
-      - days
-      - weeks
-      - months
-      - quarters
-      - years
+      - minutes - 3 minutes
+      - hours - 8 hours
+      - days - 10 days
+      - weeks - 2 week
+      - months - 4 month
+      - quarters - 3 quarter
+      - years - 1 year
       `)
   }).describe("This schema is used when the trigger is based on type interval."),
   z.object({
@@ -67,14 +67,11 @@ const actionCreateSchema = z.object({
 
     resource: This type of action is used to trigger an action when a resource is created, updated or deleted. The resources can be:
       - device - This resource is used to trigger an action when a device is created, updated or deleted.
-      - bucket - This resource is used to trigger an action when a bucket is created, updated or deleted.
       - file - This resource is used to trigger an action when a file is created, updated or deleted.
       - analysis - This resource is used to trigger an action when an analysis is created, updated or deleted.
       - action - This resource is used to trigger an action when an action is created, updated or deleted.
       - am - This resource is used to trigger an action when an access management is created, updated or deleted.
       - user - This resource is used to trigger an action when a run_user is created, updated or deleted.
-      - financial - This resource is used to trigger an action when a financial is created, updated or deleted.
-      - profile - This resource is used to trigger an action when a profile is created, updated or deleted.
 
     interval: This type of action is used to trigger an action at a regular interval.
 
