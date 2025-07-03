@@ -6,9 +6,9 @@ import { getZodError } from "./utils/get-zod-error";
 /**
  * @description Validate the headers provided by the client and return the resources.
  */
-async function authenticate({ profileToken, tagoioApi }: { profileToken: string | undefined; tagoioApi: string | string[] | undefined }) {
+async function authenticate({ token, tagoioApi }: { token: string | undefined; tagoioApi: string | string[] | undefined }) {
   const headers = (await headersModel
-    .parseAsync({ authorization: profileToken, "tagoio-api": tagoioApi })
+    .parseAsync({ authorization: token, "tagoio-api": tagoioApi })
     .catch(getZodError)
     .catch(async (error) => {
       throw { message: `Bad Request: ${error}`, statusCode: 400 };
@@ -20,9 +20,11 @@ async function authenticate({ profileToken, tagoioApi }: { profileToken: string 
 
   const resources = new Resources({ token: headers.authorization });
 
-  await resources.account.info().catch(() => {
-    throw { message: "Unauthorized: The Authorization or TagoIO-API header is invalid, can't connect to the TagoIO API, check the headers and try again.", statusCode: 401 };
-  });
+  if (!token?.startsWith("a-") || !token) {
+    await resources.account.info().catch(() => {
+      throw { message: "Unauthorized: The Authorization or TagoIO-API header is invalid, can't connect to the TagoIO API, check the headers and try again.", statusCode: 401 };
+    });
+  }
 
   return resources;
 }

@@ -216,56 +216,126 @@ function validateDeviceDataQuery(query: any): DataQuery | undefined {
   return query;
 }
 
+// Define interface for data operation handlers
+interface DataOperationHandler {
+  create(deviceID: string, data: DataCreate[]): Promise<string>;
+  update(deviceID: string, data: DataEdit[]): Promise<string>;
+  read(deviceID: string, query?: DataQuery): Promise<string>;
+  delete(deviceID: string, query?: DataQuery): Promise<string>;
+}
+
+// Analysis Token Handler
+class AnalysisTokenHandler implements DataOperationHandler {
+  constructor(private resources: Resources) {}
+
+  async create(deviceID: string, data: DataCreate[]): Promise<string> {
+    const result = await this.resources.devices.sendDeviceData(deviceID, data);
+    return convertJSONToMarkdown(result);
+  }
+
+  async update(deviceID: string, data: DataEdit[]): Promise<string> {
+    const result = await this.resources.devices.editDeviceData(deviceID, data);
+    return convertJSONToMarkdown(result);
+  }
+
+  async read(deviceID: string, query?: DataQuery): Promise<string> {
+    const result = await this.resources.devices.getDeviceData(deviceID, query);
+    return convertJSONToMarkdown(result);
+  }
+
+  async delete(deviceID: string, query?: DataQuery): Promise<string> {
+    const result = await this.resources.devices.deleteDeviceData(deviceID, query);
+    return convertJSONToMarkdown(result);
+  }
+}
+
+// Device Token Handler
+class DeviceTokenHandler implements DataOperationHandler {
+  constructor(private resources: Resources, private api: string) {}
+
+  private async getDeviceInstance(deviceID: string): Promise<Device> {
+    const [deviceToken] = await this.resources.devices.tokenList(deviceID);
+    return new Device({
+      token: deviceToken.token,
+      region: { api: this.api } as any
+    });
+  }
+
+  async create(deviceID: string, data: DataCreate[]): Promise<string> {
+    const device = await this.getDeviceInstance(deviceID);
+    const result = await device.sendData(data);
+    return convertJSONToMarkdown(result);
+  }
+
+  async update(deviceID: string, data: DataEdit[]): Promise<string> {
+    const device = await this.getDeviceInstance(deviceID);
+    const result = await device.editData(data);
+    return convertJSONToMarkdown(result);
+  }
+
+  async read(deviceID: string, query?: DataQuery): Promise<string> {
+    const device = await this.getDeviceInstance(deviceID);
+    // @ts-expect-error - The getData method is not typed according to the DataQuery type from the Resources.
+    const result = await device.getData(query);
+    return convertJSONToMarkdown(result);
+  }
+
+  async delete(deviceID: string, query?: DataQuery): Promise<string> {
+    const device = await this.getDeviceInstance(deviceID);
+    const result = await device.deleteData(query);
+    return convertJSONToMarkdown(result);
+  }
+}
+
+// Create appropriate handler based on token type
+class DataOperationHandlerFactory {
+  static create(token: string, resources: Resources, api: string): DataOperationHandler {
+    const handlers = {
+      analysis: () => new AnalysisTokenHandler(resources),
+      device: () => new DeviceTokenHandler(resources, api)
+    };
+
+    const handlerType = token.startsWith("a-") ? "analysis" : "device";
+    return handlers[handlerType]();
+  }
+}
+
+// Operation executor
+const operationExecutors = {
+  create: async (handler: DataOperationHandler, params: DeviceDataOperation) => {
+    if (!isCreateOperation(params)) {
+      throw new Error("Invalid create operation: createData is required");
+    }
+    return handler.create(params.deviceID, params.createData as DataCreate[]);
+  },
+  update: async (handler: DataOperationHandler, params: DeviceDataOperation) => {
+    if (!isUpdateOperation(params)) {
+      throw new Error("Invalid update operation: editData is required");
+    }
+    return handler.update(params.deviceID, params.editData as DataEdit[]);
+  },
+  read: async (handler: DataOperationHandler, params: DeviceDataOperation) => {
+    const query = validateDeviceDataQuery(params.query);
+    return handler.read(params.deviceID, query);
+  },
+  delete: async (handler: DataOperationHandler, params: DeviceDataOperation) => {
+    const query = validateDeviceDataQuery(params.query);
+    return handler.delete(params.deviceID, query);
+  }
+} as const;
+
 async function deviceDataTool(resources: Resources, params: DeviceDataOperation) {
-  // Parse and validate using the refined schema
   const validatedParams = deviceDataSchema.parse(params);
-  const { operation, deviceID } = validatedParams;
+  const { operation } = validatedParams;
 
   const api = ENV.TAGOIO_API;
+  const token = ENV.TAGOIO_TOKEN;
 
-  const [deviceToken] = await resources.devices.tokenList(deviceID);
-  const device = new Device({
-    token: deviceToken.token,
-    region: {
-      api,
-    } as any
-  })
-
-  switch (operation) {
-    case "create": {
-      // Use type guard to ensure type safety
-      if (!isCreateOperation(validatedParams)) {
-        throw new Error("Invalid create operation: createData is required");
-      }
-      // Safe type assertion to SDK type - our validation guarantees correct structure
-      const result = await device.sendData(validatedParams.createData as DataCreate[]);
-      const markdown = convertJSONToMarkdown(result);
-      return markdown;
-    }
-    case "update": {
-      // Use type guard to ensure type safety
-      if (!isUpdateOperation(validatedParams)) {
-        throw new Error("Invalid update operation: editData is required");
-      }
-      // Safe type assertion to SDK type - our validation guarantees correct structure
-      const result = await device.editData(validatedParams.editData as DataEdit[]);
-      const markdown = convertJSONToMarkdown(result);
-      return markdown;
-    }
-    case "read": {
-      const query = validateDeviceDataQuery(validatedParams.query);
-      // @ts-expect-error - The getData method is not typed according to the DataQuery type from the Resources.
-      const result = await device.getData(query);
-      const markdown = convertJSONToMarkdown(result);
-      return markdown;
-    }
-    case "delete": {
-      const query = validateDeviceDataQuery(validatedParams.query);
-      const result = await device.deleteData(query);
-      const markdown = convertJSONToMarkdown(result);
-      return markdown;
-    }
-  }
+  // Creates appropriate handler based on token type
+  const handler = DataOperationHandlerFactory.create(token, resources, api);
+  
+  // Execute operation
+  return operationExecutors[operation](handler, validatedParams);
 }
 
 const deviceDataConfigJSON: IDeviceToolConfig = {
