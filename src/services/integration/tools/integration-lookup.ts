@@ -193,7 +193,7 @@ async function integrationOperationsTool(resources: Resources, params: Integrati
 
 const integrationLookupConfigJSON: IDeviceToolConfig = {
   name: "integration-operations",
-  description: `Perform operations on networks. It can be used to create, update, list and delete networks.
+  description: `Perform operations on connectors and networks. It can be used to create, update, list and delete networks and connectors.
   
   <example>
     {
