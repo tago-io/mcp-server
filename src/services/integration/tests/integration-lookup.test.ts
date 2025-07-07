@@ -1,574 +1,449 @@
 import { describe, it, expect } from "vitest";
 import { integrationBaseSchema } from "../tools/integration-lookup";
 
-describe("integrationBaseSchema", () => {
-  describe("parse", () => {
-    describe("operation field", () => {
-      it("should accept valid operation 'lookup'", () => {
-        const input = { 
-          operation: "lookup",
-          integrationType: "network"
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.operation).toBe("lookup");
+describe("integrationBaseSchema Parse", () => {
+  describe("Operation Validation", () => {
+    it("should accept valid operation type", () => {
+      const result = integrationBaseSchema.safeParse({ 
+        operation: "lookup",
+        query: {}
       });
-
-      it("should reject invalid operation", () => {
-        const input = { 
-          operation: "invalid",
-          integrationType: "network"
-        };
-        expect(() => integrationBaseSchema.parse(input)).toThrow();
-      });
-
-      it("should require operation field", () => {
-        const input = { integrationType: "network" };
-        expect(() => integrationBaseSchema.parse(input)).toThrow();
-      });
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.operation).toBe("lookup");
+      }
     });
 
-    describe("integrationType field", () => {
-      it("should accept valid integrationType 'network'", () => {
-        const input = { 
-          operation: "lookup",
-          integrationType: "network"
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.integrationType).toBe("network");
-      });
-
-      it("should accept valid integrationType 'connector'", () => {
-        const input = { 
-          operation: "lookup",
-          integrationType: "connector"
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.integrationType).toBe("connector");
-      });
-
-      it("should reject invalid integrationType", () => {
-        const input = { 
-          operation: "lookup",
-          integrationType: "invalid"
-        };
-        expect(() => integrationBaseSchema.parse(input)).toThrow();
-      });
-
-      it("should require integrationType field", () => {
-        const input = { operation: "lookup" };
-        expect(() => integrationBaseSchema.parse(input)).toThrow();
-      });
+    it("should reject invalid operation types", () => {
+      const invalidOperations = ["invalid", "create", "update", "delete", "get", "patch", "remove", ""];
+      
+      for (const operation of invalidOperations) {
+        const result = integrationBaseSchema.safeParse({ 
+          operation,
+          query: {}
+        });
+        
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error.issues[0].code).toBe("invalid_enum_value");
+          expect(result.error.issues[0].path).toEqual(["operation"]);
+        }
+      }
     });
 
-    describe("networkID field", () => {
-      it("should accept valid networkID", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "network",
-          networkID: "507f1f77bcf86cd799439011"
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.networkID).toBe("507f1f77bcf86cd799439011");
-      });
-
-      it("should accept missing networkID (optional)", () => {
-        const input = { 
-          operation: "lookup",
-          integrationType: "network"
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.networkID).toBeUndefined();
-      });
-
-      it("should accept empty string networkID", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "network",
-          networkID: ""
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.networkID).toBe("");
-      });
+    it("should require operation field", () => {
+      const result = integrationBaseSchema.safeParse({ query: {} });
+      
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].code).toBe("invalid_type");
+        expect(result.error.issues[0].path).toEqual(["operation"]);
+        expect(result.error.issues[0].message).toBe("Required");
+      }
     });
 
-    describe("connectorID field", () => {
-      it("should accept valid connectorID", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "connector",
-          connectorID: "507f1f77bcf86cd799439011"
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.connectorID).toBe("507f1f77bcf86cd799439011");
-      });
+    it("should reject non-string operation values", () => {
+      const nonStringOperations = [123, true, null, [], {}];
+      
+      for (const operation of nonStringOperations) {
+        const result = integrationBaseSchema.safeParse({ 
+          operation,
+          query: {}
+        });
+        
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error.issues[0].code).toBe("invalid_type");
+          expect(result.error.issues[0].path).toEqual(["operation"]);
+        }
+      }
+    });
+  });
 
-      it("should accept missing connectorID (optional)", () => {
-        const input = { 
-          operation: "lookup",
-          integrationType: "connector"
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.connectorID).toBeUndefined();
+  describe("Query Object Validation", () => {
+    it("should accept empty query object", () => {
+      const result = integrationBaseSchema.safeParse({
+        operation: "lookup",
+        query: {}
       });
-
-      it("should accept empty string connectorID", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "connector",
-          connectorID: ""
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.connectorID).toBe("");
-      });
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.query).toEqual({});
+      }
     });
 
-    describe("lookupNetwork field", () => {
-      it("should accept valid lookupNetwork with all fields", () => {
-        const input = {
+    it("should accept query with connector only", () => {
+      const result = integrationBaseSchema.safeParse({
+        operation: "lookup",
+        query: {
+          connector: "test-connector"
+        }
+      });
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.query.connector).toBe("test-connector");
+        expect(result.data.query.network).toBeUndefined();
+      }
+    });
+
+    it("should accept query with network only", () => {
+      const result = integrationBaseSchema.safeParse({
+        operation: "lookup",
+        query: {
+          network: "test-network"
+        }
+      });
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.query.network).toBe("test-network");
+        expect(result.data.query.connector).toBeUndefined();
+      }
+    });
+
+    it("should accept query with both connector and network", () => {
+      const result = integrationBaseSchema.safeParse({
+        operation: "lookup",
+        query: {
+          connector: "test-connector",
+          network: "test-network"
+        }
+      });
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.query.connector).toBe("test-connector");
+        expect(result.data.query.network).toBe("test-network");
+      }
+    });
+
+    it("should require query field", () => {
+      const result = integrationBaseSchema.safeParse({
+        operation: "lookup"
+      });
+      
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].code).toBe("invalid_type");
+        expect(result.error.issues[0].path).toEqual(["query"]);
+        expect(result.error.issues[0].message).toBe("Required");
+      }
+    });
+
+    it("should reject non-object query values", () => {
+      const nonObjectQueries = [123, "string", true, null, []];
+      
+      for (const query of nonObjectQueries) {
+        const result = integrationBaseSchema.safeParse({
           operation: "lookup",
-          integrationType: "network",
-          lookupNetwork: {
-            amount: 50,
-            page: 1,
-            fields: ["id", "name", "description"],
-            filter: {
-              id: "507f1f77bcf86cd799439011",
-              name: "sensor"
-            }
+          query
+        });
+        
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error.issues[0].code).toBe("invalid_type");
+          expect(result.error.issues[0].path).toEqual(["query"]);
+        }
+      }
+    });
+  });
+
+  describe("Connector Field Validation", () => {
+    it("should accept valid connector string", () => {
+      const validConnectors = [
+        "connector-name",
+        "123456789012345678901234", // 24-char ID
+        "GlobalSat LT-100HS/ES",
+        "connector with spaces",
+        "connector-with-dashes"
+      ];
+      
+      for (const connector of validConnectors) {
+        const result = integrationBaseSchema.safeParse({
+          operation: "lookup",
+          query: { connector }
+        });
+        
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.query.connector).toBe(connector);
+        }
+      }
+    });
+
+    it("should accept undefined connector", () => {
+      const result = integrationBaseSchema.safeParse({
+        operation: "lookup",
+        query: {}
+      });
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.query.connector).toBeUndefined();
+      }
+    });
+
+    it("should reject non-string connector values", () => {
+      const nonStringConnectors = [123, true, null, [], {}];
+      
+      for (const connector of nonStringConnectors) {
+        const result = integrationBaseSchema.safeParse({
+          operation: "lookup",
+          query: { connector }
+        });
+        
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error.issues[0].code).toBe("invalid_type");
+          expect(result.error.issues[0].path).toEqual(["query", "connector"]);
+        }
+      }
+    });
+
+    it("should accept empty string connector", () => {
+      const result = integrationBaseSchema.safeParse({
+        operation: "lookup",
+        query: { connector: "" }
+      });
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.query.connector).toBe("");
+      }
+    });
+  });
+
+  describe("Network Field Validation", () => {
+    it("should accept valid network string", () => {
+      const validNetworks = [
+        "network-name",
+        "123456789012345678901234", // 24-char ID
+        "LoRaWAN ChirpStack",
+        "network with spaces",
+        "network-with-dashes"
+      ];
+      
+      for (const network of validNetworks) {
+        const result = integrationBaseSchema.safeParse({
+          operation: "lookup",
+          query: { network }
+        });
+        
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.query.network).toBe(network);
+        }
+      }
+    });
+
+    it("should accept undefined network", () => {
+      const result = integrationBaseSchema.safeParse({
+        operation: "lookup",
+        query: {}
+      });
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.query.network).toBeUndefined();
+      }
+    });
+
+    it("should reject non-string network values", () => {
+      const nonStringNetworks = [123, true, null, [], {}];
+      
+      for (const network of nonStringNetworks) {
+        const result = integrationBaseSchema.safeParse({
+          operation: "lookup",
+          query: { network }
+        });
+        
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error.issues[0].code).toBe("invalid_type");
+          expect(result.error.issues[0].path).toEqual(["query", "network"]);
+        }
+      }
+    });
+
+    it("should accept empty string network", () => {
+      const result = integrationBaseSchema.safeParse({
+        operation: "lookup",
+        query: { network: "" }
+      });
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.query.network).toBe("");
+      }
+    });
+  });
+
+  describe("Complete Valid Schemas", () => {
+    it("should parse minimal valid schema", () => {
+      const minimalSchema = {
+        operation: "lookup" as const,
+        query: {}
+      };
+      
+      const result = integrationBaseSchema.safeParse(minimalSchema);
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toEqual(minimalSchema);
+      }
+    });
+
+    it("should parse complete valid schema with connector", () => {
+      const completeSchema = {
+        operation: "lookup" as const,
+        query: {
+          connector: "GlobalSat LT-100HS/ES"
+        }
+      };
+      
+      const result = integrationBaseSchema.safeParse(completeSchema);
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toEqual(completeSchema);
+      }
+    });
+
+    it("should parse complete valid schema with network", () => {
+      const completeSchema = {
+        operation: "lookup" as const,
+        query: {
+          network: "LoRaWAN ChirpStack"
+        }
+      };
+      
+      const result = integrationBaseSchema.safeParse(completeSchema);
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toEqual(completeSchema);
+      }
+    });
+
+    it("should parse complete valid schema with both connector and network", () => {
+      const completeSchema = {
+        operation: "lookup" as const,
+        query: {
+          connector: "123456789012345678901234",
+          network: "567890123456789012345678"
+        }
+      };
+      
+      const result = integrationBaseSchema.safeParse(completeSchema);
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toEqual(completeSchema);
+      }
+    });
+  });
+
+  describe("Edge Cases", () => {
+    it("should handle nested invalid types", () => {
+      const result = integrationBaseSchema.safeParse({
+        operation: "lookup",
+        query: {
+          connector: {
+            nested: "object"
           }
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.lookupNetwork).toBeDefined();
-        expect(result.lookupNetwork?.amount).toBe(50);
-        expect(result.lookupNetwork?.page).toBe(1);
-        expect(result.lookupNetwork?.fields).toEqual(["id", "name", "description"]);
+        }
       });
-
-      it("should accept lookupNetwork with minimal fields", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "network",
-          lookupNetwork: {}
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.lookupNetwork).toEqual({});
-      });
-
-      it("should accept missing lookupNetwork (optional)", () => {
-        const input = { 
-          operation: "lookup",
-          integrationType: "network"
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.lookupNetwork).toBeUndefined();
-      });
-
-      describe("amount validation", () => {
-        it("should accept valid amount within range", () => {
-          const input = {
-            operation: "lookup",
-            integrationType: "network",
-            lookupNetwork: { amount: 100 }
-          };
-          const result = integrationBaseSchema.parse(input);
-          expect(result.lookupNetwork?.amount).toBe(100);
-        });
-
-        it("should accept minimum amount (1)", () => {
-          const input = {
-            operation: "lookup",
-            integrationType: "network",
-            lookupNetwork: { amount: 1 }
-          };
-          const result = integrationBaseSchema.parse(input);
-          expect(result.lookupNetwork?.amount).toBe(1);
-        });
-
-        it("should accept maximum amount (10000)", () => {
-          const input = {
-            operation: "lookup",
-            integrationType: "network",
-            lookupNetwork: { amount: 10000 }
-          };
-          const result = integrationBaseSchema.parse(input);
-          expect(result.lookupNetwork?.amount).toBe(10000);
-        });
-
-        it("should reject amount below minimum", () => {
-          const input = {
-            operation: "lookup",
-            integrationType: "network",
-            lookupNetwork: { amount: 0 }
-          };
-          expect(() => integrationBaseSchema.parse(input)).toThrow();
-        });
-
-        it("should reject amount above maximum", () => {
-          const input = {
-            operation: "lookup",
-            integrationType: "network",
-            lookupNetwork: { amount: 10001 }
-          };
-          expect(() => integrationBaseSchema.parse(input)).toThrow();
-        });
-      });
-
-      describe("page validation", () => {
-        it("should accept valid page number", () => {
-          const input = {
-            operation: "lookup",
-            integrationType: "network",
-            lookupNetwork: { page: 5 }
-          };
-          const result = integrationBaseSchema.parse(input);
-          expect(result.lookupNetwork?.page).toBe(5);
-        });
-
-        it("should accept minimum page (1)", () => {
-          const input = {
-            operation: "lookup",
-            integrationType: "network",
-            lookupNetwork: { page: 1 }
-          };
-          const result = integrationBaseSchema.parse(input);
-          expect(result.lookupNetwork?.page).toBe(1);
-        });
-
-        it("should reject page below minimum", () => {
-          const input = {
-            operation: "lookup",
-            integrationType: "network",
-            lookupNetwork: { page: 0 }
-          };
-          expect(() => integrationBaseSchema.parse(input)).toThrow();
-        });
-      });
-
-      describe("fields validation", () => {
-        it("should accept valid fields array", () => {
-          const validFields = ["id", "name", "description", "device_parameters", "public", "created_at", "updated_at"];
-          const input = {
-            operation: "lookup",
-            integrationType: "network",
-            lookupNetwork: { fields: validFields }
-          };
-          const result = integrationBaseSchema.parse(input);
-          expect(result.lookupNetwork?.fields).toEqual(validFields);
-        });
-
-        it("should accept subset of valid fields", () => {
-          const input = {
-            operation: "lookup",
-            integrationType: "network",
-            lookupNetwork: { fields: ["id", "name"] }
-          };
-          const result = integrationBaseSchema.parse(input);
-          expect(result.lookupNetwork?.fields).toEqual(["id", "name"]);
-        });
-
-        it("should reject invalid field names", () => {
-          const input = {
-            operation: "lookup",
-            integrationType: "network",
-            lookupNetwork: { fields: ["invalid_field"] }
-          };
-          expect(() => integrationBaseSchema.parse(input)).toThrow();
-        });
-
-        it("should accept empty fields array", () => {
-          const input = {
-            operation: "lookup",
-            integrationType: "network",
-            lookupNetwork: { fields: [] }
-          };
-          const result = integrationBaseSchema.parse(input);
-          expect(result.lookupNetwork?.fields).toEqual([]);
-        });
-      });
-
-      describe("filter validation", () => {
-        describe("id filter", () => {
-          it("should accept valid 24-character ID", () => {
-            const input = {
-              operation: "lookup",
-              integrationType: "network",
-              lookupNetwork: {
-                filter: { id: "507f1f77bcf86cd799439011" }
-              }
-            };
-            const result = integrationBaseSchema.parse(input);
-            expect(result.lookupNetwork?.filter?.id).toBe("507f1f77bcf86cd799439011");
-          });
-
-          it("should reject ID with wrong length", () => {
-            const input = {
-              operation: "lookup",
-              integrationType: "network",
-              lookupNetwork: {
-                filter: { id: "123" }
-              }
-            };
-            expect(() => integrationBaseSchema.parse(input)).toThrow();
-          });
-        });
-
-        describe("name filter", () => {
-          it("should accept valid name and add wildcards", () => {
-            const input = {
-              operation: "lookup",
-              integrationType: "network",
-              lookupNetwork: {
-                filter: { name: "sensor" }
-              }
-            };
-            const result = integrationBaseSchema.parse(input);
-            expect(result.lookupNetwork?.filter?.name).toBe("*sensor*");
-          });
-
-          it("should add wildcards to empty name", () => {
-            const input = {
-              operation: "lookup",
-              integrationType: "network",
-              lookupNetwork: {
-                filter: { name: "" }
-              }
-            };
-            const result = integrationBaseSchema.parse(input);
-            expect(result.lookupNetwork?.filter?.name).toBe("**");
-          });
-        });
-      });
+      
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].code).toBe("invalid_type");
+        expect(result.error.issues[0].path).toEqual(["query", "connector"]);
+      }
     });
 
-    describe("lookupConnector field", () => {
-      it("should accept valid lookupConnector with all fields", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "connector",
-          lookupConnector: {
-            amount: 50,
-            page: 1,
-            fields: ["id", "name", "description", "networks"],
-            filter: {
-              id: "507f1f77bcf86cd799439011",
-              name: "sensor"
-            }
-          }
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.lookupConnector).toBeDefined();
-        expect(result.lookupConnector?.amount).toBe(50);
-        expect(result.lookupConnector?.page).toBe(1);
-        expect(result.lookupConnector?.fields).toEqual(["id", "name", "description", "networks"]);
+    it("should handle very long strings", () => {
+      const longString = "a".repeat(1000);
+      
+      const result = integrationBaseSchema.safeParse({
+        operation: "lookup",
+        query: {
+          connector: longString,
+          network: longString
+        }
       });
+      
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.query.connector).toBe(longString);
+        expect(result.data.query.network).toBe(longString);
+      }
+    });
 
-      it("should accept lookupConnector with minimal fields", () => {
-        const input = {
+    it("should handle special characters in strings", () => {
+      const specialStrings = [
+        "connector/with/slashes",
+        "connector@with@symbols",
+        "connector with special chars: !@#$%^&*()",
+        "connector\nwith\nnewlines",
+        "connector\twith\ttabs"
+      ];
+      
+      for (const connector of specialStrings) {
+        const result = integrationBaseSchema.safeParse({
           operation: "lookup",
-          integrationType: "connector",
-          lookupConnector: {}
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.lookupConnector).toEqual({});
-      });
-
-      it("should accept missing lookupConnector (optional)", () => {
-        const input = { 
-          operation: "lookup",
-          integrationType: "connector"
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.lookupConnector).toBeUndefined();
-      });
-
-      describe("fields validation", () => {
-        it("should accept valid connector fields array", () => {
-          const validFields = ["id", "name", "description", "networks"];
-          const input = {
-            operation: "lookup",
-            integrationType: "connector",
-            lookupConnector: { fields: validFields }
-          };
-          const result = integrationBaseSchema.parse(input);
-          expect(result.lookupConnector?.fields).toEqual(validFields);
+          query: { connector }
         });
+        
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.query.connector).toBe(connector);
+        }
+      }
+    });
+  });
 
-        it("should reject invalid connector field names", () => {
-          const input = {
-            operation: "lookup",
-            integrationType: "connector",
-            lookupConnector: { fields: ["invalid_field"] }
-          };
-          expect(() => integrationBaseSchema.parse(input)).toThrow();
-        });
-      });
-
-      describe("filter validation", () => {
-        it("should add wildcards to connector name filter", () => {
-          const input = {
-            operation: "lookup",
-            integrationType: "connector",
-            lookupConnector: {
-              filter: { name: "temperature" }
-            }
-          };
-          const result = integrationBaseSchema.parse(input);
-          expect(result.lookupConnector?.filter?.name).toBe("*temperature*");
-        });
-      });
+  describe("Error Message Quality", () => {
+    it("should provide clear error messages for missing operation", () => {
+      const result = integrationBaseSchema.safeParse({ query: {} });
+      
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const operationError = result.error.issues.find(issue => 
+          issue.path.join(".") === "operation"
+        );
+        expect(operationError?.message).toBe("Required");
+      }
     });
 
-    describe("complete valid schemas", () => {
-      it("should parse network lookup operation with networkID", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "network",
-          networkID: "507f1f77bcf86cd799439011"
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result).toEqual(input);
+    it("should provide clear error messages for invalid operation", () => {
+      const result = integrationBaseSchema.safeParse({ 
+        operation: "invalid",
+        query: {}
       });
-
-      it("should parse connector lookup operation with connectorID", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "connector",
-          connectorID: "507f1f77bcf86cd799439011"
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result).toEqual(input);
-      });
-
-      it("should parse network lookup operation with lookupNetwork", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "network",
-          lookupNetwork: {
-            amount: 100,
-            page: 1,
-            fields: ["id", "name", "description"],
-            filter: {
-              name: "sensor"
-            }
-          }
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.operation).toBe("lookup");
-        expect(result.integrationType).toBe("network");
-        expect(result.lookupNetwork?.amount).toBe(100);
-        expect(result.lookupNetwork?.filter?.name).toBe("*sensor*");
-      });
-
-      it("should parse connector lookup operation with lookupConnector", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "connector",
-          lookupConnector: {
-            amount: 50,
-            fields: ["id", "name", "networks"],
-            filter: {
-              id: "507f1f77bcf86cd799439011"
-            }
-          }
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.operation).toBe("lookup");
-        expect(result.integrationType).toBe("connector");
-        expect(result.lookupConnector?.amount).toBe(50);
-        expect(result.lookupConnector?.filter?.id).toBe("507f1f77bcf86cd799439011");
-      });
-
-      it("should parse minimal valid schema", () => {
-        const input = { 
-          operation: "lookup",
-          integrationType: "network"
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result).toEqual(input);
-      });
+      
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const operationError = result.error.issues.find(issue => 
+          issue.path.join(".") === "operation"
+        );
+        expect(operationError?.message).toContain("Invalid enum value");
+        expect(operationError?.message).toContain("lookup");
+      }
     });
 
-    describe("mixed integrationType scenarios", () => {
-      it("should accept network integrationType with connector fields", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "network",
-          connectorID: "507f1f77bcf86cd799439011",
-          lookupConnector: {}
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.integrationType).toBe("network");
-        expect(result.connectorID).toBe("507f1f77bcf86cd799439011");
-        expect(result.lookupConnector).toEqual({});
-      });
-
-      it("should accept connector integrationType with network fields", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "connector",
-          networkID: "507f1f77bcf86cd799439011",
-          lookupNetwork: {}
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.integrationType).toBe("connector");
-        expect(result.networkID).toBe("507f1f77bcf86cd799439011");
-        expect(result.lookupNetwork).toEqual({});
-      });
-    });
-
-    describe("type validation", () => {
-      it("should reject non-object input", () => {
-        expect(() => integrationBaseSchema.parse("string")).toThrow();
-        expect(() => integrationBaseSchema.parse(123)).toThrow();
-        expect(() => integrationBaseSchema.parse([])).toThrow();
-        expect(() => integrationBaseSchema.parse(null)).toThrow();
-      });
-
-      it("should reject undefined input", () => {
-        expect(() => integrationBaseSchema.parse(undefined)).toThrow();
-      });
-
-      it("should reject empty object", () => {
-        expect(() => integrationBaseSchema.parse({})).toThrow();
-      });
-    });
-
-    describe("edge cases", () => {
-      it("should handle special characters in name filters", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "network",
-          lookupNetwork: {
-            filter: { name: "test-sensor_123" }
-          }
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.lookupNetwork?.filter?.name).toBe("*test-sensor_123*");
-      });
-
-      it("should handle unicode characters in name filters", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "connector",
-          lookupConnector: {
-            filter: { name: "température" }
-          }
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.lookupConnector?.filter?.name).toBe("*température*");
-      });
-
-      it("should handle large amounts at boundary", () => {
-        const input = {
-          operation: "lookup",
-          integrationType: "network",
-          lookupNetwork: {
-            amount: 9999
-          }
-        };
-        const result = integrationBaseSchema.parse(input);
-        expect(result.lookupNetwork?.amount).toBe(9999);
-      });
+    it("should provide clear error messages for missing query", () => {
+      const result = integrationBaseSchema.safeParse({ operation: "lookup" });
+      
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const queryError = result.error.issues.find(issue => 
+          issue.path.join(".") === "query"
+        );
+        expect(queryError?.message).toBe("Required");
+      }
     });
   });
 }); 
