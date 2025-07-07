@@ -20,11 +20,9 @@ async function authenticate({ token, tagoioApi }: { token: string | undefined; t
 
   const resources = new Resources({ token: headers.authorization });
 
-  if (!token?.startsWith("a-") || !token) {
-    await resources.account.info().catch(() => {
-      throw { message: "Unauthorized: The Authorization or TagoIO-API header is invalid, can't connect to the TagoIO API, check the headers and try again.", statusCode: 401 };
-    });
-  }
+  await resources.account.info().catch(() => {
+    throw { message: "Unauthorized: The Authorization or TagoIO-API header is invalid, can't connect to the TagoIO API, check the headers and try again.", statusCode: 401 };
+  });
 
   return resources;
 }
