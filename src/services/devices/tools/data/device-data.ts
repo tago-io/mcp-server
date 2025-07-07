@@ -223,69 +223,71 @@ interface DataOperationHandler {
   read(deviceID: string, query?: DataQuery): Promise<string>;
 }
 
-// Analysis Token Handler
-class AnalysisTokenHandler implements DataOperationHandler {
-  constructor(private resources: Resources) {}
+// Analysis Token Handler Factory
+function createAnalysisTokenHandler(resources: Resources): DataOperationHandler {
+  return {
+    async create(deviceID: string, data: DataCreate[]): Promise<string> {
+      const result = await resources.devices.sendDeviceData(deviceID, data);
+      return convertJSONToMarkdown(result);
+    },
 
-  async create(deviceID: string, data: DataCreate[]): Promise<string> {
-    const result = await this.resources.devices.sendDeviceData(deviceID, data);
-    return convertJSONToMarkdown(result);
-  }
+    async update(deviceID: string, data: DataEdit[]): Promise<string> {
+      const result = await resources.devices.editDeviceData(deviceID, data);
+      return convertJSONToMarkdown(result);
+    },
 
-  async update(deviceID: string, data: DataEdit[]): Promise<string> {
-    const result = await this.resources.devices.editDeviceData(deviceID, data);
-    return convertJSONToMarkdown(result);
-  }
-
-  async read(deviceID: string, query?: DataQuery): Promise<string> {
-    const result = await this.resources.devices.getDeviceData(deviceID, query);
-    return convertJSONToMarkdown(result);
-  }
+    async read(deviceID: string, query?: DataQuery): Promise<string> {
+      const result = await resources.devices.getDeviceData(deviceID, query);
+      return convertJSONToMarkdown(result);
+    },
+  };
 }
 
-// Device Token Handler
-class DeviceTokenHandler implements DataOperationHandler {
-  constructor(private resources: Resources, private api: string) {}
-
-  private async getDeviceInstance(deviceID: string): Promise<Device> {
-    const [deviceToken] = await this.resources.devices.tokenList(deviceID);
+// Device Token Handler Factory
+function createDeviceTokenHandler(resources: Resources, api: string): DataOperationHandler {
+  const getDeviceInstance = async (deviceID: string): Promise<Device> => {
+    const [deviceToken] = await resources.devices.tokenList(deviceID);
     return new Device({
       token: deviceToken.token,
-      region: { api: this.api } as any
+      region: { api: api } as any
     });
-  }
+  };
 
-  async create(deviceID: string, data: DataCreate[]): Promise<string> {
-    const device = await this.getDeviceInstance(deviceID);
-    const result = await device.sendData(data);
-    return convertJSONToMarkdown(result);
-  }
+  return {
+    async create(deviceID: string, data: DataCreate[]): Promise<string> {
+      const device = await getDeviceInstance(deviceID);
+      const result = await device.sendData(data);
+      return convertJSONToMarkdown(result);
+    },
 
-  async update(deviceID: string, data: DataEdit[]): Promise<string> {
-    const device = await this.getDeviceInstance(deviceID);
-    const result = await device.editData(data);
-    return convertJSONToMarkdown(result);
-  }
+    async update(deviceID: string, data: DataEdit[]): Promise<string> {
+      const device = await getDeviceInstance(deviceID);
+      const result = await device.editData(data);
+      return convertJSONToMarkdown(result);
+    },
 
   async read(deviceID: string, query?: DataQuery): Promise<string> {
     const device = await this.getDeviceInstance(deviceID);
-    // @ts-expect-error - The getData method is not typed according to the DataQuery type from the Resources.
     const result = await device.getData(query);
     return convertJSONToMarkdown(result);
   }
 }
 
 // Create appropriate handler based on token type
-class DataOperationHandlerFactory {
-  static create(token: string, resources: Resources, api: string): DataOperationHandler {
-    const handlers = {
-      analysis: () => new AnalysisTokenHandler(resources),
-      device: () => new DeviceTokenHandler(resources, api)
-    };
+function createDataOperationHandler(token: string, resources: Resources, api: string): DataOperationHandler {
+  const handlers = {
+    analysis: () => createAnalysisTokenHandler(resources),
+    device: () => createDeviceTokenHandler(resources, api)
+  };
 
-    const handlerType = token.startsWith("a-") ? "analysis" : "device";
-    return handlers[handlerType]();
+  const handlerType = token.startsWith("a-") ? "analysis" : "device";
+  const handler = handlers[handlerType];
+  
+  if (!handler) {
+    throw new Error(`Unsupported token type: ${handlerType}`);
   }
+
+  return handler();
 }
 
 // Operation executor
@@ -316,7 +318,7 @@ async function deviceDataTool(resources: Resources, params: DeviceDataOperation)
   const token = ENV.TAGOIO_TOKEN;
 
   // Creates appropriate handler based on token type
-  const handler = DataOperationHandlerFactory.create(token, resources, api);
+  const handler = createDataOperationHandler(token, resources, api);
   
   // Execute operation
   return operationExecutors[operation](handler, validatedParams);
