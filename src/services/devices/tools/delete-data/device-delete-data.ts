@@ -10,9 +10,8 @@ import { querySchema, validateDeviceDataQuery } from "../data/device-data";
 const deviceDeleteDataBaseSchema = z.object({
   operation: z.enum(["delete"]).describe("The type of operation to perform on the device data."),
   deviceID: z.string({ required_error: "Device ID is required" }).length(24, "Device ID must be 24 characters long").describe("The ID of the device to perform the operation on."),
-
   // Fields for delete operations
-  query: querySchema.describe("The query to perform delete operations on the device's database.").optional(),
+  query: z.object(querySchema.shape).omit({ query: true }).describe("The query to perform delete operations on the device's database.").optional(),
 }).describe("Schema for the device data delete operation. Data Delete require the device to be of the mutable type.");
 
 // Refined schema with validation logic
@@ -30,53 +29,57 @@ interface DataOperationHandler {
   delete(deviceID: string, query?: DataQuery): Promise<string>;
 }
 
-// Analysis Token Handler
-class AnalysisTokenHandler implements DataOperationHandler {
-  constructor(private resources: Resources) {}
-
-  async delete(deviceID: string, query?: DataQuery): Promise<string> {
-    const result = await this.resources.devices.deleteDeviceData(deviceID, query);
-    return convertJSONToMarkdown(result);
-  }
+// Analysis Token Handler Factory
+function createAnalysisTokenHandler(resources: Resources): DataOperationHandler {
+  return {
+    async delete(deviceID: string, query?: DataQuery): Promise<string> {
+      const result = await resources.devices.deleteDeviceData(deviceID, query);
+      return convertJSONToMarkdown(result);
+    },
+  };
 }
 
-// Device Token Handler
-class DeviceTokenHandler implements DataOperationHandler {
-  constructor(private resources: Resources, private api: string) {}
-
-  private async getDeviceInstance(deviceID: string): Promise<Device> {
-    const [deviceToken] = await this.resources.devices.tokenList(deviceID);
+// Device Token Handler Factory
+function createDeviceTokenHandler(resources: Resources, api: string): DataOperationHandler {
+  const getDeviceInstance = async (deviceID: string): Promise<Device> => {
+    const [deviceToken] = await resources.devices.tokenList(deviceID);
     return new Device({
       token: deviceToken.token,
-      region: { api: this.api } as any
+      region: { api: api } as any
     });
-  }
+  };
 
-  async delete(deviceID: string, query?: DataQuery): Promise<string> {
-    const device = await this.getDeviceInstance(deviceID);
-    const result = await device.deleteData(query);
-    return convertJSONToMarkdown(result);
-  }
+  return {
+    async delete(deviceID: string, query?: DataQuery): Promise<string> {
+      const device = await getDeviceInstance(deviceID);
+      const result = await device.deleteData(query);
+      return convertJSONToMarkdown(result);
+    },
+  };
 }
 
 // Create appropriate handler based on token type
-class DataOperationHandlerFactory {
-  static create(token: string, resources: Resources, api: string): DataOperationHandler {
-    const handlers = {
-      analysis: () => new AnalysisTokenHandler(resources),
-      device: () => new DeviceTokenHandler(resources, api)
-    };
+function createDataOperationHandler(token: string, resources: Resources, api: string): DataOperationHandler {
+  const handlers = {
+    analysis: () => createAnalysisTokenHandler(resources),
+    device: () => createDeviceTokenHandler(resources, api)
+  };
 
-    const handlerType = token.startsWith("a-") ? "analysis" : "device";
-    return handlers[handlerType]();
+  const handlerType = token.startsWith("a-") ? "analysis" : "device";
+  const handler = handlers[handlerType];
+  
+  if (!handler) {
+    throw new Error(`Unsupported token type: ${handlerType}`);
   }
+
+  return handler();
 }
 
 // Operation executor
 const operationExecutors = {
   delete: async (handler: DataOperationHandler, params: DeviceDeleteDataOperation) => {
     const query = validateDeviceDataQuery(params.query);
-    return handler.delete(params.deviceID, query);
+    return handler.delete(params.deviceID as string, query);
   }
 } as const;
 
@@ -88,7 +91,7 @@ async function deviceDataDeleteTool(resources: Resources, params: DeviceDeleteDa
   const token = ENV.TAGOIO_TOKEN;
 
   // Creates appropriate handler based on token type
-  const handler = DataOperationHandlerFactory.create(token, resources, api);
+  const handler = createDataOperationHandler(token, resources, api);
   
   // Execute operation
   return operationExecutors[operation](handler, validatedParams);
@@ -110,7 +113,6 @@ const deviceDeleteDataConfigJSON: IDeviceToolConfig = {
       "operation": "delete",
       "deviceID": "68531cc713af9d000af75d5c",
       "query": {
-        "query": "default",
         "qty": 1,
         "skip": 0,
         "variables": ["temperature"],

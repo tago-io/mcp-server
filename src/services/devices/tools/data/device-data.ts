@@ -266,11 +266,13 @@ function createDeviceTokenHandler(resources: Resources, api: string): DataOperat
       return convertJSONToMarkdown(result);
     },
 
-  async read(deviceID: string, query?: DataQuery): Promise<string> {
-    const device = await this.getDeviceInstance(deviceID);
-    const result = await device.getData(query);
-    return convertJSONToMarkdown(result);
-  }
+    async read(deviceID: string, query?: DataQuery): Promise<string> {
+      const device = await getDeviceInstance(deviceID);
+      // @ts-expect-error - The getData method is not typed according to the DataQuery type from the Resources.
+      const result = await device.getData(query);
+      return convertJSONToMarkdown(result);
+    },
+  };
 }
 
 // Create appropriate handler based on token type
@@ -321,7 +323,7 @@ async function deviceDataTool(resources: Resources, params: DeviceDataOperation)
   const handler = createDataOperationHandler(token, resources, api);
   
   // Execute operation
-  return operationExecutors[operation](handler, validatedParams);
+  return operationExecutors[operation as keyof typeof operationExecutors](handler, validatedParams);
 }
 
 const deviceDataConfigJSON: IDeviceToolConfig = {
