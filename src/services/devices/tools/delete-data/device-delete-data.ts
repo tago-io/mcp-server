@@ -1,8 +1,6 @@
 import { z } from "zod/v3";
-
 import { Device, Resources } from "@tago-io/sdk";
 import { DataQuery } from "@tago-io/sdk/lib/modules/Device/device.types";
-
 import { ENV } from "../../../../utils/get-env-variables";
 import { convertJSONToMarkdown } from "../../../../utils/markdown";
 import { IDeviceToolConfig } from "../../../types";
@@ -127,4 +125,5 @@ const deviceDeleteDataConfigJSON: IDeviceToolConfig = {
   tool: deviceDataDeleteTool,
 };
 
-export { deviceDeleteDataSchema, DeviceDeleteDataOperation, deviceDeleteDataConfigJSON };
+export { DeviceDeleteDataOperation, deviceDeleteDataConfigJSON };
+export { deviceDeleteDataBaseSchema } // export for testing purposes
