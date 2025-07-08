@@ -55,7 +55,7 @@ const analysisCodeConfigJSON: IDeviceToolConfig = {
         
         <example>
           {
-            "lookupCode": {
+            "lookupCodeQuestions": {
               "question": ["How to create a new device?", "How to get the device list?"]
               "type": "analysis"
             }
