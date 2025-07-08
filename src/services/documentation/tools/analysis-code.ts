@@ -61,6 +61,7 @@ const analysisCodeConfigJSON: IDeviceToolConfig = {
             }
           }
         </example>
+        Current Date: ${new Date().toLocaleDateString()}
   `,
   parameters: analysisCodeBaseSchema.shape,
   title: "Analysis Code Search",
