@@ -143,7 +143,7 @@ const querySchema = z.object({
 
 // Base schema without refinement - this provides the .shape property needed by MCP
 const deviceDataBaseSchema = z.object({
-  operation: z.enum(["create", "update", "read", "delete"]).describe("The type of operation to perform on the device data."),
+  operation: z.enum(["create", "update", "read"]).describe("The type of operation to perform on the device data."),
   deviceID: z.string({ required_error: "Device ID is required" }).length(24, "Device ID must be 24 characters long").describe("The ID of the device to perform the operation on."),
 
   // Separate fields for different operations to maintain type safety
@@ -152,7 +152,7 @@ const deviceDataBaseSchema = z.object({
 
   // Fields for read/delete operations
   query: querySchema.describe("The query to perform retrieve or delete operations on the device's database.").optional(),
-}).describe("Schema for the device data operation. Data Edit and Data Delete require the device to be of the mutable type.");
+}).describe("Schema for the device data operation. Data Edit require the device to be of the mutable type.");
 
 // Refined schema with validation logic
 const deviceDataSchema = deviceDataBaseSchema.refine((data) => {
@@ -166,7 +166,7 @@ const deviceDataSchema = deviceDataBaseSchema.refine((data) => {
     return !!data.editData;
   }
 
-  // Read and delete operations are valid with or without query
+  // Read operations are valid with or without query
   return true;
 }, {
   message: "Invalid data structure for the specified operation. Create requires createData, update requires editData.",
@@ -221,7 +221,6 @@ interface DataOperationHandler {
   create(deviceID: string, data: DataCreate[]): Promise<string>;
   update(deviceID: string, data: DataEdit[]): Promise<string>;
   read(deviceID: string, query?: DataQuery): Promise<string>;
-  delete(deviceID: string, query?: DataQuery): Promise<string>;
 }
 
 // Analysis Token Handler Factory
@@ -241,11 +240,6 @@ function createAnalysisTokenHandler(resources: Resources): DataOperationHandler 
       const result = await resources.devices.getDeviceData(deviceID, query);
       return convertJSONToMarkdown(result);
     },
-
-    async delete(deviceID: string, query?: DataQuery): Promise<string> {
-      const result = await resources.devices.deleteDeviceData(deviceID, query);
-      return convertJSONToMarkdown(result);
-    }
   };
 }
 
@@ -278,12 +272,6 @@ function createDeviceTokenHandler(resources: Resources, api: string): DataOperat
       const result = await device.getData(query);
       return convertJSONToMarkdown(result);
     },
-
-    async delete(deviceID: string, query?: DataQuery): Promise<string> {
-      const device = await getDeviceInstance(deviceID);
-      const result = await device.deleteData(query);
-      return convertJSONToMarkdown(result);
-    }
   };
 }
 
@@ -321,10 +309,6 @@ const operationExecutors = {
   read: async (handler: DataOperationHandler, params: DeviceDataOperation) => {
     const query = validateDeviceDataQuery(params.query);
     return handler.read(params.deviceID, query);
-  },
-  delete: async (handler: DataOperationHandler, params: DeviceDataOperation) => {
-    const query = validateDeviceDataQuery(params.query);
-    return handler.delete(params.deviceID, query);
   }
 } as const;
 
@@ -339,14 +323,14 @@ async function deviceDataTool(resources: Resources, params: DeviceDataOperation)
   const handler = createDataOperationHandler(token, resources, api);
   
   // Execute operation
-  return operationExecutors[operation](handler, validatedParams);
+  return operationExecutors[operation as keyof typeof operationExecutors](handler, validatedParams);
 }
 
 const deviceDataConfigJSON: IDeviceToolConfig = {
   name: "device-data-operations",
-  description: `Perform operations on device data. It can be used to create, update, read and delete data from a device.
+  description: `Perform operations on device data. It can be used to create, update, and read data from a device.
   
-  **Data Edit and Data Delete require the device to be of the mutable type.**
+  **Data Edit require the device to be of the mutable type.**
   
   - NEVER use spaces in variable names. They should always use snake_case.
   - NEVER use special characters in variable names. They should always use alphanumeric characters.
@@ -377,4 +361,12 @@ const deviceDataConfigJSON: IDeviceToolConfig = {
   tool: deviceDataTool,
 };
 
-export { deviceDataSchema, DeviceDataOperation, dataCreateZodSchema, dataEditZodSchema, deviceDataConfigJSON };
+export { 
+  deviceDataSchema, 
+  DeviceDataOperation, 
+  dataCreateZodSchema, 
+  dataEditZodSchema, 
+  deviceDataConfigJSON, 
+  querySchema,
+  validateDeviceDataQuery
+};
