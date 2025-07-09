@@ -1,17 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Resources } from "@tago-io/sdk";
-
-import { deviceDataTools } from "./tools/data/index";
-import { deviceTools } from "./tools/index";
-import { deviceDeleteDataTools } from "./tools/delete-data";
+import { documentationTools } from "./tools";
 
 /**
  * @description Handler for devices tools to register tools in the MCP server.
  */
-async function handlerDevicesTools(server: McpServer, resources: Resources) {
-  const fullDeviceTools = [...deviceTools, ...deviceDataTools, ...deviceDeleteDataTools];
+async function handlerDocumentationTools(server: McpServer, resources: Resources) {
+  const fullDocumentationTools = [...documentationTools];
 
-  for (const toolConfig of fullDeviceTools) {
+  for (const toolConfig of fullDocumentationTools) {
     server.tool(toolConfig.name, toolConfig.description, toolConfig.parameters, { title: toolConfig.title }, async (params) => {
       const result = await toolConfig.tool(resources, params);
       return { content: [{ type: "text", text: result }] };
@@ -19,4 +16,4 @@ async function handlerDevicesTools(server: McpServer, resources: Resources) {
   }
 }
 
-export { handlerDevicesTools };
+export { handlerDocumentationTools };

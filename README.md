@@ -36,7 +36,7 @@ Create or update your MCP configuration file:
       "command": "npx",
       "args": ["-y", "@tago-io/mcp-server"],
       "env": {
-        "TAGOIO_TOKEN": "YOUR-PROFILE-TOKEN",
+        "TAGOIO_TOKEN": "YOUR-TOKEN",
         "TAGOIO_API": "https://api.us-e1.tago.io"
       }
     }
@@ -46,7 +46,8 @@ Create or update your MCP configuration file:
 
 **Configuration Parameters:**
 
-- Replace `YOUR-PROFILE-TOKEN` with your TagoIO profile token
+- Replace `YOUR-TOKEN` with your TagoIO profile token or an Analysis Token
+- Analysis Token must have permission to access account information.
 - Update API endpoint to `https://api.eu-w1.tago.io` for European accounts
 
 ### Platform-Specific Setup

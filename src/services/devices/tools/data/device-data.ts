@@ -143,7 +143,7 @@ const querySchema = z.object({
 
 // Base schema without refinement - this provides the .shape property needed by MCP
 const deviceDataBaseSchema = z.object({
-  operation: z.enum(["create", "update", "read", "delete"]).describe("The type of operation to perform on the device data."),
+  operation: z.enum(["create", "update", "read"]).describe("The type of operation to perform on the device data."),
   deviceID: z.string({ required_error: "Device ID is required" }).length(24, "Device ID must be 24 characters long").describe("The ID of the device to perform the operation on."),
 
   // Separate fields for different operations to maintain type safety
@@ -152,7 +152,7 @@ const deviceDataBaseSchema = z.object({
 
   // Fields for read/delete operations
   query: querySchema.describe("The query to perform retrieve or delete operations on the device's database.").optional(),
-}).describe("Schema for the device data operation. Data Edit and Data Delete require the device to be of the mutable type.");
+}).describe("Schema for the device data operation. Data Edit require the device to be of the mutable type.");
 
 // Refined schema with validation logic
 const deviceDataSchema = deviceDataBaseSchema.refine((data) => {
@@ -166,7 +166,7 @@ const deviceDataSchema = deviceDataBaseSchema.refine((data) => {
     return !!data.editData;
   }
 
-  // Read and delete operations are valid with or without query
+  // Read operations are valid with or without query
   return true;
 }, {
   message: "Invalid data structure for the specified operation. Create requires createData, update requires editData.",
@@ -216,63 +216,121 @@ function validateDeviceDataQuery(query: any): DataQuery | undefined {
   return query;
 }
 
-async function deviceDataTool(resources: Resources, params: DeviceDataOperation) {
-  // Parse and validate using the refined schema
-  const validatedParams = deviceDataSchema.parse(params);
-  const { operation, deviceID } = validatedParams;
+// Define interface for data operation handlers
+interface DataOperationHandler {
+  create(deviceID: string, data: DataCreate[]): Promise<string>;
+  update(deviceID: string, data: DataEdit[]): Promise<string>;
+  read(deviceID: string, query?: DataQuery): Promise<string>;
+}
 
-  const api = ENV.TAGOIO_API;
+// Analysis Token Handler Factory
+function createAnalysisTokenHandler(resources: Resources): DataOperationHandler {
+  return {
+    async create(deviceID: string, data: DataCreate[]): Promise<string> {
+      const result = await resources.devices.sendDeviceData(deviceID, data);
+      return convertJSONToMarkdown(result);
+    },
 
-  const [deviceToken] = await resources.devices.tokenList(deviceID);
-  const device = new Device({
-    token: deviceToken.token,
-    region: {
-      api,
-    } as any
-  })
+    async update(deviceID: string, data: DataEdit[]): Promise<string> {
+      const result = await resources.devices.editDeviceData(deviceID, data);
+      return convertJSONToMarkdown(result);
+    },
 
-  switch (operation) {
-    case "create": {
-      // Use type guard to ensure type safety
-      if (!isCreateOperation(validatedParams)) {
-        throw new Error("Invalid create operation: createData is required");
-      }
-      // Safe type assertion to SDK type - our validation guarantees correct structure
-      const result = await device.sendData(validatedParams.createData as DataCreate[]);
-      const markdown = convertJSONToMarkdown(result);
-      return markdown;
-    }
-    case "update": {
-      // Use type guard to ensure type safety
-      if (!isUpdateOperation(validatedParams)) {
-        throw new Error("Invalid update operation: editData is required");
-      }
-      // Safe type assertion to SDK type - our validation guarantees correct structure
-      const result = await device.editData(validatedParams.editData as DataEdit[]);
-      const markdown = convertJSONToMarkdown(result);
-      return markdown;
-    }
-    case "read": {
-      const query = validateDeviceDataQuery(validatedParams.query);
+    async read(deviceID: string, query?: DataQuery): Promise<string> {
+      const result = await resources.devices.getDeviceData(deviceID, query);
+      return convertJSONToMarkdown(result);
+    },
+  };
+}
+
+// Device Token Handler Factory
+function createDeviceTokenHandler(resources: Resources, api: string): DataOperationHandler {
+  const getDeviceInstance = async (deviceID: string): Promise<Device> => {
+    const [deviceToken] = await resources.devices.tokenList(deviceID);
+    return new Device({
+      token: deviceToken.token,
+      region: { api: api } as any
+    });
+  };
+
+  return {
+    async create(deviceID: string, data: DataCreate[]): Promise<string> {
+      const device = await getDeviceInstance(deviceID);
+      const result = await device.sendData(data);
+      return convertJSONToMarkdown(result);
+    },
+
+    async update(deviceID: string, data: DataEdit[]): Promise<string> {
+      const device = await getDeviceInstance(deviceID);
+      const result = await device.editData(data);
+      return convertJSONToMarkdown(result);
+    },
+
+    async read(deviceID: string, query?: DataQuery): Promise<string> {
+      const device = await getDeviceInstance(deviceID);
       // @ts-expect-error - The getData method is not typed according to the DataQuery type from the Resources.
       const result = await device.getData(query);
-      const markdown = convertJSONToMarkdown(result);
-      return markdown;
-    }
-    case "delete": {
-      const query = validateDeviceDataQuery(validatedParams.query);
-      const result = await device.deleteData(query);
-      const markdown = convertJSONToMarkdown(result);
-      return markdown;
-    }
+      return convertJSONToMarkdown(result);
+    },
+  };
+}
+
+// Create appropriate handler based on token type
+function createDataOperationHandler(token: string, resources: Resources, api: string): DataOperationHandler {
+  const handlers = {
+    analysis: () => createAnalysisTokenHandler(resources),
+    device: () => createDeviceTokenHandler(resources, api)
+  };
+
+  const handlerType = token.startsWith("a-") ? "analysis" : "device";
+  const handler = handlers[handlerType];
+  
+  if (!handler) {
+    throw new Error(`Unsupported token type: ${handlerType}`);
   }
+
+  return handler();
+}
+
+// Operation executor
+const operationExecutors = {
+  create: async (handler: DataOperationHandler, params: DeviceDataOperation) => {
+    if (!isCreateOperation(params)) {
+      throw new Error("Invalid create operation: createData is required");
+    }
+    return handler.create(params.deviceID, params.createData as DataCreate[]);
+  },
+  update: async (handler: DataOperationHandler, params: DeviceDataOperation) => {
+    if (!isUpdateOperation(params)) {
+      throw new Error("Invalid update operation: editData is required");
+    }
+    return handler.update(params.deviceID, params.editData as DataEdit[]);
+  },
+  read: async (handler: DataOperationHandler, params: DeviceDataOperation) => {
+    const query = validateDeviceDataQuery(params.query);
+    return handler.read(params.deviceID, query);
+  }
+} as const;
+
+async function deviceDataTool(resources: Resources, params: DeviceDataOperation) {
+  const validatedParams = deviceDataSchema.parse(params);
+  const { operation } = validatedParams;
+
+  const api = ENV.TAGOIO_API;
+  const token = ENV.TAGOIO_TOKEN;
+
+  // Creates appropriate handler based on token type
+  const handler = createDataOperationHandler(token, resources, api);
+  
+  // Execute operation
+  return operationExecutors[operation as keyof typeof operationExecutors](handler, validatedParams);
 }
 
 const deviceDataConfigJSON: IDeviceToolConfig = {
   name: "device-data-operations",
-  description: `Perform operations on device data. It can be used to create, update, read and delete data from a device.
+  description: `Perform operations on device data. It can be used to create, update, and read data from a device.
   
-  **Data Edit and Data Delete require the device to be of the mutable type.**
+  **Data Edit require the device to be of the mutable type.**
   
   - NEVER use spaces in variable names. They should always use snake_case.
   - NEVER use special characters in variable names. They should always use alphanumeric characters.
@@ -303,4 +361,12 @@ const deviceDataConfigJSON: IDeviceToolConfig = {
   tool: deviceDataTool,
 };
 
-export { deviceDataSchema, DeviceDataOperation, dataCreateZodSchema, dataEditZodSchema, deviceDataConfigJSON };
+export { 
+  deviceDataSchema, 
+  DeviceDataOperation, 
+  dataCreateZodSchema, 
+  dataEditZodSchema, 
+  deviceDataConfigJSON, 
+  querySchema,
+  validateDeviceDataQuery
+};

@@ -6,9 +6,9 @@ import { getZodError } from "./utils/get-zod-error";
 /**
  * @description Validate the headers provided by the client and return the resources.
  */
-async function authenticate({ profileToken, tagoioApi }: { profileToken: string | undefined; tagoioApi: string | string[] | undefined }) {
+async function authenticate({ token, tagoioApi }: { token: string | undefined; tagoioApi: string | string[] | undefined }) {
   const headers = (await headersModel
-    .parseAsync({ authorization: profileToken, "tagoio-api": tagoioApi })
+    .parseAsync({ authorization: token, "tagoio-api": tagoioApi })
     .catch(getZodError)
     .catch(async (error) => {
       throw { message: `Bad Request: ${error}`, statusCode: 400 };
