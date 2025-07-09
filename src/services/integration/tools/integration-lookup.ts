@@ -119,7 +119,7 @@ async function integrationOperationsTool(resources: Resources, params: Integrati
 
 const integrationLookupConfigJSON: IDeviceToolConfig = {
   name: "connector-network-lookup",
-  description: `The ConnectorNetworkLookup tool retrieves connector and network information from the TagoIO platform using either ID or name-based searches. This tool queries the TagoIO database to find specific connectors (data integration endpoints) and networks (communication pathways) that facilitate device connectivity and data transmission within the IoT platform.
+  description: `The ConnectorNetworkLookup tool retrieves connector and network information from the TagoIO platform using either ID or name-based searches. This tool queries the TagoIO database to find specific connectors (pre-defined data decoders) and networks (communication protocol or integrations) that facilitate device connectivity and data transmission within the IoT platform.
   
 The query object accepts two optional fields: "connector" and "network", each accepting either the exact resource ID (alphanumeric string) or a full or partial resource name (case-sensitive string). You can query for a connector only, a network only, or both simultaneously in a single request. When using partial names, the tool will return all matching resources that contain the specified text.
 
