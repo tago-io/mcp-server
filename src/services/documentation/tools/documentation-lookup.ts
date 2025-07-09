@@ -38,7 +38,7 @@ async function documentationSearchTool(_resources: Resources, params: Documentat
 }
 
 const documentationConfigJSON: IDeviceToolConfig = {
-  name: "tagoio_doc_search",
+  name: "tagoio-doc-search",
   description: `
         Ground your answer into TagoIO Documentation. Use it to get links and content of relevant documentation. Accepts multiple search queries with automatic deduplication.
 
