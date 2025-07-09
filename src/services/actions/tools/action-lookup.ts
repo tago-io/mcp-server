@@ -91,42 +91,19 @@ const triggerSchema = z.union([
 const actionCreateSchema = z
   .object({
     name: z.string().describe("The name for action. (Required)"),
-    type: z.enum(["condition", "resource", "interval", "schedule", "mqtt_topic", "usage_alert", "condition_geofence"]).describe(`The type of trigger of the action. (Required)  
-    condition: This type of action is used to trigger an action when a variable of a device met a condition.
+    type: z.enum(["condition", "resource", "interval", "schedule", "mqtt_topic", "usage_alert", "condition_geofence"]).describe(`The type of trigger for the action. (Required)
 
-    resource: This type of action is used to trigger an action when a resource is created, updated or deleted. The resources can be:
-      - device - This resource is used to trigger an action when a device is created, updated or deleted.
-      - file - This resource is used to trigger an action when a file is created, updated or deleted.
-      - analysis - This resource is used to trigger an action when an analysis is created, updated or deleted.
-      - action - This resource is used to trigger an action when an action is created, updated or deleted.
-      - am - This resource is used to trigger an action when an access management is created, updated or deleted.
-      - user - This resource is used to trigger an action when a run_user is created, updated or deleted.
+The trigger_type parameter accepts one of seven values:
 
-    interval: This type of action is used to trigger an action at a regular interval.
+"condition": Monitors device variables against specified conditions (threshold, comparison operators)
+"resource": Responds to CRUD operations on platform resources (device, file, analysis, action, am, user)
+"interval": Executes actions at regular time intervals (minutes, hours, days)
+"schedule": Executes actions at specific dates/times using cron-like scheduling
+"mqtt_topic": Responds to publications on specified MQTT topics
+"condition_geofence": Triggers when devices enter or exit defined geographical boundaries
+"usage_alert": Monitors account usage metrics against thresholds for services like input/output data, analysis minutes, SMS, email, push notifications, file storage, and resource counts
 
-    schedule: This type of action is used to trigger an action at a specific time.
-
-    mqtt_topic: This type of action is used to trigger an action when a MQTT topic is published.
-
-    condition_geofence: This type of action is used to trigger an action when a device enters or exits a geofence.
-
-    usage_alert: This type of action is used to trigger an action when a usage of a service or resource is above or equal to a certain threshold.
-      - input - This is the resource of the amount of data_input of the account.
-      - output - This is the resource of the amount of data_output of the account.
-      - analysis - This is the resource of the amount of minutes of analysis of the account.
-      - data_records - This is the resource of the amount of data_records of the account.
-      - sms - This is the service of the amount of sms of the account.
-      - email - This is the service of the amount of email of the account.
-      - run_users - This is the resource of the amount of run_users of the account.
-      - push_notification - This is the service of the amount of push_notification of the account.
-      - file_storage - This is the service of the amount of MB of file_storage of the account.
-      - device - This is the resource of the amount of device registered of the account.
-      - dashboard - This is the resource of the amount of dashboard created of the account.
-      - action - This is the resource of the amount of action created of the account.
-      - tcore - This is the service of the amount of tcore registered in the account.
-      - team_members - This is the resource of the amount of team members of the account.
-      - am - This is the service of the amount of access management created of the account.
-  `),
+Each trigger type requires specific configuration parameters. Resource triggers must specify which resource type to monitor (device, file, analysis, action, am, user) and which operations (create, update, delete). Usage alert triggers must specify the monitored resource (input, output, analysis, data_records, sms, email, run_users, push_notification, file_storage, device, dashboard, action, tcore, team_members, am) and threshold values.`),
     action: z
       .object({
         type: z
@@ -336,34 +313,36 @@ async function actionOperationsTool(resources: Resources, params: ActionOperatio
 
 const actionOperationsConfigJSON: IDeviceToolConfig = {
   name: "action-operations",
-  description: `Perform operations on actions. It can be used to create, update, list and delete actions.
+  description: `The ActionManager tool performs CRUD operations (Create, Read, Update, Delete) on automation actions within an TagoIO platform. Actions are automated workflows that execute predefined responses when specific triggers occur, such as device data changes, resource events, scheduled intervals, or usage threshold breaches. 
   
-  <example>
-    {
-      "operation": "create",
-      "action": {
-        "name": "My Action",
-        "type": "condition",
-        "action": {
-          "type": "script",
-          "script": ["script-id-123"]
-        }
-        "tags": [{ "key": "action_type", "value": "notification" }],
-        "description": "This is a test action",
-        "trigger_when_unlock": true,
-        "trigger": [
-          { 
-            "resource": "device", 
-            "when": "create", 
-            "tag_key": "device_type", 
-            "tag_value": "sensor" 
-          }
-        ]
-      }
-    }
-  </example>
+Use this tool when you need to set up automated responses to device data changes, resource management events, scheduled operations, location-based triggers, or account usage thresholds. It's essential for building reactive systems, monitoring workflows, alert systems, and automated device management processes.
 
-  `,
+Avoid using it for one-time operations that don't require automation triggers, or for managing the actual execution of actions (this tool only manages action definitions, not their runtime).
+
+<example>
+  {
+    "operation": "create",
+    "action": {
+      "name": "My Action",
+      "type": "condition",
+      "action": {
+        "type": "script",
+        "script": ["script-id-123"]
+      }
+      "tags": [{ "key": "action_type", "value": "notification" }],
+      "description": "This is a test action",
+      "trigger_when_unlock": true,
+      "trigger": [
+        { 
+          "resource": "device", 
+          "when": "create", 
+          "tag_key": "device_type", 
+          "tag_value": "sensor" 
+        }
+      ]
+    }
+  }
+</example>`,
   parameters: actionBaseSchema.shape,
   title: "Action Operations",
   tool: actionOperationsTool,
