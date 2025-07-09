@@ -17,8 +17,8 @@ const analysisListSchema = querySchema.extend({
         `)
         .transform((val) => `*${val}*`)
         .optional(),
-      runtime: z.enum(["node", "python"]).describe("Filter by runtime. E.g: 'node' or 'python'").optional(),
-      run_on: z.enum(["tago", "external"]).describe("Filter by run on. E.g: 'tago' or 'external'").optional(),
+      runtime: z.enum(["node", "python"]).default("node").describe("Filter by runtime. E.g: 'node' or 'python'").optional(),
+      run_on: z.enum(["tago", "external"]).default("tago").describe("Filter by run on. E.g: 'tago' or 'external'").optional(),
       tags: z.array(tagsObjectModel).describe("Filter by tags. E.g: [{ key: 'analysis_type', value: 'invoice' }]").optional(),
       include_console: z.boolean().default(false).describe("Whether to include the console log of the analysis when it's running on TagoIO platform.").optional(),
     })
