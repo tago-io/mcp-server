@@ -258,23 +258,28 @@ async function deviceOperationsTool(resources: Resources, params: DeviceSchema) 
 
 const deviceOperationsConfigJSON: IDeviceToolConfig = {
   name: "device-operations",
-  description: `Perform operations on devices. It can be used to list, create, update and delete devices.
-  
-  <example>
-    {
-      "operation": "lookup",
-      "device": {
+  description: `The DeviceOperations tool manages IoT device entities within the TagoIO platform, supporting four primary operations: lookup/list, create, update, and delete. This tool handles device configuration and management rather than the data stored within devices. Each device represents an IoT endpoint that can communicate through various protocols, called Networks, including LoRaWAN, MQTT, HTTP, and REST API.
+Use this tool when you need to discover existing devices, provision new IoT endpoints, modify device configurations, or remove devices from your TagoIO account.
+
+Do not use this tool for managing data stored within devices (use DeviceDataOperations instead), real-time device communication, or protocol-specific configuration that requires direct network access. This tool manages device entities in the platform, not device firmware or hardware settings.
+
+Important limitations: Device type (mutable/immutable) cannot be changed after creation. Storage limits apply to mutable devices but not immutable ones. Device deletion is permanent and removes all associated data.
+
+For create operations, ensure you have connector and network IDs.
+
+<example>
+  {
+    "operation": "lookup",
+    "lookupDevice": {
+      "name": "My Device",
+      "type": "mutable",
+      "filter": {
         "name": "My Device",
-        "type": "mutable",
-        "filter": {
-          "name": "My Device",
-          "tags": [{ "key": "device_type", "value": "sensor" }]
-        }
+        "tags": [{ "key": "device_type", "value": "sensor" }]
       }
     }
-  </example>
-
-  `,
+  }
+</example>`,
   parameters: deviceBaseSchema.shape,
   title: "Device Operations",
   tool: deviceOperationsTool,
