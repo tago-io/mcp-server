@@ -9,7 +9,7 @@ const analysisCodeBaseSchema = z.object({
   // Separate fields for different operations to maintain type safety
   lookupCodeQuestions: z.array(z.string()).min(1).max(5).describe("The questions to search for code. This list should contain at least 1 question and maximum 5 questions."),
   type: z.enum(["analysis", "payload-parser"]).describe("The type of code to search for. This will help the tool to return the correct code examples and SDK methods."),
-}).describe("Schema for the analysis operation. The delete operation only requires the analysisID.");
+}).describe("Schema for analysis code search.");
 
 type AnalysisCodeSchema = z.infer<typeof analysisCodeBaseSchema>;
 
