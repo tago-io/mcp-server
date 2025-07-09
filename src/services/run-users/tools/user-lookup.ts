@@ -27,6 +27,8 @@ const userListSchema = querySchema.extend({
         .transform((val) => `*${val}*`)
         .optional(),
       active: z.boolean().describe("Filter by active status. E.g: true").optional(),
+      updated_at: z.string().describe("Filter by updated date. E.g: '2021-01-01'").optional(),
+      created_at: z.string().describe("Filter by created date. E.g: '2021-01-01'").optional(),
       tags: z.array(tagsObjectModel).describe("Filter by tags. E.g: [{ key: 'user_type', value: 'admin' }]").optional(),
     })
     .describe("Filter object to apply to the query. Available filters: id, name, email, active, tags")
