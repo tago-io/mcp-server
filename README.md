@@ -20,7 +20,7 @@ The TagoIO MCP Server enables AI models to interact directly with your TagoIO ac
 ### Prerequisites
 
 - Installed Node.js 18+ (https://nodejs.org/en/download/)
-- TagoIO account with valid profile token
+- TagoIO account with valid profile token or analysis token
 - Compatible AI platform or IDE (see [Supported Platforms](#supported-platforms))
 
 ### Installation
@@ -46,8 +46,9 @@ Create or update your MCP configuration file:
 
 **Configuration Parameters:**
 
-- Replace `YOUR-TOKEN` with your TagoIO profile token or an Analysis Token
-- Analysis Token must have permission to access account information.
+- Replace `YOUR-TOKEN` with your TagoIO Profile token or an Analysis Token
+  - Using Analysis token is advised for better security, as you can limit the permissions of the token to only the resources you need.
+  - Using a Profile token is going to instantly grant the MCP access to your entire profile, but it's not recommended for production environments.
 - Update API endpoint to `https://api.eu-w1.tago.io` for European accounts
 
 ### Platform-Specific Setup
