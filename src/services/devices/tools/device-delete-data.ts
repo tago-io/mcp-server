@@ -31,77 +31,33 @@ const deviceDeleteDataSchema = deviceDeleteDataBaseSchema.refine(
 
 type DeviceDeleteDataOperation = z.infer<typeof deviceDeleteDataSchema>;
 
-// Define interface for data operation handlers
-interface DataOperationHandler {
-  delete(deviceID: string, query?: DataQuery): Promise<string>;
+// Simple delete operation - analysis token
+async function deleteWithAnalysisToken(resources: Resources, deviceID: string, query?: DataQuery): Promise<string> {
+  const result = await resources.devices.deleteDeviceData(deviceID, query);
+  return convertJSONToMarkdown(result);
 }
 
-// Analysis Token Handler Factory
-function createAnalysisTokenHandler(resources: Resources): DataOperationHandler {
-  return {
-    async delete(deviceID: string, query?: DataQuery): Promise<string> {
-      const result = await resources.devices.deleteDeviceData(deviceID, query);
-      return convertJSONToMarkdown(result);
-    },
-  };
+// Simple delete operation - device token
+async function deleteWithDeviceToken(resources: Resources, api: string, deviceID: string, query?: DataQuery): Promise<string> {
+  const [deviceToken] = await resources.devices.tokenList(deviceID);
+  const device = new Device({
+    token: deviceToken.token,
+    region: { api: api } as any,
+  });
+
+  const result = await device.deleteData(query);
+  return convertJSONToMarkdown(result);
 }
-
-// Device Token Handler Factory
-function createDeviceTokenHandler(resources: Resources, api: string): DataOperationHandler {
-  const getDeviceInstance = async (deviceID: string): Promise<Device> => {
-    const [deviceToken] = await resources.devices.tokenList(deviceID);
-    return new Device({
-      token: deviceToken.token,
-      region: { api: api } as any,
-    });
-  };
-
-  return {
-    async delete(deviceID: string, query?: DataQuery): Promise<string> {
-      const device = await getDeviceInstance(deviceID);
-      const result = await device.deleteData(query);
-      return convertJSONToMarkdown(result);
-    },
-  };
-}
-
-// Create appropriate handler based on token type
-function createDataOperationHandler(token: string, resources: Resources, api: string): DataOperationHandler {
-  const handlers = {
-    analysis: () => createAnalysisTokenHandler(resources),
-    device: () => createDeviceTokenHandler(resources, api),
-  };
-
-  const handlerType = token.startsWith("a-") ? "analysis" : "device";
-  const handler = handlers[handlerType];
-
-  if (!handler) {
-    throw new Error(`Unsupported token type: ${handlerType}`);
-  }
-
-  return handler();
-}
-
-// Operation executor
-const operationExecutors = {
-  delete: async (handler: DataOperationHandler, params: DeviceDeleteDataOperation) => {
-    const query = validateDeviceDataQuery(params.query);
-    return handler.delete(params.deviceID as string, query);
-  },
-} as const;
 
 async function deviceDataDeleteTool(resources: Resources, params: DeviceDeleteDataOperation) {
   const validatedParams = deviceDeleteDataSchema.parse(params);
-  // const { operation } = validatedParams;
+  const query = validateDeviceDataQuery(validatedParams.query);
 
-  const api = ENV.TAGOIO_API;
   const token = ENV.TAGOIO_TOKEN;
+  const api = ENV.TAGOIO_API;
 
-  // Creates appropriate handler based on token type
-  const handler = createDataOperationHandler(token, resources, api);
-
-  // Execute operation
-  return operationExecutors["delete"](handler, validatedParams);
+  // Simple token type check and direct function call
+  return token.startsWith("a-") ? deleteWithAnalysisToken(resources, validatedParams.deviceID, query) : deleteWithDeviceToken(resources, api, validatedParams.deviceID, query);
 }
 
 const deviceDeleteDataConfigJSON: IDeviceToolConfig = {

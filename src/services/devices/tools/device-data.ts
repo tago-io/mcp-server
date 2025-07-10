@@ -195,6 +195,7 @@ const deviceDataSchema = deviceDataBaseSchema.refine(
 
 type DeviceDataOperation = z.infer<typeof deviceDataSchema>;
 
+// Query validation utility
 function validateDeviceDataQuery(query: any): DataQuery | undefined {
   if (!query) {
     return undefined;
@@ -221,70 +222,88 @@ function validateDeviceDataQuery(query: any): DataQuery | undefined {
   return query;
 }
 
-// Operation handlers using analysis token
-async function handleCreateWithAnalysisToken(resources: Resources, deviceID: string, data: DataCreate[]): Promise<string> {
-  const result = await resources.devices.sendDeviceData(deviceID, data);
-  return convertJSONToMarkdown(result);
+// Device data operation interface
+interface IDeviceDataHandler {
+  create(deviceID: string, data: DataCreate[]): Promise<string>;
+  update(deviceID: string, data: DataEdit[]): Promise<string>;
+  read(deviceID: string, query?: DataQuery): Promise<string>;
 }
 
-async function handleUpdateWithAnalysisToken(resources: Resources, deviceID: string, data: DataEdit[]): Promise<string> {
-  const result = await resources.devices.editDeviceData(deviceID, data);
-  return convertJSONToMarkdown(result);
+// Analysis token handler implementation
+function createAnalysisTokenHandler(resources: Resources): IDeviceDataHandler {
+  return {
+    async create(deviceID: string, data: DataCreate[]): Promise<string> {
+      const result = await resources.devices.sendDeviceData(deviceID, data);
+      return convertJSONToMarkdown(result);
+    },
+
+    async update(deviceID: string, data: DataEdit[]): Promise<string> {
+      const result = await resources.devices.editDeviceData(deviceID, data);
+      return convertJSONToMarkdown(result);
+    },
+
+    async read(deviceID: string, query?: DataQuery): Promise<string> {
+      const result = await resources.devices.getDeviceData(deviceID, query);
+      return convertJSONToMarkdown(result);
+    },
+  };
 }
 
-async function handleReadWithAnalysisToken(resources: Resources, deviceID: string, query?: DataQuery): Promise<string> {
-  const result = await resources.devices.getDeviceData(deviceID, query);
-  return convertJSONToMarkdown(result);
+// Device token handler implementation
+function createDeviceTokenHandler(resources: Resources, api: string): IDeviceDataHandler {
+  // Cache device instances to avoid creating them multiple times for the same device
+  const deviceCache = new Map<string, Device>();
+
+  const getDeviceInstance = async (deviceID: string): Promise<Device> => {
+    if (deviceCache.has(deviceID)) {
+      return deviceCache.get(deviceID)!;
+    }
+
+    const [deviceToken] = await resources.devices.tokenList(deviceID);
+    const device = new Device({
+      token: deviceToken.token,
+      region: { api: api } as any,
+    });
+
+    deviceCache.set(deviceID, device);
+    return device;
+  };
+
+  return {
+    async create(deviceID: string, data: DataCreate[]): Promise<string> {
+      const device = await getDeviceInstance(deviceID);
+      const result = await device.sendData(data);
+      return convertJSONToMarkdown(result);
+    },
+
+    async update(deviceID: string, data: DataEdit[]): Promise<string> {
+      const device = await getDeviceInstance(deviceID);
+      const result = await device.editData(data);
+      return convertJSONToMarkdown(result);
+    },
+
+    async read(deviceID: string, query?: DataQuery): Promise<string> {
+      const device = await getDeviceInstance(deviceID);
+      // @ts-expect-error - The getData method is not typed according to the DataQuery type from the Resources.
+      const result = await device.getData(query);
+      return convertJSONToMarkdown(result);
+    },
+  };
 }
 
-// Operation handlers using device token
-async function handleCreateWithDeviceToken(resources: Resources, api: string, deviceID: string, data: DataCreate[]): Promise<string> {
-  const [deviceToken] = await resources.devices.tokenList(deviceID);
-  const device = new Device({
-    token: deviceToken.token,
-    region: { api: api } as any,
-  });
-
-  const result = await device.sendData(data);
-  return convertJSONToMarkdown(result);
+// Simple helper to create the appropriate handler
+function createDataHandler(token: string, resources: Resources, api: string): IDeviceDataHandler {
+  return token.startsWith("a-") ? createAnalysisTokenHandler(resources) : createDeviceTokenHandler(resources, api);
 }
 
-async function handleUpdateWithDeviceToken(resources: Resources, api: string, deviceID: string, data: DataEdit[]): Promise<string> {
-  const [deviceToken] = await resources.devices.tokenList(deviceID);
-  const device = new Device({
-    token: deviceToken.token,
-    region: { api: api } as any,
-  });
-
-  const result = await device.editData(data);
-  return convertJSONToMarkdown(result);
-}
-
-async function handleReadWithDeviceToken(resources: Resources, api: string, deviceID: string, query?: DataQuery): Promise<string> {
-  const [deviceToken] = await resources.devices.tokenList(deviceID);
-  const device = new Device({
-    token: deviceToken.token,
-    region: { api: api } as any,
-  });
-
-  // @ts-expect-error - The getData method is not typed according to the DataQuery type from the Resources.
-  const result = await device.getData(query);
-  return convertJSONToMarkdown(result);
-}
-
-// Main operation handlers
+// Main operation handlers - simple and direct
 async function handleCreateOperation(resources: Resources, params: DeviceDataOperation): Promise<string> {
   if (!params.createData) {
     throw new Error("Invalid create operation: createData is required");
   }
 
-  const api = ENV.TAGOIO_API;
-  const token = ENV.TAGOIO_TOKEN;
-  const isAnalysisToken = token.startsWith("a-");
-
-  return isAnalysisToken
-    ? handleCreateWithAnalysisToken(resources, params.deviceID, params.createData as DataCreate[])
-    : handleCreateWithDeviceToken(resources, api, params.deviceID, params.createData as DataCreate[]);
+  const handler = createDataHandler(ENV.TAGOIO_TOKEN, resources, ENV.TAGOIO_API);
+  return handler.create(params.deviceID, params.createData);
 }
 
 async function handleUpdateOperation(resources: Resources, params: DeviceDataOperation): Promise<string> {
@@ -292,24 +311,17 @@ async function handleUpdateOperation(resources: Resources, params: DeviceDataOpe
     throw new Error("Invalid update operation: editData is required");
   }
 
-  const api = ENV.TAGOIO_API;
-  const token = ENV.TAGOIO_TOKEN;
-  const isAnalysisToken = token.startsWith("a-");
-
-  return isAnalysisToken
-    ? handleUpdateWithAnalysisToken(resources, params.deviceID, params.editData as DataEdit[])
-    : handleUpdateWithDeviceToken(resources, api, params.deviceID, params.editData as DataEdit[]);
+  const handler = createDataHandler(ENV.TAGOIO_TOKEN, resources, ENV.TAGOIO_API);
+  return handler.update(params.deviceID, params.editData);
 }
 
 async function handleReadOperation(resources: Resources, params: DeviceDataOperation): Promise<string> {
   const query = validateDeviceDataQuery(params.query);
-  const api = ENV.TAGOIO_API;
-  const token = ENV.TAGOIO_TOKEN;
-  const isAnalysisToken = token.startsWith("a-");
-
-  return isAnalysisToken ? handleReadWithAnalysisToken(resources, params.deviceID, query) : handleReadWithDeviceToken(resources, api, params.deviceID, query);
+  const handler = createDataHandler(ENV.TAGOIO_TOKEN, resources, ENV.TAGOIO_API);
+  return handler.read(params.deviceID, query);
 }
 
+// Main tool function
 async function deviceDataTool(resources: Resources, params: DeviceDataOperation) {
   const validatedParams = deviceDataSchema.parse(params);
 
