@@ -5,15 +5,17 @@ import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { Resources } from "@tago-io/sdk";
 
 // Base schema without refinement - this provides the .shape property needed by MCP
-const documentationBaseSchema = z.object({
-  // Separate fields for different operations to maintain type safety
-  lookupCodeQuestions: z.array(z.string()).min(1).max(5).describe("The questions to search for documentation. This list should contain at least 1 question and maximum 5 questions."),
-}).describe("Schema for the documentation operation");
+const documentationBaseSchema = z
+  .object({
+    // Separate fields for different operations to maintain type safety
+    search: z.array(z.string()).min(1).max(5).describe("The questions to search for documentation. This list should contain at least 1 question and maximum 5 questions."),
+  })
+  .describe("Schema for the documentation operation");
 
 type DocumentationSchema = z.infer<typeof documentationBaseSchema>;
 
 async function documentationSearchTool(_resources: Resources, params: DocumentationSchema): Promise<string> {
-  const { lookupCodeQuestions } = params;
+  const { search } = params;
 
   let token = "test";
   if (!process.env.TEST) {
@@ -24,11 +26,11 @@ async function documentationSearchTool(_resources: Resources, params: Documentat
   const response = await fetch(`${api}/rag/documentation`, {
     method: "POST",
     headers: {
-      "Authorization": `${token}`,
+      Authorization: `${token}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      search: lookupCodeQuestions,
+      search,
     }),
   });
 
@@ -38,7 +40,7 @@ async function documentationSearchTool(_resources: Resources, params: Documentat
 }
 
 const documentationConfigJSON: IDeviceToolConfig = {
-  name: "tagoio-doc-search",
+  name: "tagoio-documentation-search",
   description: `
         Ground your answer into TagoIO Documentation. Use it to get links and content of relevant documentation. Accepts multiple search queries with automatic deduplication.
 
@@ -56,9 +58,7 @@ const documentationConfigJSON: IDeviceToolConfig = {
 
         <example>
           {
-            "lookupCode": {
-              "question": ["How to configure a dashboard?", "How to configure a widget?"]
-            }
+            "search": ["How to configure a dashboard?", "How to configure a widget?"]
           }
         </example>
         Current Date: ${new Date().toLocaleDateString()}
