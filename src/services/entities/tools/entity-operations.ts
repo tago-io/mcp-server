@@ -19,6 +19,9 @@ const entityListSchema = querySchema.extend({
         .transform((val) => `*${val}*`)
         .optional(),
       tags: z.array(tagsObjectModel).describe("Filter by tags. E.g: [{ key: 'entity_type', value: 'sensor' }]").optional(),
+      updated_at: z.string().describe("Filter by updated at. E.g: '2021-01-01'").optional(),
+      created_at: z.string().describe("Filter by created at. E.g: '2021-01-01'").optional(),
+      orderBy: z.string().default("name,asc").describe("Sort by field and order. E.g: 'name,asc' or 'name,desc'").optional(),
     })
     .describe("Filter object to apply to the query. Available filters: id, name, tags")
     .optional(),

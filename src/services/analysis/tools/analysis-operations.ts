@@ -21,6 +21,9 @@ const analysisListSchema = querySchema.extend({
       run_on: z.enum(["tago", "external"]).default("tago").describe("Filter by run on. E.g: 'tago' or 'external'").optional(),
       tags: z.array(tagsObjectModel).describe("Filter by tags. E.g: [{ key: 'analysis_type', value: 'invoice' }]").optional(),
       include_console: z.boolean().default(false).describe("Whether to include the console log of the analysis when it's running on TagoIO platform.").optional(),
+      updated_at: z.string().describe("Filter by updated at. E.g: '2021-01-01'").optional(),
+      created_at: z.string().describe("Filter by created at. E.g: '2021-01-01'").optional(),
+      orderBy: z.string().default("name,asc").describe("Sort by field and order. E.g: 'name,asc' or 'name,desc'").optional(),
     })
     .describe("Filter object to apply to the query.")
     .optional(),

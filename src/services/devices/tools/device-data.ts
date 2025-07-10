@@ -343,6 +343,8 @@ Variable names must use snake_case format with only alphanumeric characters - no
 
 For time-based queries, use the current date/time reference: ${new Date().toLocaleDateString()}
 
+**Critical Usage Requirements**: All data retrieval operations are subject to Profile Data Output limits and Data Input limits. You must ALWAYS inform users before executing read operations that these limits will apply to the request. The assistant must optimize requests by utilizing available filters to minimize data transfer and stay within profile constraints.
+
 <example>
   {
     "operation": "create",

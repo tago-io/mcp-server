@@ -182,6 +182,9 @@ const actionListSchema = querySchema
           .optional(),
         active: z.boolean().describe("Filter by active status. E.g: true").optional(),
         tags: z.array(tagsObjectModel).describe("Filter by tags. E.g: [{ key: 'action_type', value: 'notification' }]").optional(),
+        updated_at: z.string().describe("Filter by updated at. E.g: '2021-01-01'").optional(),
+        created_at: z.string().describe("Filter by created at. E.g: '2021-01-01'").optional(),
+        orderBy: z.string().default("name,asc").describe("Sort by field and order. E.g: 'name,asc' or 'name,desc'").optional(),
       })
       .describe("Filter object to apply to the query. Available filters: name, active, last_triggered, created_at, updated_at, tags")
       .optional(),

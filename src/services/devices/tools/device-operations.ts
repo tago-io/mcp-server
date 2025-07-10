@@ -33,6 +33,9 @@ const deviceLookupSchema = querySchema
         network: z.string().describe("Filter by network ID. E.g: 'network_id'").length(24, "Network ID must be 24 characters long").optional(),
         type: z.enum(["mutable", "immutable"]).describe("Filter by device type. E.g: 'mutable' or 'immutable'").optional(),
         tags: z.array(tagsObjectModel.partial()).describe("Filter by tags. E.g: [{ key: 'device_type', value: 'sensor' }]").optional(),
+        updated_at: z.string().describe("Filter by updated at. E.g: '2021-01-01'").optional(),
+        created_at: z.string().describe("Filter by created at. E.g: '2021-01-01'").optional(),
+        orderBy: z.string().default("name,asc").describe("Sort by field and order. E.g: 'name,asc' or 'name,desc'").optional(),
       })
       .describe("Filter object to apply to the query. Available filters: id, name, active, connector, network, type, tags")
       .optional(),
@@ -164,7 +167,9 @@ async function handleLookupOperation(resources: Resources, params: DeviceSchema)
   let devicesWithMoreInfo: DeviceWithMoreInfo[] = devices;
 
   if (devices.length !== 1 && (lookupDevice?.include_data_amount || lookupDevice?.include_configuration_params)) {
-    throw "The 'include_data_amount' and 'include_configuration_params' options are only available when filtering by a single device.";
+    let response = convertJSONToMarkdown(devicesWithMoreInfo);
+    response += "\n\n**Critical**: The 'include_data_amount' and 'include_configuration_params' options are only available when filtering by a single device.";
+    return response;
   }
 
   if (devices.length === 1) {
@@ -271,8 +276,6 @@ For create operations, ensure you have connector and network IDs.
   {
     "operation": "lookup",
     "lookupDevice": {
-      "name": "My Device",
-      "type": "mutable",
       "filter": {
         "name": "My Device",
         "tags": [{ "key": "device_type", "value": "sensor" }]
