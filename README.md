@@ -47,7 +47,7 @@ Create or update your MCP configuration file:
 **Configuration Parameters:**
 
 - Replace `YOUR-TOKEN` with your TagoIO Profile token or an Analysis Token
-  - Using Analysis token is advised for better security, as you can limit the permissions of the token to only the resources you need.
+  - Using an Analysis token is recommended for better security, as you can limit the token's permissions to only the resources you need. Your analysis must be set to run "External" so you can use the token.
   - Using a Profile token is going to instantly grant the MCP access to your entire profile, but it's not recommended for production environments.
 - Update API endpoint to `https://api.eu-w1.tago.io` for European accounts
 
@@ -104,7 +104,7 @@ The server supports both US and European TagoIO instances:
 
 **Authentication Error**
 
-- Confirm profile token has necessary permissions
+- Confirm profile or analysis token has necessary permissions
 - Verify token format in configuration file
 
 **Data Access Issues**
