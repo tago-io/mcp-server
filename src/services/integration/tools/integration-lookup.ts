@@ -10,14 +10,8 @@ const integrationBaseSchema = z
   .object({
     query: z
       .object({
-        connector: z
-          .string()
-          .describe("The ID or name of the connector to perform the operation on. Optional for lookup and create, but required for update and delete operations.")
-          .optional(),
-        network: z
-          .string()
-          .describe("The ID or name of the network to perform the operation on. Optional for lookup and create, but required for update and delete operations.")
-          .optional(),
+        connector: z.string().describe("The ID or Name of the connector to lookup for.").optional(),
+        network: z.string().describe("The ID or Name of the network to lookup for.").optional(),
       })
       .describe("The query to perform the operation on."),
   })
