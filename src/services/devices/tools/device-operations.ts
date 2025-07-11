@@ -8,12 +8,21 @@ import { createOperationFactory } from "../../../utils/operation-factory";
 
 const configParamSchema = z
   .object({
-    id: z.string().describe("The ID of the configuration parameter.").optional(),
+    id: z.string().describe("The ID of the configuration parameter. When present, updates existing parameter. When not present, creates new parameter.").optional(),
     sent: z.boolean().describe("The sent status of the configuration parameter."),
     key: z.string().describe("The key of the configuration parameter."),
     value: z.string().describe("The value of the configuration parameter."),
   })
   .describe("The configuration parameter of the device.");
+
+const deviceConfigureSchema = z
+  .object({
+    configuration_params: z
+      .array(configParamSchema)
+      .describe("Array of configuration parameters to set/update. When ID is present, updates existing parameter. When ID is not present, creates new parameter.")
+      .min(1, "At least one configuration parameter is required"),
+  })
+  .describe("Schema for the device configuration operation.");
 
 const deviceLookupSchema = querySchema
   .extend({
@@ -101,17 +110,22 @@ type DeviceWithMoreInfo = DeviceListItem & { data_amount?: number; configuration
 
 const deviceBaseSchema = z
   .object({
-    operation: z.enum(["lookup", "delete", "create", "update"]).describe(`The type of operation to perform on the device.
+    operation: z.enum(["lookup", "delete", "create", "update", "configure"]).describe(`The type of operation to perform on the device.
     lookup: Get the information of a device by its ID or a list of devices by a query.
     delete: Delete a device by its ID.
     create: Create a new device.
     update: Update a device by its ID.
+    configure: Set or update configuration parameters for a device.
   `),
-    deviceID: z.string().describe("The ID of the Device to perform the operation on. Optional for lookup and create, but required for update and delete operations.").optional(),
+    deviceID: z
+      .string()
+      .describe("The ID of the Device to perform the operation on. Optional for lookup and create, but required for update, delete, and configure operations.")
+      .optional(),
     // Separate fields for different operations to maintain type safety
     lookupDevice: deviceLookupSchema.describe("The device to be listed. Required for lookup operations.").optional(),
     createDevice: deviceCreateSchema.describe("The device to be created. Required for create operations.").optional(),
     updateDevice: deviceUpdateSchema.describe("The device to be updated. Required for update operations.").optional(),
+    configureDevice: deviceConfigureSchema.describe("The configuration parameters to set/update. Required for configure operations.").optional(),
   })
   .describe("Schema for the device operation. The delete operation only requires the deviceID.");
 
@@ -126,11 +140,17 @@ const deviceSchema = deviceBaseSchema.refine(
     if (data.operation === "update") {
       return !!data.updateDevice;
     }
+
+    // Validation for configure operation
+    if (data.operation === "configure") {
+      return !!data.configureDevice && !!data.deviceID;
+    }
+
     // lookup and delete operations are valid with or without query
     return true;
   },
   {
-    message: "Invalid data structure for the specified operation. Create requires createDevice, update requires updateDevice.",
+    message: "Invalid data structure for the specified operation. Create requires createDevice, update requires updateDevice, configure requires configureDevice and deviceID.",
   }
 );
 
@@ -246,6 +266,44 @@ async function handleDeleteOperation(resources: Resources, params: DeviceSchema)
   return convertJSONToMarkdown(result);
 }
 
+async function handleConfigureOperation(resources: Resources, params: DeviceSchema): Promise<string> {
+  const { deviceID, configureDevice } = params;
+
+  if (!deviceID) {
+    throw new Error("deviceID is required for configure operation");
+  }
+
+  if (!configureDevice) {
+    throw new Error("configureDevice is required for configure operation");
+  }
+
+  const results = [];
+
+  for (const configParam of configureDevice.configuration_params) {
+    try {
+      const result = await resources.devices.paramSet(deviceID, {
+        id: configParam.id,
+        sent: configParam.sent,
+        key: configParam.key,
+        value: configParam.value,
+      });
+      results.push({
+        operation: configParam.id ? "updated" : "created",
+        parameter: configParam.key,
+        result,
+      });
+    } catch (error) {
+      results.push({
+        operation: "failed",
+        parameter: configParam.key,
+        error: (error as Error)?.message || error,
+      });
+    }
+  }
+
+  return convertJSONToMarkdown(results);
+}
+
 /**
  * @description Performs device operations and returns a Markdown-formatted response.
  */
@@ -256,15 +314,19 @@ async function deviceOperationsTool(resources: Resources, params: DeviceSchema) 
     .register("lookup", (params) => handleLookupOperation(resources, params))
     .register("create", (params) => handleCreateOperation(resources, params))
     .register("update", (params) => handleUpdateOperation(resources, params))
-    .register("delete", (params) => handleDeleteOperation(resources, params));
+    .register("delete", (params) => handleDeleteOperation(resources, params))
+    .register("configure", (params) => handleConfigureOperation(resources, params));
 
   return factory.execute(validatedParams);
 }
 
 const deviceOperationsConfigJSON: IDeviceToolConfig = {
   name: "device-operations",
-  description: `The DeviceOperations tool manages IoT device entities within the TagoIO platform, supporting four primary operations: lookup/list, create, update, and delete. This tool handles device configuration and management rather than the data stored within devices. Each device represents an IoT endpoint that can communicate through various protocols, called Networks, including LoRaWAN, MQTT, HTTP, and REST API.
-Use this tool when you need to discover existing devices, provision new IoT endpoints, modify device configurations, or remove devices from your TagoIO account.
+  description: `The DeviceOperations tool manages IoT device entities within the TagoIO platform, supporting five primary operations: lookup/list, create, update, delete, and configure. This tool handles device configuration and management rather than the data stored within devices. Each device represents an IoT endpoint that can communicate through various protocols, called Networks, including LoRaWAN, MQTT, HTTP, and REST API.
+
+Use this tool when you need to discover existing devices, provision new IoT endpoints, modify device configurations, manage configuration parameters, or remove devices from your TagoIO account.
+
+The configure operation allows you to set or update device configuration parameters independently from other device properties. When a parameter ID is provided, it updates the existing parameter; when no ID is provided, it creates a new parameter.
 
 Do not use this tool for managing data stored within devices (use DeviceDataOperations instead), real-time device communication, or protocol-specific configuration that requires direct network access. This tool manages device entities in the platform, not device firmware or hardware settings.
 
