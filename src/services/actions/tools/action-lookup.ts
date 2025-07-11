@@ -94,16 +94,15 @@ const actionCreateSchema = z
     type: z.enum(["condition", "resource", "interval", "schedule", "mqtt_topic", "usage_alert", "condition_geofence"]).describe(`The type of trigger for the action. (Required)
 
 The trigger_type parameter accepts one of seven values:
-
-"condition": Monitors device variables against specified conditions (threshold, comparison operators)
-"resource": Responds to CRUD operations on platform resources (device, file, analysis, action, am, user)
-"interval": Executes actions at regular time intervals (minutes, hours, days)
-"schedule": Executes actions at specific dates/times using cron-like scheduling
-"mqtt_topic": Responds to publications on specified MQTT topics
-"condition_geofence": Triggers when devices enter or exit defined geographical boundaries
-"usage_alert": Monitors account usage metrics against thresholds for services like input/output data, analysis minutes, SMS, email, push notifications, file storage, and resource counts
-
-Each trigger type requires specific configuration parameters. Resource triggers must specify which resource type to monitor (device, file, analysis, action, am, user) and which operations (create, update, delete). Usage alert triggers must specify the monitored resource (input, output, analysis, data_records, sms, email, run_users, push_notification, file_storage, device, dashboard, action, tcore, team_members, am) and threshold values.`),
+- "condition": Monitors device variables against specified conditions (threshold, comparison operators)
+- "resource": Responds to CRUD operations on platform resources (device, file, analysis, action, am, user)
+  - Resource triggers must specify which resource type to monitor (device, file, analysis, action, am, user) and which operations (create, update, delete).
+- "interval": Executes actions at regular time intervals (minutes, hours, days)
+- "schedule": Executes actions at specific dates/times using cron-like scheduling
+- "mqtt_topic": Responds to publications on specified MQTT topics
+- "condition_geofence": Triggers when devices enter or exit defined geographical boundaries
+- "usage_alert": Monitors account usage metrics against thresholds for services like input/output data, analysis minutes, SMS, email, push notifications, file storage, and resource counts
+  - Usage alert triggers must specify the monitored resource (input, output, analysis, data_records, sms, email, run_users, push_notification, file_storage, device, dashboard, action, tcore, team_members, am) and threshold values.`),
     action: z
       .object({
         type: z
@@ -188,10 +187,10 @@ const actionListSchema = querySchema
       })
       .describe("Filter object to apply to the query. Available filters: name, active, last_triggered, created_at, updated_at, tags")
       .optional(),
-    fields: z
-      .array(z.enum(["id", "active", "name", "created_at", "updated_at", "last_triggered", "tags", "type", "action"]))
-      .describe("Specific fields to include in the action list response. Available fields: id, active, name, created_at, updated_at, last_triggered, tags, type, action")
-      .optional(),
+    // fields: z
+    //   .array(z.enum(["id", "active", "name", "created_at", "updated_at", "last_triggered", "tags", "type", "action"]))
+    //   .describe("Specific fields to include in the action list response. Available fields: id, active, name, created_at, updated_at, last_triggered, tags, type, action")
+    //   .optional(),
   })
   .describe("Schema for the action list operation.");
 
@@ -316,12 +315,15 @@ async function actionOperationsTool(resources: Resources, params: ActionOperatio
 
 const actionOperationsConfigJSON: IDeviceToolConfig = {
   name: "action-operations",
-  description: `The ActionManager tool performs CRUD operations (Create, Read, Update, Delete) on automation actions within an TagoIO platform. Actions are automated workflows that execute predefined responses when specific triggers occur, such as device data changes, resource events, scheduled intervals, or usage threshold breaches. 
+  description: `The Action-Operations tool performs CRUD operations (Create, Read, Update, Delete) on automation actions within the TagoIO platform. Actions are automated workflows that execute predefined responses when specific triggers occur, such as device data changes, resource events, scheduled intervals, or usage threshold breaches.
   
-Use this tool when you need to set up automated responses to device data changes, resource management events, scheduled operations, location-based triggers, or account usage thresholds. It's essential for building reactive systems, monitoring workflows, alert systems, and automated device management processes.
+Use this tool when you need to set up automated responses to device data changes, resource management events, scheduled operations, location-based triggers, or account usage thresholds.
 
-Avoid using it for one-time operations that don't require automation triggers, or for managing the actual execution of actions (this tool only manages action definitions, not their runtime).
+Ensure that for Actions that uses Secrets, you have been provided with the Secret ID by the user. If not, state that you cannot create the action without the Secret ID.
 
+When creating actions that affect multiple components (such as multiple devices), prefer using triggers based on tag_key and tag_value rather than specific resource IDs. This approach provides better scalability and maintainability. Suggest adding appropriate tags to target devices or resources, or offer to add the tags directly to enable group-based triggering.
+
+Example usage:
 <example>
   {
     "operation": "create",
@@ -345,7 +347,8 @@ Avoid using it for one-time operations that don't require automation triggers, o
       ]
     }
   }
-</example>`,
+</example>
+Important limitations: Actions only define automation rules and don't execute immediately upon creation. The tool cannot monitor or control active action execution. Trigger conditions must be properly configured to avoid unintended activations or missed events.`,
   parameters: actionBaseSchema.shape,
   title: "Action Operations",
   tool: actionOperationsTool,

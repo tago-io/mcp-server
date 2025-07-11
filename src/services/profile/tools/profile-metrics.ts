@@ -51,7 +51,6 @@ async function profileMetricsTool(resources: Resources, params: ProfileMetricsSc
 
     // Only pass options if at least one parameter is provided
     const hasOptions = Object.keys(options).length > 0;
-
     data = await resources.profiles.usageStatisticList(profileID, hasOptions ? (options as any) : undefined).catch((error) => {
       throw `**Error fetching profile statistics:** ${error}`;
     });
