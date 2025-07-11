@@ -6,7 +6,7 @@ import { handlerActionsTools } from "./services/actions/index";
 import { handlerUsersTools } from "./services/run-users/index";
 import { handlerEntitiesTools } from "./services/entities/index";
 import { handlerAnalysesTools } from "./services/analysis/index";
-import { handlerProfileMetricsTools } from "./services/profile-metrics/index";
+import { handlerProfileMetricsTools } from "./services/profile/index";
 import { handlerIntegrationTools } from "./services/integration/index";
 import { handlerDocumentationTools } from "./services/documentation/index";
 
