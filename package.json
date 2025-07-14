@@ -1,12 +1,14 @@
 {
 	"name": "@tago-io/mcp-server",
-	"version": "1.2.0",
+	"version": "2.0.0",
 	"main": "build/index.js",
 	"bin": {
 		"tago-mcp-server": "build/index.js"
 	},
 	"type": "commonjs",
-	"files": ["build"],
+	"files": [
+		"build"
+	],
 	"scripts": {
 		"test": "vitest run",
 		"test:single": "vitest --",
@@ -15,7 +17,13 @@
 		"build": "rm -rf ./build; tsc --build && shx chmod +x build/*.js",
 		"start": "ts-node-dev  src/index.ts"
 	},
-	"keywords": ["mcp", "model-context-protocol", "tagoio", "ai", "tools"],
+	"keywords": [
+		"mcp",
+		"model-context-protocol",
+		"tagoio",
+		"ai",
+		"tools"
+	],
 	"author": "TagoIO",
 	"engines": {
 		"node": ">=20"
