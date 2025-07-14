@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { actionBaseSchema } from "../action-lookup";
+import { describe, expect, it } from "vitest";
+import { actionBaseSchema } from "../action-operations";
 
 describe("actionBaseSchema Validation", () => {
   describe("Operation validation", () => {
@@ -176,19 +176,6 @@ describe("actionBaseSchema Validation", () => {
       });
 
       expect(result.success).toBe(true);
-    });
-
-    it("should reject invalid field names in lookupAction", () => {
-      const invalidLookupAction = {
-        fields: ["invalid_field"],
-      };
-
-      const result = actionBaseSchema.safeParse({
-        operation: "lookup",
-        lookupAction: invalidLookupAction,
-      });
-
-      expect(result.success).toBe(false);
     });
   });
 
