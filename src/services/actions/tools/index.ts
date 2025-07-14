@@ -1,5 +1,5 @@
 import { IDeviceToolConfig } from "../../types";
-import { actionOperationsConfigJSON } from "./action-lookup";
+import { actionOperationsConfigJSON } from "./action-operations";
 
 /**
  * @description Array of all action tool configurations.
