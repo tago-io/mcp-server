@@ -42,6 +42,7 @@ async function profileMetricsTool(resources: Resources, params: ProfileMetricsSc
       return { resource: key, used: usedLimit, limit };
     });
 
+    // TODO: Must get the resources limits when the SDK is updated to include the /limits endpoint
     data = { limits: tabularFormat, resources_amount: rawLimits.amount };
   }
 
@@ -73,7 +74,7 @@ All the metrics below are montlhy usages, and resets every month.
 Data Input: Amount of registers received
 Data Output: Amount of registers read
 Data Storage: Amount of registers used
-Analysis: Minutes spents
+Analysis Run: Analysis Run Minutes spents.
 E-mails / SMS / Push Notification: Number of messages sent`;
 
   return markdownResponse;
