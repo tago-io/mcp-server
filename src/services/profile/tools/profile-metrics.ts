@@ -1,9 +1,9 @@
-import { z } from "zod/v3";
 import { Resources } from "@tago-io/sdk";
+import { z } from "zod/v3";
 
-import { IDeviceToolConfig } from "../../types";
-import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { getProfileID } from "../../../utils/get-profile-id";
+import { convertJSONToMarkdown } from "../../../utils/markdown";
+import { IDeviceToolConfig } from "../../types";
 
 const profileMetricsSchema = z.object({
   type: z
@@ -56,7 +56,17 @@ async function profileMetricsTool(resources: Resources, params: ProfileMetricsSc
     });
   }
 
-  const markdownResponse = convertJSONToMarkdown(data);
+  let markdownResponse = convertJSONToMarkdown(data);
+
+  markdownResponse += `\n\n# Units\n
+Data Input: Amount of registers received
+Data Output: Amount of registers read
+Data Storage: Amount of registers used
+Analysis: Minutes spents
+E-mails / SMS / Push Notification: Number of messages sent
+Run Users: Number of users
+File Storage: Megabytes used
+  `;
 
   return markdownResponse;
 }
