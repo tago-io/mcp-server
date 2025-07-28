@@ -1,6 +1,6 @@
 {
 	"name": "@tago-io/mcp-server",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"main": "build/index.js",
 	"bin": {
 		"tago-mcp-server": "build/index.js"
@@ -44,8 +44,8 @@
 		"vitest": "^3.1.4"
 	},
 	"dependencies": {
-		"@modelcontextprotocol/sdk": "^1.12.1",
-		"@tago-io/sdk": "^11.3.9",
+		"@modelcontextprotocol/sdk": "^1.17.0",
+		"@tago-io/sdk": "^12.0.3",
 		"dotenv": "^16.5.0",
 		"mcps-logger": "^1.0.0",
 		"shx": "^0.4.0",
