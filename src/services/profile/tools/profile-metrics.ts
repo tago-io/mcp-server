@@ -1,6 +1,7 @@
 import { Resources } from "@tago-io/sdk";
 import { z } from "zod/v3";
 
+import { ProfileSummary } from "@tago-io/sdk/lib/types";
 import { getProfileID } from "../../../utils/get-profile-id";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { IDeviceToolConfig } from "../../types";
@@ -30,9 +31,18 @@ async function profileMetricsTool(resources: Resources, params: ProfileMetricsSc
   let data;
 
   if (params.type === "limits") {
-    data = await resources.profiles.summary(profileID).catch((error) => {
+    const rawLimits = await resources.profiles.summary(profileID).catch((error) => {
       throw `**Error fetching profile limits:** ${error}`;
     });
+
+    const tabularFormat = Object.keys(rawLimits.limit).map((key: keyof ProfileSummary["limit"]) => {
+      const limit = rawLimits.limit[key];
+      const usedLimit = rawLimits.limit_used[key];
+
+      return { resource: key, used: usedLimit, limit };
+    });
+
+    data = { limits: tabularFormat, resources_amount: rawLimits.amount };
   }
 
   if (params.type === "statistics") {
@@ -59,21 +69,20 @@ async function profileMetricsTool(resources: Resources, params: ProfileMetricsSc
   let markdownResponse = convertJSONToMarkdown(data);
 
   markdownResponse += `\n\n# Units\n
+All the metrics below are montlhy usages, and resets every month.
 Data Input: Amount of registers received
 Data Output: Amount of registers read
 Data Storage: Amount of registers used
 Analysis: Minutes spents
-E-mails / SMS / Push Notification: Number of messages sent
-Run Users: Number of users
-File Storage: Megabytes used
-  `;
+E-mails / SMS / Push Notification: Number of messages sent`;
 
   return markdownResponse;
 }
 
 const profileMetricsConfigJSON: IDeviceToolConfig = {
   name: "profile-metrics",
-  description: `Get profile resource limits or usage statistics, depending on the 'type' parameter. For statistics, you can optionally provide a 'statisticsQuery' object with date range (start_date, end_date) and periodicity (day, month, year) parameters.
+  description: `Get profile resource limits or usage statistics, depending on the 'type' parameter. 
+For statistics, you can optionally provide a 'statisticsQuery' object with date range (start_date, end_date) and periodicity (day, month, year) parameters.
 For time-based queries, use the current date/time reference: ${new Date().toLocaleDateString()}`,
   parameters: profileMetricsSchema.shape,
   title: "Get Profile Metrics (Limits or Statistics)",
