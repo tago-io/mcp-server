@@ -1,62 +1,38 @@
 #!/usr/bin/env node
 
-
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { Resources } from "@tago-io/sdk";
-
-import { handlerTools } from "./mcp-tools";
-import { ENV } from "./utils/get-env-variables";
+import { startStdioServer } from "./server/stdio-server";
+import { startHttpServer } from "./server/http-server";
 
 if (process.env.NODE_ENV === "dev") {
   import("mcps-logger/console");
 }
 
 /**
- * @description Start the MCP server using stdio transport.
+ * @description Main entry point - parse command line arguments and start the appropriate server
  */
-async function startServer() {
-  try {
-    // Validate required environment variables
-    if (!ENV.TAGOIO_TOKEN) {
-      console.error("Error: TAGOIO_TOKEN environment variable is required");
+async function main() {
+  // Get command line arguments (skip node and script path)
+  const args = process.argv.slice(2);
+
+  // Determine the transport mode
+  const mode = args[0]?.toLowerCase();
+
+  switch (mode) {
+    case "http":
+      await startHttpServer();
+      break;
+    case "stdio":
+    case undefined:
+    case "":
+      await startStdioServer();
+      break;
+    default:
+      console.error(`Error: Unknown transport mode "${mode}"`);
+      console.error("Usage: tago-mcp-server [stdio|http]");
+      console.error("  stdio - Use STDIO transport (default)");
+      console.error("  http  - Use HTTP transport with Streamable protocol");
       process.exit(1);
-    }
-
-    // Set the TagoIO API endpoint
-    process.env.TAGOIO_API = ENV.TAGOIO_API;
-
-    // Initialize TagoIO Resources with the token
-    const resources = new Resources({ token: ENV.TAGOIO_TOKEN });
-
-    // Validate the connection to TagoIO API
-    await resources.account.info().catch(() => {
-      throw new Error("Failed to connect to TagoIO API. Please check your TAGOIO_TOKEN and TAGOIO_API configuration.");
-    });
-
-    // Create MCP server
-    const mcpServer = new McpServer({
-      name: "middleware-mcp-tagoio",
-      version: "1.0.0",
-    });
-
-    // Register all tools
-    await handlerTools(mcpServer, resources);
-
-    // Create stdio transport
-    const transport = new StdioServerTransport();
-
-    // Connect server to transport
-    await mcpServer.connect(transport);
-
-    if (ENV.LOG_LEVEL === "DEBUG") {
-      console.error("MCP server started successfully with stdio transport");
-      console.error("Tools registered and ready to receive requests");
-    }
-  } catch (error) {
-    console.error("Failed to start MCP server:", error);
-    process.exit(1);
   }
 }
 
-startServer();
+main();
