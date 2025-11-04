@@ -14,6 +14,7 @@ The TagoIO MCP Server enables AI models to interact directly with your TagoIO ac
 - **Platform Integration**: Retrieve users, actions, analysis scripts, and account statistics
 - **Code Generation**: AI-powered TagoIO Analysis script generation with proper context
 - **Development Support**: Debug assistance and tag relationship analysis
+- **Dual Protocol Support**: STDIO (default) and HTTP Streamable transport protocols
 
 ## Quick Start
 
@@ -27,7 +28,11 @@ The TagoIO MCP Server enables AI models to interact directly with your TagoIO ac
 
 #### Manual Configuration
 
-Create or update your MCP configuration file:
+The TagoIO MCP Server supports two transport protocols:
+
+##### STDIO Transport (Default)
+
+Best for local development with desktop AI assistants and IDEs:
 
 ```json
 {
@@ -43,6 +48,50 @@ Create or update your MCP configuration file:
   }
 }
 ```
+
+You can also explicitly specify STDIO mode:
+
+```json
+{
+  "mcpServers": {
+    "@tago-io/mcp": {
+      "command": "npx",
+      "args": ["-y", "@tago-io/mcp-server", "stdio"],
+      "env": {
+        "TAGOIO_TOKEN": "YOUR-TOKEN",
+        "TAGOIO_API": "https://api.us-e1.tago.io"
+      }
+    }
+  }
+}
+```
+
+##### HTTP Streamable Transport
+
+Required for OpenAI Agent Builder and web-based AI platforms:
+
+```bash
+# Start HTTP server on default port 3000
+npx -y @tago-io/mcp-server http
+
+# Or specify custom port
+MCP_PORT=8080 npx -y @tago-io/mcp-server http
+```
+
+The HTTP server will be available at: `http://localhost:3000/mcp`
+
+**Authentication:** HTTP mode uses Bearer token authentication. Include your TagoIO token in the `Authorization` header:
+```
+Authorization: Bearer YOUR-TAGOIO-TOKEN
+```
+
+**HTTP Configuration for OpenAI Agent Builder:**
+- Server URL: `http://localhost:3000/mcp`
+- Protocol: Streamable HTTP (MCP 2025-03-26)
+- Authentication: Bearer token (passed in Authorization header on each request)
+- CORS: Enabled for web-based integrations
+
+**Note:** Unlike STDIO mode, HTTP mode does not require `TAGOIO_TOKEN` environment variable. Each client connection authenticates with their own Bearer token, allowing multiple clients with different credentials to connect simultaneously.
 
 **Configuration Parameters:**
 
