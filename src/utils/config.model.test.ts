@@ -30,9 +30,10 @@ describe("environmentModel", () => {
     expect(parsed.LOG_LEVEL).toBe("INFO");
   });
 
-  it("throws error if TAGOIO_TOKEN is missing", () => {
+  it("defaults TAGOIO_TOKEN to empty string if missing", () => {
     const { TAGOIO_TOKEN, ...env } = defaultEnv;
-    expect(() => environmentModel.parse(env)).toThrow();
+    const parsed = environmentModel.parse(env);
+    expect(parsed.TAGOIO_TOKEN).toBe("");
   });
 
   it("throws error if LOG_LEVEL is invalid", () => {

@@ -5,7 +5,7 @@ import { z } from "zod/v3";
  */
 const environmentModel = z.object({
   LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARNING", "ERROR"]).optional().default("INFO"),
-  TAGOIO_TOKEN: z.string(),
+  TAGOIO_TOKEN: z.string().default(""),
   TAGOIO_API: z.string().default("https://api.tago.io"),
 });
 
