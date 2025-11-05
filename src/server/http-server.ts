@@ -9,6 +9,8 @@ import { handlerTools } from "../mcp-tools";
 
 const MCP_PORT = Number.parseInt(process.env.MCP_PORT || "3000");
 const TAGOIO_API = process.env.TAGOIO_API || "https://api.tago.io";
+const SESSION_TIMEOUT_MINUTES = Number.parseInt(process.env.SESSION_LIVE || "60");
+const SESSION_TIMEOUT_MS = SESSION_TIMEOUT_MINUTES * 60 * 1000;
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -19,6 +21,7 @@ const CORS_HEADERS = {
 interface SessionData {
   transport: StreamableHTTPServerTransport;
   resources: Resources;
+  lastActivity: number;
 }
 
 interface SessionMap {
@@ -107,6 +110,15 @@ function createMcpServer(resources: Resources): McpServer {
 }
 
 /**
+ * Updates the last activity timestamp for a session.
+ */
+function updateSessionActivity(sessions: SessionMap, sessionId: string): void {
+  if (sessions[sessionId]) {
+    sessions[sessionId].lastActivity = Date.now();
+  }
+}
+
+/**
  * Handles POST requests for initialization and tool calls.
  */
 async function handlePostRequest(
@@ -118,6 +130,7 @@ async function handlePostRequest(
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
   if (sessionId && sessions[sessionId]) {
+    updateSessionActivity(sessions, sessionId);
     const session = sessions[sessionId];
     await session.transport.handleRequest(req, res, body);
     return;
@@ -179,7 +192,7 @@ async function handleInitializeRequest(
     sessionIdGenerator: () => randomUUID(),
     onsessioninitialized: (newSessionId: string) => {
       console.info(`Session initialized: ${newSessionId}`);
-      sessions[newSessionId] = { transport, resources };
+      sessions[newSessionId] = { transport, resources, lastActivity: Date.now() };
     },
   });
 
@@ -213,6 +226,8 @@ async function handleGetRequest(
     });
     return;
   }
+
+  updateSessionActivity(sessions, sessionId);
 
   const lastEventId = req.headers["last-event-id"] as string | undefined;
   if (lastEventId) {
@@ -298,17 +313,46 @@ async function handleRequest(
 }
 
 /**
+ * Closes a specific session and cleans up its resources.
+ */
+async function closeSession(sessions: SessionMap, sessionId: string): Promise<void> {
+  try {
+    console.error(`Closing session ${sessionId}`);
+    await sessions[sessionId].transport.close();
+    delete sessions[sessionId];
+  } catch (error) {
+    console.error(`Error closing session ${sessionId}:`, error);
+  }
+}
+
+/**
+ * Checks for expired sessions and removes them.
+ */
+async function cleanupExpiredSessions(sessions: SessionMap): Promise<void> {
+  const now = Date.now();
+  const expiredSessions: string[] = [];
+
+  for (const sessionId in sessions) {
+    const session = sessions[sessionId];
+    const inactiveTime = now - session.lastActivity;
+
+    if (inactiveTime > SESSION_TIMEOUT_MS) {
+      expiredSessions.push(sessionId);
+    }
+  }
+
+  for (const sessionId of expiredSessions) {
+    console.error(`Session expired due to inactivity: ${sessionId}`);
+    await closeSession(sessions, sessionId);
+  }
+}
+
+/**
  * Closes all active sessions and their transports.
  */
 async function closeAllSessions(sessions: SessionMap): Promise<void> {
   for (const sessionId in sessions) {
-    try {
-      console.error(`Closing session ${sessionId}`);
-      await sessions[sessionId].transport.close();
-      delete sessions[sessionId];
-    } catch (error) {
-      console.error(`Error closing session ${sessionId}:`, error);
-    }
+    await closeSession(sessions, sessionId);
   }
 }
 
@@ -323,15 +367,18 @@ async function startHttpServer(): Promise<void> {
 
     const server = createServer((req, res) => handleRequest(req, res, sessions));
 
+    // Start periodic session cleanup (every 5 minutes)
+    const cleanupInterval = setInterval(() => {
+      cleanupExpiredSessions(sessions);
+    }, 5 * 60 * 1000);
+
     server.listen(MCP_PORT, () => {
       console.error(`MCP Streamable HTTP Server listening on port ${MCP_PORT}`);
-      console.error(`Connect to: http://localhost:${MCP_PORT}/mcp`);
-      console.error("Authentication: Bearer token required in Authorization header");
-      console.error("Tools registered and ready to receive requests");
     });
 
     process.on("SIGINT", async () => {
       console.error("Shutting down server...");
+      clearInterval(cleanupInterval);
       await closeAllSessions(sessions);
       server.close(() => {
         console.error("Server shutdown complete");
