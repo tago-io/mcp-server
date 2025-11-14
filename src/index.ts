@@ -35,9 +35,12 @@ async function startServer() {
 
     // Create MCP server
     const mcpServer = new McpServer({
-      name: "middleware-mcp-tagoio",
-      version: "1.0.0",
-    });
+      name: "tagoio-mcp-server",
+      version: "2.1.2",
+    },
+  {
+    instructions: "Use this server to interact with your TagoIO account. Perform data analysis, collect profile metrics and manage your TagoIO devices..",
+  });
 
     // Register all tools
     await handlerTools(mcpServer, resources);

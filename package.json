@@ -31,11 +31,11 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/tago-io/middleware-mcp-tagoio.git"
+		"url": "https://github.com/tago-io/mcp-server.git"
 	},
 	"license": "ISC",
 	"description": "Model Context Protocol server for TagoIO data and analytics",
-	"homepage": "https://github.com/tago-io/middleware-mcp-tagoio",
+	"homepage": "https://github.com/tago-io/mcp-server",
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@types/aws-lambda": "^8.10.136",
