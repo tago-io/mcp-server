@@ -2,8 +2,9 @@
 	"name": "@tago-io/mcp-server",
 	"version": "2.1.0",
 	"main": "build/index.js",
+	"mcpName": "io.github.tago-io/mcp-server",
 	"bin": {
-		"tago-mcp-server": "build/index.js"
+		"tagoio-mcp-server": "build/index.js"
 	},
 	"type": "commonjs",
 	"files": [
@@ -28,9 +29,13 @@
 	"engines": {
 		"node": ">=20"
 	},
-	"repository": "tago-io/mcp-server.git",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/tago-io/middleware-mcp-tagoio.git"
+	},
 	"license": "ISC",
 	"description": "Model Context Protocol server for TagoIO data and analytics",
+	"homepage": "https://github.com/tago-io/middleware-mcp-tagoio",
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@types/aws-lambda": "^8.10.136",
