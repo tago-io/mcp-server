@@ -1,6 +1,6 @@
 {
 	"name": "@tago-io/mcp-server",
-	"version": "2.0.1",
+	"version": "2.1.0",
 	"main": "build/index.js",
 	"bin": {
 		"tago-mcp-server": "build/index.js"
