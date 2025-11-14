@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.tago-io/mcp-server",
+  "description": "Model Context Protocol server for TagoIO data and analytics",
+  "repository": {
+    "url": "https://github.com/tago-io/mcp-server",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@tago-io/mcp-server",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "description": "Your TagoIO Profile Token or Analysis Token",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true,
+          "name": "TAGOIO_TOKEN"
+        },
+        {
+          "description": "Your API endpoint for the TagoIO. Defaults to https://api.us-e1.tago.io",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false,
+          "name": "TAGOIO_API"
+        }
+      ]
+    }
+  ]
+}

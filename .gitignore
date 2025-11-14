@@ -55,3 +55,7 @@ yarn.lock
 
 # ignore .cursor
 .cursor
+
+# ignore mcpregistry tokens
+.mcpregistry_github_token
+.mcpregistry_registry_token
