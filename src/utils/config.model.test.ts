@@ -4,14 +4,14 @@ import { environmentModel, headersModel } from "./config.model";
 // Helper to create a valid base object for environment
 const defaultEnv = {
   TAGOIO_TOKEN: "token123",
-  TAGOIO_API: "https://api.tago.io",
+  TAGOIO_API: "https://api.us-e1.tago.io",
   LOG_LEVEL: "DEBUG",
 };
 
 // Helper to create a valid base object for headers
 const defaultHeaders = {
   authorization: "Bearer token123",
-  "tagoio-api": "https://api.tago.io",
+  "tagoio-api": "https://api.us-e1.tago.io",
 };
 
 describe("environmentModel", () => {
@@ -19,14 +19,14 @@ describe("environmentModel", () => {
     const parsed = environmentModel.parse(defaultEnv);
     expect(parsed).toEqual({
       TAGOIO_TOKEN: "token123",
-      TAGOIO_API: "https://api.tago.io",
+      TAGOIO_API: "https://api.us-e1.tago.io",
       LOG_LEVEL: "DEBUG",
     });
   });
 
   it("uses default values for TAGOIO_API and LOG_LEVEL", () => {
     const parsed = environmentModel.parse({ TAGOIO_TOKEN: "token123" });
-    expect(parsed.TAGOIO_API).toBe("https://api.tago.io");
+    expect(parsed.TAGOIO_API).toBe("https://api.us-e1.tago.io");
     expect(parsed.LOG_LEVEL).toBe("INFO");
   });
 
@@ -46,14 +46,14 @@ describe("headersModel", () => {
     const parsed = headersModel.parse(defaultHeaders);
     expect(parsed).toEqual({
       authorization: "token123", // Bearer prefix should be removed
-      "tagoio-api": "https://api.tago.io",
+      "tagoio-api": "https://api.us-e1.tago.io",
     });
   });
 
   it("uses default value for tagoio-api", () => {
     const { "tagoio-api": tagoApi, ...headers } = defaultHeaders;
     const parsed = headersModel.parse(headers);
-    expect(parsed["tagoio-api"]).toBe("https://api.tago.io");
+    expect(parsed["tagoio-api"]).toBe("https://api.us-e1.tago.io");
   });
 
   it("throws error if authorization is missing", () => {
