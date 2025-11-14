@@ -1,4 +1,4 @@
-import { z } from "zod/v3";
+import { z } from "zod";
 import { Resources, SecretsQuery } from "@tago-io/sdk";
 
 import { IDeviceToolConfig } from "../../types";

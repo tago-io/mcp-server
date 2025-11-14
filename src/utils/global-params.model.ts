@@ -1,4 +1,4 @@
-import { z } from "zod/v3";
+import { z } from "zod";
 
 const genericIDSchema = z.object({
   id: z.string({ message: "ID is required" }).describe("ID used on TagoIO, string with 24 characters").length(24, "ID must be 24 characters long"),

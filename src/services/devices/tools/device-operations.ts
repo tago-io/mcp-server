@@ -4,7 +4,7 @@ import { Resources,
   DeviceListItem,
   DeviceQuery,
 } from "@tago-io/sdk";
-import { z } from "zod/v3";
+import { z } from "zod";
 import {
   querySchema,
   tagsObjectModel,

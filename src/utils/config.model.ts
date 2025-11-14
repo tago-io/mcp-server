@@ -1,4 +1,4 @@
-import { z } from "zod/v3";
+import { z } from "zod";
 
 /**
  * Zod schema for environment variables.
@@ -6,7 +6,7 @@ import { z } from "zod/v3";
 const environmentModel = z.object({
   LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARNING", "ERROR"]).optional().default("INFO"),
   TAGOIO_TOKEN: z.string(),
-  TAGOIO_API: z.string().default("https://api.tago.io"),
+  TAGOIO_API: z.string().default("https://api.us-e1.tago.io"),
 });
 
 /**
@@ -14,7 +14,7 @@ const environmentModel = z.object({
  */
 const headersModel = z.object({
   authorization: z.string({ message: "Authorization header is required" }).transform((val) => val.replace(/^Bearer\s+/i, "")),
-  "tagoio-api": z.string().default("https://api.tago.io"),
+  "tagoio-api": z.string().default("https://api.us-e1.tago.io"),
 });
 
 type IEnvironmentModel = z.infer<typeof environmentModel>;

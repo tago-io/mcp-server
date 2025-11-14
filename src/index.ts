@@ -22,11 +22,10 @@ async function startServer() {
       process.exit(1);
     }
 
-    // Set the TagoIO API endpoint
-    process.env.TAGOIO_API = ENV.TAGOIO_API;
+    const region = !ENV.TAGOIO_API ? undefined :  { api: ENV.TAGOIO_API, sse: ENV.TAGOIO_API.replace("api", "sse") };
 
     // Initialize TagoIO Resources with the token
-    const resources = new Resources({ token: ENV.TAGOIO_TOKEN });
+    const resources = new Resources({ token: ENV.TAGOIO_TOKEN, region });
 
     // Validate the connection to TagoIO API
     await resources.account.info().catch(() => {

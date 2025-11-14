@@ -1,5 +1,5 @@
 import { ProfileSummary, Resources } from "@tago-io/sdk";
-import { z } from "zod/v3";
+import { z } from "zod";
 
 import { getProfileID } from "../../../utils/get-profile-id";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
