@@ -1,9 +1,6 @@
 import { Resources, 
-  DeviceCreateInfo,
-  DeviceEditInfo,
-  DeviceListItem,
-  DeviceQuery,
 } from "@tago-io/sdk";
+import { DeviceCreateInfo, DeviceEditInfo, DeviceListItem, DeviceQuery } from "@tago-io/sdk/lib/types";
 import { z } from "zod";
 import {
   querySchema,

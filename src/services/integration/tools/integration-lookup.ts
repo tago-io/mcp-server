@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { ConnectorQuery, NetworkQuery, Resources } from "@tago-io/sdk";
+import { Resources } from "@tago-io/sdk";
+import { ConnectorQuery, NetworkQuery } from "@tago-io/sdk/lib/types";
 import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 

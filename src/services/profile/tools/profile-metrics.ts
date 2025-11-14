@@ -1,4 +1,5 @@
-import { ProfileSummary, Resources } from "@tago-io/sdk";
+import { Resources } from "@tago-io/sdk";
+import { ProfileSummary } from "@tago-io/sdk/lib/types";
 import { z } from "zod";
 
 import { getProfileID } from "../../../utils/get-profile-id";

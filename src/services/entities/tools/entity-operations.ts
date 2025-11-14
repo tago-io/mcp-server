@@ -1,9 +1,10 @@
 import { z } from "zod";
-import { EntityQuery, Resources } from "@tago-io/sdk";
+import { Resources } from "@tago-io/sdk";
 import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { querySchema, tagsObjectModel } from "../../../utils/global-params.model";
 import { createOperationFactory } from "../../../utils/operation-factory";
+import { EntityQuery } from "@tago-io/sdk/lib/modules/Resources/entities.types";
 
 const entityListSchema = querySchema.extend({
   filter: z

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { IDeviceToolConfig } from "../../types";
-import { ENV } from "../../../utils/get-env-variables";
+import { getEnvVariables } from "../../../utils/get-env-variables";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { Resources } from "@tago-io/sdk";
 
@@ -18,16 +18,13 @@ type AnalysisCodeSchema = z.infer<typeof analysisCodeBaseSchema>;
 async function analysisCodeSearchTool(_resources: Resources, params: AnalysisCodeSchema): Promise<string> {
   const { search, type } = params;
 
-  let token = "test";
-  if (!process.env.TEST) {
-    token = ENV.TAGOIO_TOKEN;
-  }
+  const ENV = getEnvVariables();
   const api = "https://api.ai.tago.io";
 
   const response = await fetch(`${api}/rag/code`, {
     method: "POST",
     headers: {
-      Authorization: `${token}`,
+      Authorization: `${ENV.TAGOIO_TOKEN}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({

@@ -5,7 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { Resources } from "@tago-io/sdk";
 
 import { handlerTools } from "./mcp-tools";
-import { ENV } from "./utils/get-env-variables";
+import { getEnvVariables } from "./utils/get-env-variables";
 
 if (process.env.NODE_ENV === "dev") {
   import("mcps-logger/console");
@@ -15,7 +15,9 @@ if (process.env.NODE_ENV === "dev") {
  * @description Start the MCP server using stdio transport.
  */
 async function startServer() {
-  try {
+  try { 
+    const ENV = getEnvVariables();
+
     // Validate required environment variables
     if (!ENV.TAGOIO_TOKEN) {
       console.error("Error: TAGOIO_TOKEN environment variable is required");
