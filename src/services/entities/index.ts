@@ -8,10 +8,18 @@ import { entityTools } from "./tools";
  */
 async function handlerEntitiesTools(server: McpServer, resources: Resources) {
   for (const toolConfig of entityTools) {
-    server.tool(toolConfig.name, toolConfig.description, toolConfig.parameters, { title: toolConfig.title }, async (params) => {
-      const result = await toolConfig.tool(resources, params);
-      return { content: [{ type: "text", text: result }] };
-    });
+    server.registerTool(
+      toolConfig.name,
+      {
+        title: toolConfig.title,
+        description: toolConfig.description,
+        inputSchema: toolConfig.parameters,
+      },
+      async (params) => {
+        const result = await toolConfig.tool(resources, params);
+        return { content: [{ type: "text", text: result }] };
+      },
+    );
   }
 }
 

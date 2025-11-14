@@ -1,9 +1,7 @@
 import { z } from "zod/v3";
-import { Resources } from "@tago-io/sdk";
+import { ConnectorQuery, NetworkQuery, Resources } from "@tago-io/sdk";
 import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
-import { NetworkQuery } from "@tago-io/sdk/lib/modules/Resources/integration.networks.types";
-import { ConnectorQuery } from "@tago-io/sdk/lib/modules/Resources/integration.connectors.types";
 
 const integrationQuerySchema = z.object({
   type: z.enum(["connector", "network"]).describe("The type of resource to query - either connector or network"),

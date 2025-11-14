@@ -1,6 +1,5 @@
 import { z } from "zod/v3";
-import { Resources } from "@tago-io/sdk";
-import { ActionCreateInfo, ActionQuery } from "@tago-io/sdk/lib/types";
+import { ActionCreateInfo, ActionQuery, Resources } from "@tago-io/sdk";
 import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { querySchema, tagsObjectModel } from "../../../utils/global-params.model";

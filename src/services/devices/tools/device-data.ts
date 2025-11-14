@@ -1,8 +1,6 @@
 import { z } from "zod/v3";
 
-import { Device, Resources } from "@tago-io/sdk";
-import { DataCreate, DataEdit } from "@tago-io/sdk/lib/common/common.types";
-import { DataQuery } from "@tago-io/sdk/lib/modules/Device/device.types";
+import { Device, Resources, DataCreate, DataEdit, DataQuery } from "@tago-io/sdk";
 
 import { ENV } from "../../../utils/get-env-variables";
 import { convertJSONToMarkdown } from "../../../utils/markdown";

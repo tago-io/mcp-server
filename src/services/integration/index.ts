@@ -7,10 +7,18 @@ import { integrationTools } from "./tools";
  */
 async function handlerIntegrationTools(server: McpServer, resources: Resources) {
   for (const toolConfig of integrationTools) {
-    server.tool(toolConfig.name, toolConfig.description, toolConfig.parameters, { title: toolConfig.title }, async (params) => {
-      const result = await toolConfig.tool(resources, params);
-      return { content: [{ type: "text", text: result }] };
-    });
+    server.registerTool(
+      toolConfig.name,
+      {
+        title: toolConfig.title,
+        description: toolConfig.description,
+        inputSchema: toolConfig.parameters,
+      },
+      async (params) => {
+        const result = await toolConfig.tool(resources, params);
+        return { content: [{ type: "text", text: result }] };
+      },
+    );
   }
 }
 

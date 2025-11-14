@@ -1,6 +1,5 @@
 import { z } from "zod/v3";
-import { Resources } from "@tago-io/sdk";
-import { EntityQuery } from "@tago-io/sdk/lib/modules/Resources/entities.types";
+import { EntityQuery, Resources } from "@tago-io/sdk";
 import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { querySchema, tagsObjectModel } from "../../../utils/global-params.model";

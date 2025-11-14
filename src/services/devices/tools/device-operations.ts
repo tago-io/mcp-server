@@ -1,10 +1,9 @@
-import { Resources } from "@tago-io/sdk";
-import {
+import { Resources, 
   DeviceCreateInfo,
   DeviceEditInfo,
   DeviceListItem,
   DeviceQuery,
-} from "@tago-io/sdk/lib/types";
+} from "@tago-io/sdk";
 import { z } from "zod/v3";
 import {
   querySchema,
@@ -317,7 +316,7 @@ async function handleLookupOperation(
       throw `**Error fetching devices:** ${(error as Error)?.message || error}`;
     });
 
-  let devicesWithMoreInfo: DeviceWithMoreInfo[] = devices;
+  let devicesWithMoreInfo: DeviceWithMoreInfo[] = devices as DeviceWithMoreInfo[];
 
   if (
     devices.length !== 1 &&
@@ -331,7 +330,7 @@ async function handleLookupOperation(
   }
 
   if (devices.length === 1) {
-    let deviceInfo: DeviceWithMoreInfo = { ...devices[0] };
+    let deviceInfo = { ...devices[0] } as DeviceWithMoreInfo;
 
     if (lookupDevice?.include_data_amount) {
       const dataAmount = await resources.devices.amount(devices[0].id);
