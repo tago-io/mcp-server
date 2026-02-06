@@ -1,9 +1,9 @@
-import { z } from "zod/v3";
+import { z } from "zod";
 import { Resources } from "@tago-io/sdk";
+import { AnalysisQuery } from "@tago-io/sdk/lib/types";
 import { IDeviceToolConfig } from "../../types";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { querySchema, tagsObjectModel } from "../../../utils/global-params.model";
-import { AnalysisQuery } from "@tago-io/sdk/lib/types";
 import { createOperationFactory } from "../../../utils/operation-factory";
 
 const analysisListSchema = querySchema.extend({

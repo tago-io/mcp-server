@@ -1,10 +1,9 @@
-import { z } from "zod/v3";
+import { z } from "zod";
 
 import { Device, Resources } from "@tago-io/sdk";
-import { DataCreate, DataEdit } from "@tago-io/sdk/lib/common/common.types";
-import { DataQuery } from "@tago-io/sdk/lib/modules/Device/device.types";
+import { DataCreate, DataEdit, DataQuery } from "@tago-io/sdk/lib/types";
 
-import { ENV } from "../../../utils/get-env-variables";
+import { getEnvVariables } from "../../../utils/get-env-variables";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { IDeviceToolConfig } from "../../types";
 import { createOperationFactory } from "../../../utils/operation-factory";
@@ -302,6 +301,7 @@ async function handleCreateOperation(resources: Resources, params: DeviceDataOpe
     throw new Error("Invalid create operation: createData is required");
   }
 
+  const ENV = getEnvVariables();
   const handler = createDataHandler(ENV.TAGOIO_TOKEN, resources, ENV.TAGOIO_API);
   return handler.create(params.deviceID, params.createData);
 }
@@ -311,12 +311,14 @@ async function handleUpdateOperation(resources: Resources, params: DeviceDataOpe
     throw new Error("Invalid update operation: editData is required");
   }
 
+  const ENV = getEnvVariables();
   const handler = createDataHandler(ENV.TAGOIO_TOKEN, resources, ENV.TAGOIO_API);
   return handler.update(params.deviceID, params.editData);
 }
 
 async function handleReadOperation(resources: Resources, params: DeviceDataOperation): Promise<string> {
   const query = validateDeviceDataQuery(params.query);
+  const ENV = getEnvVariables();
   const handler = createDataHandler(ENV.TAGOIO_TOKEN, resources, ENV.TAGOIO_API);
   return handler.read(params.deviceID, query);
 }

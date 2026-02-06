@@ -8,11 +8,13 @@ import { actionTools } from "./tools";
  */
 async function handlerActionsTools(server: McpServer, resources: Resources) {
   for (const toolConfig of actionTools) {
-    server.tool(
+    server.registerTool(
       toolConfig.name,
-      toolConfig.description,
-      toolConfig.parameters,
-      { title: toolConfig.title },
+      {
+        title: toolConfig.title,
+        description: toolConfig.description,
+        inputSchema: toolConfig.parameters,
+      },
       async (params) => {
         const result = await toolConfig.tool(resources, params);
         return { content: [{ type: "text", text: result }] };

@@ -1,4 +1,4 @@
-import { z } from "zod/v3";
+import { z } from "zod";
 import { Resources } from "@tago-io/sdk";
 import { ActionCreateInfo, ActionQuery } from "@tago-io/sdk/lib/types";
 import { IDeviceToolConfig } from "../../types";

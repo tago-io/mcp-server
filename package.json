@@ -1,9 +1,10 @@
 {
 	"name": "@tago-io/mcp-server",
-	"version": "2.0.1",
+	"version": "2.1.4",
 	"main": "build/index.js",
+	"mcpName": "io.github.tago-io/mcp-server",
 	"bin": {
-		"tago-mcp-server": "build/index.js"
+		"tagoio-mcp-server": "build/index.js"
 	},
 	"type": "commonjs",
 	"files": [
@@ -28,27 +29,31 @@
 	"engines": {
 		"node": ">=20"
 	},
-	"repository": "tago-io/mcp-server.git",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/tago-io/mcp-server.git"
+	},
 	"license": "ISC",
 	"description": "Model Context Protocol server for TagoIO data and analytics",
+	"homepage": "https://github.com/tago-io/mcp-server",
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
-		"@types/aws-lambda": "^8.10.136",
-		"@types/node": "^22.15.21",
-		"aws-cdk-lib": "^2.200.1",
-		"constructs": "^10.3.0",
+		"@types/aws-lambda": "^8.10.160",
+		"@types/node": "^24",
+		"aws-cdk-lib": "^2.237.1",
+		"constructs": "^10.4.5",
 		"ts-node": "^10.9.2",
 		"ts-node-dev": "^2.0.0",
-		"typescript": "^5.8.3",
-		"unplugin-swc": "^1.5.3",
-		"vitest": "^3.1.4"
+		"typescript": "^5.9.3",
+		"unplugin-swc": "^1.5.9",
+		"vitest": "^4.0.18"
 	},
 	"dependencies": {
-		"@modelcontextprotocol/sdk": "1.21.0",
-		"@tago-io/sdk": "^12.0.3",
+		"@modelcontextprotocol/sdk": "^1.26.0",
+		"@tago-io/sdk": "^11.3.10",
 		"dotenv": "^16.5.0",
 		"mcps-logger": "^1.0.0",
 		"shx": "^0.4.0",
-		"zod": "^3.25.28"
+		"zod": "^4.3.6"
 	}
 }

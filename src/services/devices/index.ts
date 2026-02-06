@@ -8,10 +8,18 @@ import { deviceTools } from "./tools/index";
  */
 async function handlerDevicesTools(server: McpServer, resources: Resources) {
   for (const toolConfig of deviceTools) {
-    server.tool(toolConfig.name, toolConfig.description, toolConfig.parameters, { title: toolConfig.title }, async (params) => {
-      const result = await toolConfig.tool(resources, params);
-      return { content: [{ type: "text", text: result }] };
-    });
+    server.registerTool(
+      toolConfig.name,
+      {
+        title: toolConfig.title,
+        description: toolConfig.description,
+        inputSchema: toolConfig.parameters,
+      },
+      async (params) => {
+        const result = await toolConfig.tool(resources, params);
+        return { content: [{ type: "text", text: result }] };
+      },
+    );
   }
 }
 

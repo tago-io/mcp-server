@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { Resources } from "@tago-io/sdk";
-import { ENV } from "../utils/get-env-variables.js";
+import { getEnvVariables } from "../utils/get-env-variables.js";
 
 import { handlerTools } from "../mcp-tools";
 
@@ -10,28 +10,32 @@ import { handlerTools } from "../mcp-tools";
  */
 async function startStdioServer() {
   try {   
+    const ENV = getEnvVariables();
+
     // Validate required environment variables
     if (!ENV.TAGOIO_TOKEN) {
       console.error("Error: TAGOIO_TOKEN environment variable is required");
       process.exit(1);
     }
 
-    // Set the TagoIO API endpoint
-    process.env.TAGOIO_API = ENV.TAGOIO_API;
+    const region = !ENV.TAGOIO_API ? undefined :  { api: ENV.TAGOIO_API, sse: ENV.TAGOIO_API.replace("api", "sse") };
 
     // Initialize TagoIO Resources with the token
-    const resources = new Resources({ token: ENV.TAGOIO_TOKEN });
+    const resources = new Resources({ token: ENV.TAGOIO_TOKEN, region });
 
     // Validate the connection to TagoIO API
     await resources.account.info().catch(() => {
       throw new Error("Failed to connect to TagoIO API. Please check your TAGOIO_TOKEN and TAGOIO_API configuration.");
     });
 
+    const mcpServerOptions =   {
+      instructions: "Use this server to interact with your TagoIO account. Perform data analysis, collect profile metrics and manage your TagoIO devices..",
+    };
     // Create MCP server
     const mcpServer = new McpServer({
-      name: "middleware-mcp-tagoio",
-      version: "1.0.0",
-    });
+      name: "tagoio-mcp-server",
+      version: "2.1.2",
+    }, mcpServerOptions);
 
     // Register all tools
     await handlerTools(mcpServer, resources);

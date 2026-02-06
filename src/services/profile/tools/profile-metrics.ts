@@ -1,7 +1,7 @@
 import { Resources } from "@tago-io/sdk";
-import { z } from "zod/v3";
-
 import { ProfileSummary } from "@tago-io/sdk/lib/types";
+import { z } from "zod";
+
 import { getProfileID } from "../../../utils/get-profile-id";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { IDeviceToolConfig } from "../../types";
