@@ -16,7 +16,9 @@
 		"linter": "biome lint ./src --no-errors-on-unmatched --diagnostic-level=error",
 		"linter-fix": "biome lint --apply ./src",
 		"build": "rm -rf ./build; tsc --build && shx chmod +x build/*.js",
-		"start": "ts-node-dev  src/index.ts"
+		"start": "ts-node-dev  src/index.ts",
+		"start:http": "npm run build && node build/index.js http",
+		"test:http": "npm run build && node build/index.js http & SERVER_PID=$! && for i in $(seq 1 30); do curl -s http://localhost:${MCP_PORT:-3000}/mcp > /dev/null 2>&1 && break; sleep 1; done && npx tsx src/server/tests/http-server.test.ts; EXIT_CODE=$?; kill $SERVER_PID 2>/dev/null; exit $EXIT_CODE"
 	},
 	"keywords": [
 		"mcp",
