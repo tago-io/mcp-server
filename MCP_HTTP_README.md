@@ -42,7 +42,9 @@ curl -X POST http://localhost:3000/mcp \
       "clientInfo": {
         "name": "test-client",
         "version": "1.0.0"
-      }'
+      }
+    }
+  }'
 
 # Call a tool (after initialization)
 curl -X POST http://localhost:3000/mcp \
@@ -53,9 +55,13 @@ curl -X POST http://localhost:3000/mcp \
     "id": 2,
     "method": "tools/call",
     "params": {
-      "name": "device-list",
-      "arguments": {}
-    }'
+      "name": "device-operations",
+      "arguments": {
+        "operation": "lookup",
+        "lookupDevice": { "amount": 3 }
+      }
+    }
+  }'
 ```
 
 ### GET - Server-Sent Events (SSE) Stream
@@ -248,10 +254,9 @@ res.end(JSON.stringify({
   "result": {
     "protocolVersion": "2024-11-05",
     "capabilities": {
-      "tools": {},
-      "resources": {},
-      "prompts": {},
-      "logging": {}
+      "tools": {
+        "listChanged": true
+      }
     },
     "serverInfo": {
       "name": "middleware-mcp-tagoio",
@@ -275,10 +280,12 @@ res.end(JSON.stringify({
   "id": 2,
   "method": "tools/call",
   "params": {
-    "name": "device-list",
+    "name": "device-operations",
     "arguments": {
-      "amount": 10,
-      "page": 1
+      "operation": "lookup",
+      "lookupDevice": {
+        "amount": 10
+      }
     }
   }
 }
@@ -336,14 +343,16 @@ res.end(JSON.stringify({
   "result": {
     "tools": [
       {
-        "name": "device-list",
-        "description": "List devices in your TagoIO account",
+        "name": "device-operations",
+        "description": "The DeviceOperations tool manages IoT device entities within the TagoIO platform...",
         "inputSchema": {
           "type": "object",
           "properties": {
-            "amount": { "type": "number" },
-            "page": { "type": "number" }
-          }
+            "operation": { "type": "string", "enum": ["lookup", "delete", "create", "update", "configure"] },
+            "deviceID": { "type": "string" },
+            "lookupDevice": { "type": "object" }
+          },
+          "required": ["operation"]
         }
       }
     ]
@@ -483,6 +492,7 @@ Content-Type: application/json
 interface SessionData {
   transport: StreamableHTTPServerTransport; // MCP transport instance
   resources: Resources;                     // TagoIO SDK with client's token
+  lastActivity: number;                     // Timestamp for session expiry
 }
 
 interface SessionMap {
@@ -888,7 +898,9 @@ curl -X POST http://localhost:3000/mcp \
       "clientInfo": {
         "name": "curl-client",
         "version": "1.0.0"
-      }' -v
+      }
+    }
+  }' -v
 ```
 
 **Extract the `mcp-session-id` from response headers!**
@@ -916,10 +928,13 @@ curl -X POST http://localhost:3000/mcp \
     "id": 3,
     "method": "tools/call",
     "params": {
-      "name": "device-list",
+      "name": "device-operations",
       "arguments": {
-        "amount": 5
-      }'
+        "operation": "lookup",
+        "lookupDevice": { "amount": 5 }
+      }
+    }
+  }'
 ```
 
 #### Step 4: Test SSE Stream (Separate Terminal)
