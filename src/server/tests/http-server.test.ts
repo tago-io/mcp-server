@@ -1,25 +1,9 @@
 import http from "node:http";
+import { JsonRpcRequest, JsonRpcResponse } from "./types";
 
 const MCP_PORT = Number.parseInt(process.env.MCP_PORT || "3000");
 const TAGOIO_TOKEN = process.env.TAGOIO_TOKEN || "";
 const BASE_URL = `http://localhost:${MCP_PORT}/mcp`;
-
-interface JsonRpcRequest {
-  jsonrpc: "2.0";
-  id: number;
-  method: string;
-  params?: unknown;
-}
-
-interface JsonRpcResponse {
-  jsonrpc: "2.0";
-  id: number;
-  result?: unknown;
-  error?: {
-    code: number;
-    message: string;
-  };
-}
 
 let sessionId: string | undefined;
 let requestIdCounter = 1;
