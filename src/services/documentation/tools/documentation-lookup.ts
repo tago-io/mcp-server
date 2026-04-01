@@ -1,8 +1,7 @@
-import { z } from "zod";
-import { IDeviceToolConfig } from "../../types";
-import { getEnvVariables } from "../../../utils/get-env-variables";
-import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { Resources } from "@tago-io/sdk";
+import { z } from "zod";
+import { convertJSONToMarkdown } from "../../../utils/markdown";
+import { IDeviceToolConfig } from "../../types";
 
 // Base schema without refinement - this provides the .shape property needed by MCP
 const documentationBaseSchema = z
@@ -14,17 +13,14 @@ const documentationBaseSchema = z
 
 type DocumentationSchema = z.infer<typeof documentationBaseSchema>;
 
-async function documentationSearchTool(_resources: Resources, params: DocumentationSchema): Promise<string> {
+async function documentationSearchTool(_resources: Resources, params: DocumentationSchema, token?: string): Promise<string> {
   const { search } = params;
-
-  const ENV = getEnvVariables();
-
   const api = "https://api.ai.tago.io";
 
   const response = await fetch(`${api}/rag/documentation`, {
     method: "POST",
     headers: {
-      Authorization: `${ENV.TAGOIO_TOKEN}`,
+      Authorization: `${token}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({

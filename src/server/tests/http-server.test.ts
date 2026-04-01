@@ -5,48 +5,21 @@ const MCP_PORT = Number.parseInt(process.env.MCP_PORT || "3000");
 const TAGOIO_TOKEN = process.env.TAGOIO_TOKEN || "";
 const BASE_URL = `http://localhost:${MCP_PORT}/mcp`;
 
-let sessionId: string | undefined;
 let requestIdCounter = 1;
 
 /**
- * Parses Server-Sent Events (SSE) data
- */
-function parseSSE(data: string): { event: string; data: string }[] {
-  const events: { event: string; data: string }[] = [];
-  const lines = data.split("\n");
-  let currentEvent = "";
-  let currentData = "";
-
-  for (const line of lines) {
-    if (line.startsWith("event: ")) {
-      currentEvent = line.substring(7).trim();
-    } else if (line.startsWith("data: ")) {
-      currentData = line.substring(6).trim();
-    } else if (line === "") {
-      if (currentEvent && currentData) {
-        events.push({ event: currentEvent, data: currentData });
-        currentEvent = "";
-        currentData = "";
-      }
-    }
-  }
-
-  return events;
-}
-
-/**
- * Makes an HTTP POST request to the MCP server and handles SSE responses
+ * Makes an HTTP POST request to the MCP server and returns the parsed JSON response.
  */
 function makePostRequest(
   headers: Record<string, string>,
   body: unknown
-): Promise<{ response: http.IncomingMessage; events: { event: string; data: string }[] }> {
+): Promise<{ response: http.IncomingMessage; json: JsonRpcResponse | null }> {
   return new Promise((resolve, reject) => {
     const options: http.RequestOptions = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json, text/event-stream",
+        Accept: "application/json",
         ...headers,
       },
     };
@@ -59,8 +32,12 @@ function makePostRequest(
       });
 
       res.on("end", () => {
-        const events = parseSSE(data);
-        resolve({ response: res, events });
+        try {
+          const json: JsonRpcResponse = data ? JSON.parse(data) : null;
+          resolve({ response: res, json });
+        } catch {
+          resolve({ response: res, json: null });
+        }
       });
     });
 
@@ -71,10 +48,10 @@ function makePostRequest(
 }
 
 /**
- * Test 1: Initialize session with Bearer token
+ * Test 1: Initialize -- Bearer token required on every request
  */
-async function testInitializeSession(): Promise<void> {
-  console.log("\n=== Test 1: Initialize Session ===");
+async function testInitialize(): Promise<void> {
+  console.log("\n=== Test 1: Initialize ===");
 
   const request: JsonRpcRequest = {
     jsonrpc: "2.0",
@@ -93,40 +70,26 @@ async function testInitializeSession(): Promise<void> {
     },
   };
 
-  const { response, events } = await makePostRequest(
-    { Authorization: `Bearer ${TAGOIO_TOKEN}` },
-    request
-  );
+  const { response, json } = await makePostRequest({ Authorization: `Bearer ${TAGOIO_TOKEN}` }, request);
 
   console.log(`Status: ${response.statusCode}`);
+  console.log("Response:", JSON.stringify(json, null, 2));
 
-  // Extract session ID from response headers
-  sessionId = response.headers["mcp-session-id"] as string;
-  console.log(`Session ID: ${sessionId}`);
-
-  // Parse the message event
-  const messageEvent = events.find((e) => e.event === "message");
-  if (messageEvent) {
-    const jsonResponse: JsonRpcResponse = JSON.parse(messageEvent.data);
-    console.log("Response:", JSON.stringify(jsonResponse, null, 2));
+  if (response.statusCode !== 200) {
+    throw new Error(`Expected 200, got ${response.statusCode}`);
+  }
+  if (!json?.result) {
+    throw new Error("Missing result in initialize response");
   }
 
-  if (!sessionId) {
-    throw new Error("Failed to get session ID from response");
-  }
-
-  console.log("✓ Session initialized successfully");
+  console.log("✓ Initialize successful");
 }
 
 /**
- * Test 2: List available tools
+ * Test 2: List tools -- Bearer token required on every request (no session)
  */
 async function testListTools(): Promise<void> {
   console.log("\n=== Test 2: List Tools ===");
-
-  if (!sessionId) {
-    throw new Error("No session ID available");
-  }
 
   const request: JsonRpcRequest = {
     jsonrpc: "2.0",
@@ -134,19 +97,16 @@ async function testListTools(): Promise<void> {
     method: "tools/list",
   };
 
-  const { response, events } = await makePostRequest(
-    { "mcp-session-id": sessionId },
-    request
-  );
+  const { response, json } = await makePostRequest({ Authorization: `Bearer ${TAGOIO_TOKEN}` }, request);
 
   console.log(`Status: ${response.statusCode}`);
 
-  const messageEvent = events.find((e) => e.event === "message");
-  if (messageEvent) {
-    const jsonResponse: JsonRpcResponse = JSON.parse(messageEvent.data);
-    const tools = (jsonResponse.result as { tools: unknown[] })?.tools || [];
-    console.log(`Found ${tools.length} tools`);
-    console.log("First 3 tools:", JSON.stringify(tools.slice(0, 3), null, 2));
+  const tools = (json?.result as { tools: unknown[] } | undefined)?.tools ?? [];
+  console.log(`Found ${tools.length} tools`);
+  console.log("First 3 tools:", JSON.stringify(tools.slice(0, 3), null, 2));
+
+  if (response.statusCode !== 200) {
+    throw new Error(`Expected 200, got ${response.statusCode}`);
   }
 
   console.log("✓ Tools listed successfully");
@@ -157,10 +117,6 @@ async function testListTools(): Promise<void> {
  */
 async function testCallTool(): Promise<void> {
   console.log("\n=== Test 3: Call Tool (device-operations) ===");
-
-  if (!sessionId) {
-    throw new Error("No session ID available");
-  }
 
   const request: JsonRpcRequest = {
     jsonrpc: "2.0",
@@ -177,170 +133,23 @@ async function testCallTool(): Promise<void> {
     },
   };
 
-  const { response, events } = await makePostRequest(
-    { "mcp-session-id": sessionId },
-    request
-  );
+  const { response, json } = await makePostRequest({ Authorization: `Bearer ${TAGOIO_TOKEN}` }, request);
 
   console.log(`Status: ${response.statusCode}`);
+  console.log("Response:", JSON.stringify(json, null, 2));
 
-  const messageEvent = events.find((e) => e.event === "message");
-  if (messageEvent) {
-    const jsonResponse: JsonRpcResponse = JSON.parse(messageEvent.data);
-    console.log("Response:", JSON.stringify(jsonResponse, null, 2));
+  if (response.statusCode !== 200) {
+    throw new Error(`Expected 200, got ${response.statusCode}`);
   }
 
   console.log("✓ Tool called successfully");
 }
 
 /**
- * Test 5: Verify session persistence
- */
-async function testSessionPersistence(): Promise<void> {
-  console.log("\n=== Test 5: Session Persistence ===");
-
-  if (!sessionId) {
-    throw new Error("No session ID available");
-  }
-
-  console.log("Waiting 2 seconds before making another request...");
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  const request: JsonRpcRequest = {
-    jsonrpc: "2.0",
-    id: requestIdCounter++,
-    method: "tools/list",
-  };
-
-  const { response } = await makePostRequest(
-    { "mcp-session-id": sessionId },
-    request
-  );
-
-  console.log(`Status: ${response.statusCode}`);
-
-  if (response.statusCode === 200) {
-    console.log("✓ Session persisted successfully");
-  } else {
-    console.error("✗ Session was lost");
-  }
-}
-
-/**
- * Test 6: Test invalid session ID
- */
-async function testInvalidSession(): Promise<void> {
-  console.log("\n=== Test 6: Invalid Session ID ===");
-
-  const request: JsonRpcRequest = {
-    jsonrpc: "2.0",
-    id: requestIdCounter++,
-    method: "tools/list",
-  };
-
-  const { response, events } = await makePostRequest(
-    { "mcp-session-id": "invalid-session-id" },
-    request
-  );
-
-  console.log(`Status: ${response.statusCode}`);
-
-  if (response.statusCode === 400) {
-    console.log("✓ Invalid session rejected correctly");
-  } else {
-    console.error("✗ Invalid session was not rejected");
-  }
-
-  const messageEvent = events.find((e) => e.event === "message");
-  if (messageEvent) {
-    console.log("Response:", messageEvent.data);
-  }
-}
-
-/**
- * Test 7: Test session without Bearer token
- */
-async function testMissingToken(): Promise<void> {
-  console.log("\n=== Test 7: Missing Bearer Token ===");
-
-  const request: JsonRpcRequest = {
-    jsonrpc: "2.0",
-    id: requestIdCounter++,
-    method: "initialize",
-    params: {
-      protocolVersion: "2024-11-05",
-      capabilities: {},
-      clientInfo: {
-        name: "test-client",
-        version: "1.0.0",
-      },
-    },
-  };
-
-  const { response, events } = await makePostRequest({}, request);
-
-  console.log(`Status: ${response.statusCode}`);
-
-  if (response.statusCode === 401) {
-    console.log("✓ Request without token rejected correctly");
-  } else {
-    console.error("✗ Request without token was not rejected");
-  }
-
-  const messageEvent = events.find((e) => e.event === "message");
-  if (messageEvent) {
-    console.log("Response:", messageEvent.data);
-  }
-}
-
-/**
- * Test 8: Test invalid Bearer token
- */
-async function testInvalidToken(): Promise<void> {
-  console.log("\n=== Test 8: Invalid Bearer Token ===");
-
-  const request: JsonRpcRequest = {
-    jsonrpc: "2.0",
-    id: requestIdCounter++,
-    method: "initialize",
-    params: {
-      protocolVersion: "2024-11-05",
-      capabilities: {},
-      clientInfo: {
-        name: "test-client",
-        version: "1.0.0",
-      },
-    },
-  };
-
-  const { response, events } = await makePostRequest(
-    { Authorization: "Bearer invalid-token-12345" },
-    request
-  );
-
-  console.log(`Status: ${response.statusCode}`);
-
-  if (response.statusCode === 401) {
-    console.log("✓ Request with invalid token rejected correctly");
-  } else {
-    console.error("✗ Request with invalid token was not rejected");
-  }
-
-  const messageEvent = events.find((e) => e.event === "message");
-  if (messageEvent) {
-    console.log("Response:", messageEvent.data);
-  }
-}
-
-/**
- * Test 8: Call profile-metrics tool
+ * Test 4: Call profile-metrics tool
  */
 async function testProfileMetrics(): Promise<void> {
   console.log("\n=== Test 4: Call Tool (profile-metrics) ===");
-
-  if (!sessionId) {
-    throw new Error("No session ID available");
-  }
 
   const request: JsonRpcRequest = {
     jsonrpc: "2.0",
@@ -354,41 +163,92 @@ async function testProfileMetrics(): Promise<void> {
     },
   };
 
-  const { response, events } = await makePostRequest(
-    { "mcp-session-id": sessionId },
-    request
-  );
+  const { response, json } = await makePostRequest({ Authorization: `Bearer ${TAGOIO_TOKEN}` }, request);
 
   console.log(`Status: ${response.statusCode}`);
+  console.log("Response:", JSON.stringify(json, null, 2));
 
-  const messageEvent = events.find((e) => e.event === "message");
-  if (messageEvent) {
-    const jsonResponse: JsonRpcResponse = JSON.parse(messageEvent.data);
-    console.log("Response:", JSON.stringify(jsonResponse, null, 2));
+  if (response.statusCode !== 200) {
+    throw new Error(`Expected 200, got ${response.statusCode}`);
   }
 
   console.log("✓ Profile metrics called successfully");
 }
 
 /**
- * Test 9: Test OPTIONS (CORS Preflight)
+ * Test 5: Missing Bearer token is rejected
+ */
+async function testMissingToken(): Promise<void> {
+  console.log("\n=== Test 5: Missing Bearer Token ===");
+
+  const request: JsonRpcRequest = {
+    jsonrpc: "2.0",
+    id: requestIdCounter++,
+    method: "initialize",
+    params: {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: { name: "test-client", version: "1.0.0" },
+    },
+  };
+
+  const { response } = await makePostRequest({}, request);
+
+  console.log(`Status: ${response.statusCode}`);
+
+  if (response.statusCode !== 401) {
+    throw new Error(`Expected 401, got ${response.statusCode}`);
+  }
+
+  console.log("✓ Request without token rejected correctly");
+}
+
+/**
+ * Test 6: Invalid Bearer token is rejected
+ */
+async function testInvalidToken(): Promise<void> {
+  console.log("\n=== Test 6: Invalid Bearer Token ===");
+
+  const request: JsonRpcRequest = {
+    jsonrpc: "2.0",
+    id: requestIdCounter++,
+    method: "initialize",
+    params: {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: { name: "test-client", version: "1.0.0" },
+    },
+  };
+
+  const { response } = await makePostRequest({ Authorization: "Bearer invalid-token-12345" }, request);
+
+  console.log(`Status: ${response.statusCode}`);
+
+  if (response.statusCode !== 401) {
+    throw new Error(`Expected 401, got ${response.statusCode}`);
+  }
+
+  console.log("✓ Request with invalid token rejected correctly");
+}
+
+/**
+ * Test 7: CORS preflight (OPTIONS)
  */
 async function testOptionsCors(): Promise<void> {
-  console.log("\n=== Test 9: OPTIONS (CORS Preflight) ===");
+  console.log("\n=== Test 7: OPTIONS (CORS Preflight) ===");
 
   return new Promise((resolve, reject) => {
     const options: http.RequestOptions = {
       method: "OPTIONS",
       headers: {
-        "Origin": "https://example.com",
+        Origin: "https://example.com",
         "Access-Control-Request-Method": "POST",
-        "Access-Control-Request-Headers": "Content-Type, Authorization, mcp-session-id",
+        "Access-Control-Request-Headers": "Content-Type, Authorization",
       },
     };
 
     const req = http.request(BASE_URL, options, (res) => {
       console.log(`Status: ${res.statusCode}`);
-      console.log("CORS Headers:");
       console.log(`  Access-Control-Allow-Origin: ${res.headers["access-control-allow-origin"]}`);
       console.log(`  Access-Control-Allow-Methods: ${res.headers["access-control-allow-methods"]}`);
       console.log(`  Access-Control-Allow-Headers: ${res.headers["access-control-allow-headers"]}`);
@@ -397,8 +257,7 @@ async function testOptionsCors(): Promise<void> {
         console.log("✓ CORS preflight successful");
         resolve();
       } else {
-        console.error("✗ CORS preflight failed");
-        reject(new Error("CORS preflight failed"));
+        reject(new Error(`Expected 204, got ${res.statusCode}`));
       }
     });
 
@@ -408,162 +267,26 @@ async function testOptionsCors(): Promise<void> {
 }
 
 /**
- * Test 10: Test GET (SSE Stream)
+ * Test 8: GET is rejected (SSE not supported in stateless mode)
  */
-async function testGetSSE(): Promise<void> {
-  console.log("\n=== Test 10: GET (SSE Stream) ===");
-
-  if (!sessionId) {
-    throw new Error("No session ID available");
-  }
+async function testGetNotSupported(): Promise<void> {
+  console.log("\n=== Test 8: GET (not supported) ===");
 
   return new Promise((resolve, reject) => {
     const options: http.RequestOptions = {
       method: "GET",
-      headers: {
-        "mcp-session-id": sessionId,
-        "Accept": "text/event-stream",
-      },
+      headers: { Accept: "text/event-stream" },
     };
 
     const req = http.request(BASE_URL, options, (res) => {
       console.log(`Status: ${res.statusCode}`);
-      console.log(`Content-Type: ${res.headers["content-type"]}`);
 
-      if (res.statusCode === 200) {
-        let dataReceived = false;
-        let sseData = "";
-
-        // After connection is established, trigger a tool call to generate SSE events
-        setTimeout(async () => {
-          console.log("\nTriggering tool call to generate SSE events...");
-          try {
-            // Make a tool call while SSE stream is open
-            const toolRequest: JsonRpcRequest = {
-              jsonrpc: "2.0",
-              id: requestIdCounter++,
-              method: "tools/list",
-            };
-
-            if (sessionId) {
-              await makePostRequest({ "mcp-session-id": sessionId }, toolRequest);
-            }
-          } catch {
-            console.log("Tool call triggered (may cause SSE events)");
-          }
-        }, 500);
-
-        const timeout = setTimeout(() => {
-          req.destroy();
-          if (dataReceived) {
-            console.log("\n✓ SSE stream established and received data");
-            console.log("Sample SSE events:", sseData.substring(0, 200));
-            resolve();
-          } else {
-            console.log("✓ SSE stream connected (no server-initiated events, which is expected)");
-            resolve();
-          }
-        }, 3000);
-
-        res.on("data", (chunk) => {
-          dataReceived = true;
-          const chunkStr = chunk.toString();
-          sseData += chunkStr;
-          console.log("SSE Event received:", chunkStr.substring(0, 150).replace(/\n/g, "\\n"));
-        });
-
-        res.on("error", (err) => {
-          clearTimeout(timeout);
-          reject(err);
-        });
-      } else {
-        console.error("✗ SSE stream failed");
-        reject(new Error("SSE stream failed"));
-      }
-    });
-
-    req.on("error", (err) => {
-      if (err.message.includes("socket hang up")) {
-        console.log("✓ SSE stream established successfully");
+      if (res.statusCode === 405) {
+        console.log("✓ GET correctly rejected with 405");
         resolve();
       } else {
-        reject(err);
+        reject(new Error(`Expected 405, got ${res.statusCode}`));
       }
-    });
-
-    req.end();
-  });
-}
-
-/**
- * Test 11: Test DELETE (Session Termination)
- */
-async function testDeleteSession(): Promise<void> {
-  console.log("\n=== Test 11: DELETE (Session Termination) ===");
-
-  if (!sessionId) {
-    throw new Error("No session ID available");
-  }
-
-  const originalSessionId = sessionId;
-
-  return new Promise((resolve, reject) => {
-    const options: http.RequestOptions = {
-      method: "DELETE",
-      headers: {
-        "mcp-session-id": originalSessionId,
-        "Content-Type": "application/json",
-      },
-    };
-
-    const req = http.request(BASE_URL, options, (res) => {
-      let data = "";
-
-      res.on("data", (chunk) => {
-        data += chunk.toString();
-      });
-
-      res.on("end", () => {
-        console.log(`Status: ${res.statusCode}`);
-        console.log("Response:", data || "(no body)");
-
-        if (res.statusCode === 200 || res.statusCode === 204) {
-          console.log("✓ Session terminated successfully");
-
-          // Verify session is actually deleted by trying to use it
-          console.log("\nVerifying session was deleted...");
-          const testOptions: http.RequestOptions = {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "mcp-session-id": originalSessionId,
-            },
-          };
-
-          const testReq = http.request(BASE_URL, testOptions, (testRes) => {
-            console.log(`Verification Status: ${testRes.statusCode}`);
-
-            if (testRes.statusCode === 400) {
-              console.log("✓ Deleted session cannot be reused");
-              resolve();
-            } else {
-              console.error("✗ Deleted session is still active");
-              reject(new Error("Session not properly deleted"));
-            }
-          });
-
-          testReq.on("error", reject);
-          testReq.write(JSON.stringify({
-            jsonrpc: "2.0",
-            id: 999,
-            method: "tools/list",
-          }));
-          testReq.end();
-        } else {
-          console.error("✗ Session termination failed");
-          reject(new Error("Session termination failed"));
-        }
-      });
     });
 
     req.on("error", reject);
@@ -576,23 +299,20 @@ async function testDeleteSession(): Promise<void> {
  */
 async function runTests(): Promise<void> {
   console.log("=".repeat(50));
-  console.log("MCP HTTP Server Test Suite");
+  console.log("MCP HTTP Server Test Suite (Stateless)");
   console.log("=".repeat(50));
   console.log(`Server: ${BASE_URL}`);
-  console.log(`Token: ${TAGOIO_TOKEN}`);
+  console.log(`Token: ${TAGOIO_TOKEN ? "[set]" : "[not set]"}`);
 
   try {
-    await testInitializeSession();
+    await testInitialize();
     await testListTools();
     await testCallTool();
     await testProfileMetrics();
-    await testSessionPersistence();
-    await testInvalidSession();
     await testMissingToken();
     await testInvalidToken();
     await testOptionsCors();
-    await testGetSSE();
-    await testDeleteSession();
+    await testGetNotSupported();
 
     console.log("\n" + "=".repeat(50));
     console.log("✓ All tests completed successfully");

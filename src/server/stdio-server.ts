@@ -38,7 +38,7 @@ async function startStdioServer() {
     }, mcpServerOptions);
 
     // Register all tools
-    await handlerTools(mcpServer, resources);
+    await handlerTools(mcpServer, resources, ENV.TAGOIO_TOKEN);
 
     // Create stdio transport
     const transport = new StdioServerTransport();

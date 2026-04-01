@@ -5,7 +5,7 @@ import { documentationTools } from "./tools";
 /**
  * @description Handler for devices tools to register tools in the MCP server.
  */
-async function handlerDocumentationTools(server: McpServer, resources: Resources) {
+async function handlerDocumentationTools(server: McpServer, resources: Resources, token: string) {
   const fullDocumentationTools = [...documentationTools];
 
   for (const toolConfig of fullDocumentationTools) {
@@ -17,7 +17,7 @@ async function handlerDocumentationTools(server: McpServer, resources: Resources
         inputSchema: toolConfig.parameters,
       },
       async (params) => {
-        const result = await toolConfig.tool(resources, params);
+        const result = await toolConfig.tool(resources, params, token);
         return { content: [{ type: "text", text: result }] };
       },
     );
