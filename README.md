@@ -93,6 +93,28 @@ Authorization: Bearer YOUR-TAGOIO-TOKEN
 
 **Note:** Unlike STDIO mode, HTTP mode does not require `TAGOIO_TOKEN` environment variable. Each client connection authenticates with their own Bearer token, allowing multiple clients with different credentials to connect simultaneously.
 
+##### AWS Lambda (Remote HTTP)
+
+For connecting to the TagoIO MCP Server deployed on AWS Lambda via HTTP:
+
+```json
+{
+  "mcpServers": {
+    "@tago-io/mcp": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://YOUR-API-GATEWAY-URL/mcp",
+        "--header",
+        "Authorization: Bearer YOUR-TAGOIO-TOKEN"
+      ]
+    }
+  }
+}
+```
+
+Replace `YOUR-API-GATEWAY-URL` with your Lambda API Gateway endpoint and `YOUR-TAGOIO-TOKEN` with your TagoIO Profile or Analysis token.
+
 **Configuration Parameters:**
 
 - Replace `YOUR-TOKEN` with your TagoIO Profile token or an Analysis Token
