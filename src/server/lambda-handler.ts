@@ -1,14 +1,12 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 
-import { createMcpServer, validateTagoToken } from "./http-server";
-
-const TAGOIO_API = process.env.TAGOIO_API || "https://api.tago.io";
+import { createMcpServer, validateTagoToken, DEFAULT_TAGOIO_REGION, VALID_REGIONS } from "./http-server";
 
 const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, mcp-session-id",
+  "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization, mcp-session-id, mcp-protocol-version, x-tagoio-region",
 };
 
 function jsonResult(statusCode: number, body: unknown, extraHeaders?: Record<string, string>): APIGatewayProxyResultV2 {
@@ -25,8 +23,6 @@ function jsonResult(statusCode: number, body: unknown, extraHeaders?: Record<str
  * Compatible with API Gateway v2 HTTP API and Lambda Function URLs.
  */
 async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
-  process.env.TAGOIO_API = TAGOIO_API;
-
   const method = event.requestContext.http.method.toUpperCase();
 
   if (method === "OPTIONS") {
@@ -35,6 +31,11 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
       headers: { ...CORS_HEADERS, "Access-Control-Max-Age": "86400" },
       body: "",
     };
+  }
+
+  const requestPath = event.requestContext.http.path;
+  if (requestPath !== "/mcp") {
+    return jsonResult(404, { error: "Not Found", message: "Only /mcp endpoint is supported" });
   }
 
   if (method !== "POST") {
@@ -54,7 +55,17 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
     });
   }
 
-  const resources = await validateTagoToken(token);
+  const tagoioRegion = event.headers["x-tagoio-region"] ?? DEFAULT_TAGOIO_REGION;
+
+  if (!VALID_REGIONS.includes(tagoioRegion)) {
+    return jsonResult(400, {
+      jsonrpc: "2.0",
+      error: { code: -32000, message: `Bad Request: Invalid region "${tagoioRegion}". Valid regions: ${VALID_REGIONS.join(", ")}` },
+      id: null,
+    });
+  }
+
+  const resources = await validateTagoToken(token, tagoioRegion);
 
   if (!resources) {
     return jsonResult(401, {
@@ -68,8 +79,7 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
   const rawBody = event.body ?? "";
   const bodyStr = event.isBase64Encoded ? Buffer.from(rawBody, "base64").toString("utf-8") : rawBody;
 
-  const path = event.requestContext.http.path;
-  const webRequest = new Request(`https://lambda${path}`, {
+  const webRequest = new Request(`https://lambda${requestPath}`, {
     method,
     headers: event.headers as Record<string, string>,
     body: bodyStr || undefined,

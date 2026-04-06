@@ -4,6 +4,7 @@ import { Resources } from "@tago-io/sdk";
 import { getEnvVariables } from "../utils/get-env-variables.js";
 
 import { handlerTools } from "../mcp-tools";
+import { SERVER_NAME, SERVER_VERSION, SERVER_INSTRUCTIONS } from "../utils/server-config";
 
 /**
  * @description Start the MCP server using stdio transport.
@@ -28,14 +29,10 @@ async function startStdioServer() {
       throw new Error("Failed to connect to TagoIO API. Please check your TAGOIO_TOKEN and TAGOIO_API configuration.");
     });
 
-    const mcpServerOptions =   {
-      instructions: "Use this server to interact with your TagoIO account. Perform data analysis, collect profile metrics and manage your TagoIO devices..",
-    };
-    // Create MCP server
-    const mcpServer = new McpServer({
-      name: "tagoio-mcp-server",
-      version: "2.1.2",
-    }, mcpServerOptions);
+    const mcpServer = new McpServer(
+      { name: SERVER_NAME, version: SERVER_VERSION },
+      { instructions: SERVER_INSTRUCTIONS },
+    );
 
     // Register all tools
     await handlerTools(mcpServer, resources, ENV.TAGOIO_TOKEN);

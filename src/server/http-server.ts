@@ -4,14 +4,16 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { Resources } from "@tago-io/sdk";
 
 import { handlerTools } from "../mcp-tools";
+import { SERVER_NAME, SERVER_VERSION, SERVER_INSTRUCTIONS } from "../utils/server-config";
 
 const MCP_PORT = Number.parseInt(process.env.MCP_PORT || "3000");
-const TAGOIO_API = process.env.TAGOIO_API || "https://api.tago.io";
+const DEFAULT_TAGOIO_REGION = "us-e1";
+const VALID_REGIONS = ["us-e1", "eu-w1"];
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, mcp-session-id",
+  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization, mcp-session-id, mcp-protocol-version, x-tagoio-region",
 };
 
 /**
@@ -69,12 +71,20 @@ function handleCorsPreflightRequest(res: ServerResponse): void {
   res.end();
 }
 
+function buildRegion(tagoioRegion: string): { api: string; sse: string } {
+  return {
+    api: `https://api.${tagoioRegion}.tago.io`,
+    sse: `https://sse.${tagoioRegion}.tago.io`,
+  };
+}
+
 /**
  * Validates the TagoIO token by attempting to fetch account information.
  */
-async function validateTagoToken(token: string): Promise<Resources | null> {
+async function validateTagoToken(token: string, tagoioRegion: string): Promise<Resources | null> {
   try {
-    const resources = new Resources({ token });
+    const region = buildRegion(tagoioRegion);
+    const resources = new Resources({ token, region });
     await resources.account.info();
     return resources;
   } catch {
@@ -86,10 +96,10 @@ async function validateTagoToken(token: string): Promise<Resources | null> {
  * Creates a new MCP server instance with registered tools.
  */
 function createMcpServer(resources: Resources, token: string): McpServer {
-  const mcpServer = new McpServer({
-    name: "middleware-mcp-tagoio",
-    version: "1.0.0",
-  });
+  const mcpServer = new McpServer(
+    { name: SERVER_NAME, version: SERVER_VERSION },
+    { instructions: SERVER_INSTRUCTIONS },
+  );
 
   handlerTools(mcpServer, resources, token);
   return mcpServer;
@@ -104,7 +114,6 @@ function createMcpServer(resources: Resources, token: string): McpServer {
  */
 async function handlePostRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const token = extractBearerToken(req);
-  console.log(token);
 
   if (!token) {
     sendJsonResponse(res, 401, {
@@ -118,7 +127,21 @@ async function handlePostRequest(req: IncomingMessage, res: ServerResponse): Pro
     return;
   }
 
-  const resources = await validateTagoToken(token);
+  const tagoioRegion = (req.headers["x-tagoio-region"] as string) || DEFAULT_TAGOIO_REGION;
+
+  if (!VALID_REGIONS.includes(tagoioRegion)) {
+    sendJsonResponse(res, 400, {
+      jsonrpc: "2.0",
+      error: {
+        code: -32000,
+        message: `Bad Request: Invalid region "${tagoioRegion}". Valid regions: ${VALID_REGIONS.join(", ")}`,
+      },
+      id: null,
+    });
+    return;
+  }
+
+  const resources = await validateTagoToken(token, tagoioRegion);
 
   if (!resources) {
     sendJsonResponse(res, 401, {
@@ -164,8 +187,21 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
   }
 
   try {
+    // Set CORS headers for all /mcp responses
+    for (const [key, value] of Object.entries(CORS_HEADERS)) {
+      res.setHeader(key, value);
+    }
+
     if (method === "POST") {
       await handlePostRequest(req, res);
+    } else if (method === "GET" || method === "DELETE") {
+      // Let the SDK transport handle GET (SSE) and DELETE (session termination).
+      // In stateless mode it returns 405 with proper MCP-compliant headers.
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: undefined,
+        enableJsonResponse: true,
+      });
+      await transport.handleRequest(req, res);
     } else {
       sendJsonResponse(res, 405, {
         error: "Method Not Allowed",
@@ -192,8 +228,6 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
  */
 async function startHttpServer(): Promise<void> {
   try {
-    process.env.TAGOIO_API = TAGOIO_API;
-
     const server = createServer((req, res) => handleRequest(req, res));
 
     server.listen(MCP_PORT, () => {
@@ -213,4 +247,4 @@ async function startHttpServer(): Promise<void> {
   }
 }
 
-export { startHttpServer, handleRequest, validateTagoToken, createMcpServer };
+export { startHttpServer, handleRequest, validateTagoToken, createMcpServer, DEFAULT_TAGOIO_REGION, VALID_REGIONS };
