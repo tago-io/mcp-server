@@ -2,9 +2,11 @@ import { IncomingMessage, ServerResponse, createServer } from "node:http";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
 import { CORS_HEADERS, DEFAULT_TAGOIO_REGION, createMcpServer, extractToken, isTokenError, validateTagoToken } from "./shared";
+import { SERVER_NAME, SERVER_VERSION } from "../utils/server-config";
 
 const MAX_BODY_SIZE = 1_048_576; // 1 MB
 const MCP_ENDPOINT = "/mcp";
+const HEALTH_ENDPOINT = "/health";
 
 function parseMcpPort(): number {
   const raw = process.env.MCP_PORT || "3000";
@@ -140,16 +142,32 @@ async function handlePostRequest(req: IncomingMessage, res: ServerResponse): Pro
 }
 
 /**
+ * Handles GET /health requests, returning server name, version, and status.
+ */
+function handleHealthRequest(res: ServerResponse): void {
+  sendJsonResponse(res, 200, {
+    name: SERVER_NAME,
+    version: SERVER_VERSION,
+    status: "ok",
+  });
+}
+
+/**
  * Routes HTTP requests to appropriate handlers based on method.
  */
 async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const { method, url } = req;
 
+  if (url === HEALTH_ENDPOINT && method === "GET") {
+    handleHealthRequest(res);
+    return;
+  }
+
   // Check path first — only /mcp is supported (except OPTIONS which applies globally for CORS)
   if (url !== MCP_ENDPOINT && method !== "OPTIONS") {
     sendJsonResponse(res, 404, {
       error: "Not Found",
-      message: `Only ${MCP_ENDPOINT} endpoint is supported`,
+      message: `Only ${MCP_ENDPOINT} and ${HEALTH_ENDPOINT} endpoints are supported`,
     });
     return;
   }

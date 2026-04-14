@@ -7,11 +7,18 @@
 		"source": "github"
 	},
 	"version": "2.1.4",
+	"remotes": [
+		{
+			"transportType": "streamable-http",
+			"url": "https://mcp.tago.io"
+		}
+	],
 	"packages": [
 		{
 			"registryType": "npm",
 			"identifier": "@tago-io/mcp-server",
 			"version": "2.1.4",
+			"runtimeHint": "npx",
 			"transport": {
 				"type": "stdio"
 			},
@@ -29,6 +36,26 @@
 					"format": "string",
 					"isSecret": false,
 					"name": "TAGOIO_API"
+				}
+			]
+		},
+		{
+			"registryType": "npm",
+			"identifier": "@tago-io/mcp-server",
+			"version": "2.1.4",
+			"runtimeHint": "npx",
+			"packageArguments": ["http"],
+			"transport": {
+				"type": "streamable-http",
+				"url": "http://localhost:3000/mcp"
+			},
+			"environmentVariables": [
+				{
+					"description": "Port for the HTTP server. Defaults to 3000",
+					"isRequired": false,
+					"format": "string",
+					"isSecret": false,
+					"name": "MCP_PORT"
 				}
 			]
 		}
