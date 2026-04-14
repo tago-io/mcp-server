@@ -235,13 +235,34 @@ async function startHttpServer(): Promise<void> {
     logger.info(`MCP Streamable HTTP Server listening on port ${port}`);
   });
 
-  process.on("SIGINT", () => {
+  const connections = new Set<import("node:net").Socket>();
+
+  server.on("connection", (socket) => {
+    connections.add(socket);
+    socket.once("close", () => connections.delete(socket));
+  });
+
+  const SHUTDOWN_TIMEOUT_MS = 5_000;
+
+  function shutdown() {
     logger.info("Shutting down server...");
+
     server.close(() => {
       logger.info("Server shutdown complete");
       process.exit(0);
     });
-  });
+
+    setTimeout(() => {
+      logger.info(`Forcing shutdown after ${SHUTDOWN_TIMEOUT_MS / 1_000}s — destroying ${connections.size} remaining connection(s)`);
+      for (const socket of connections) {
+        socket.destroy();
+      }
+      process.exit(0);
+    }, SHUTDOWN_TIMEOUT_MS).unref();
+  }
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 }
 
 export { startHttpServer, handleRequest };
