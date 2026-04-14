@@ -1,43 +1,47 @@
 import { IncomingMessage, ServerResponse, createServer } from "node:http";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { Resources } from "@tago-io/sdk";
 
-import { handlerTools } from "../mcp-tools";
-import { SERVER_NAME, SERVER_VERSION, SERVER_INSTRUCTIONS } from "../utils/server-config";
+import {
+  CORS_HEADERS,
+  DEFAULT_TAGOIO_REGION,
+  VALID_REGIONS,
+  extractBearerToken,
+  validateTagoToken,
+  createMcpServer,
+  isTokenError,
+} from "./shared";
 
-const MCP_PORT = Number.parseInt(process.env.MCP_PORT || "3000");
-const DEFAULT_TAGOIO_REGION = "us-e1";
-const VALID_REGIONS = ["us-e1", "eu-w1"];
+const MAX_BODY_SIZE = 1_048_576; // 1 MB
+const MCP_ENDPOINT = "/mcp";
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization, mcp-session-id, mcp-protocol-version, x-tagoio-region",
-};
-
-/**
- * Extracts the Bearer token from the Authorization header.
- */
-function extractBearerToken(req: IncomingMessage): string | null {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return null;
+function parseMcpPort(): number {
+  const raw = process.env.MCP_PORT || "3000";
+  const port = Number.parseInt(raw, 10);
+  if (Number.isNaN(port) || port < 0 || port > 65535) {
+    console.error(`Invalid MCP_PORT "${raw}". Must be a number between 0 and 65535.`);
+    process.exit(1);
   }
-
-  const match = authHeader.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1] : null;
+  return port;
 }
 
 /**
- * Parses the JSON body from an incoming HTTP request.
+ * Parses the JSON body from an incoming HTTP request with a size limit.
  */
 async function parseBody(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
     let body = "";
-    req.on("data", (chunk) => {
+    let size = 0;
+
+    req.on("data", (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > MAX_BODY_SIZE) {
+        req.destroy();
+        reject(new Error("Request body too large"));
+        return;
+      }
       body += chunk.toString();
     });
+
     req.on("end", () => {
       try {
         resolve(body ? JSON.parse(body) : undefined);
@@ -45,6 +49,7 @@ async function parseBody(req: IncomingMessage): Promise<unknown> {
         reject(error);
       }
     });
+
     req.on("error", reject);
   });
 }
@@ -71,40 +76,6 @@ function handleCorsPreflightRequest(res: ServerResponse): void {
   res.end();
 }
 
-function buildRegion(tagoioRegion: string): { api: string; sse: string } {
-  return {
-    api: `https://api.${tagoioRegion}.tago.io`,
-    sse: `https://sse.${tagoioRegion}.tago.io`,
-  };
-}
-
-/**
- * Validates the TagoIO token by attempting to fetch account information.
- */
-async function validateTagoToken(token: string, tagoioRegion: string): Promise<Resources | null> {
-  try {
-    const region = buildRegion(tagoioRegion);
-    const resources = new Resources({ token, region });
-    await resources.account.info();
-    return resources;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Creates a new MCP server instance with registered tools.
- */
-function createMcpServer(resources: Resources, token: string): McpServer {
-  const mcpServer = new McpServer(
-    { name: SERVER_NAME, version: SERVER_VERSION },
-    { instructions: SERVER_INSTRUCTIONS },
-  );
-
-  handlerTools(mcpServer, resources, token);
-  return mcpServer;
-}
-
 /**
  * Handles POST requests in stateless mode.
  *
@@ -113,7 +84,7 @@ function createMcpServer(resources: Resources, token: string): McpServer {
  * and the response is returned -- no session state is retained.
  */
 async function handlePostRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const token = extractBearerToken(req);
+  const token = extractBearerToken(req.headers.authorization);
 
   if (!token) {
     sendJsonResponse(res, 401, {
@@ -141,30 +112,51 @@ async function handlePostRequest(req: IncomingMessage, res: ServerResponse): Pro
     return;
   }
 
-  const resources = await validateTagoToken(token, tagoioRegion);
+  const result = await validateTagoToken(token, tagoioRegion);
 
-  if (!resources) {
-    sendJsonResponse(res, 401, {
+  if (isTokenError(result)) {
+    sendJsonResponse(res, result.statusCode, {
       jsonrpc: "2.0",
       error: {
         code: -32000,
-        message: "Unauthorized: Invalid TagoIO token",
+        message: result.error,
       },
       id: null,
     });
     return;
   }
 
-  const body = await parseBody(req);
+  let body: unknown;
+  try {
+    body = await parseBody(req);
+  } catch (error) {
+    const isTooLarge = error instanceof Error && error.message === "Request body too large";
+    const statusCode = isTooLarge ? 413 : 400;
+    const message = isTooLarge ? "Payload Too Large" : "Parse error: Invalid JSON in request body";
+    const code = isTooLarge ? -32000 : -32700;
+
+    sendJsonResponse(res, statusCode, {
+      jsonrpc: "2.0",
+      error: { code, message },
+      id: null,
+    });
+    return;
+  }
 
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
     enableJsonResponse: true,
   });
 
-  const mcpServer = createMcpServer(resources, token);
-  await mcpServer.connect(transport);
-  await transport.handleRequest(req, res, body);
+  const mcpServer = createMcpServer(result.resources, token);
+
+  try {
+    await mcpServer.connect(transport);
+    await transport.handleRequest(req, res, body);
+  } finally {
+    await mcpServer.close();
+    await transport.close();
+  }
 }
 
 /**
@@ -173,16 +165,17 @@ async function handlePostRequest(req: IncomingMessage, res: ServerResponse): Pro
 async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const { method, url } = req;
 
-  if (method === "OPTIONS") {
-    handleCorsPreflightRequest(res);
+  // Check path first — only /mcp is supported (except OPTIONS which applies globally for CORS)
+  if (url !== MCP_ENDPOINT && method !== "OPTIONS") {
+    sendJsonResponse(res, 404, {
+      error: "Not Found",
+      message: `Only ${MCP_ENDPOINT} endpoint is supported`,
+    });
     return;
   }
 
-  if (url !== "/mcp") {
-    sendJsonResponse(res, 404, {
-      error: "Not Found",
-      message: "Only /mcp endpoint is supported",
-    });
+  if (method === "OPTIONS") {
+    handleCorsPreflightRequest(res);
     return;
   }
 
@@ -227,24 +220,29 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
  * Starts the MCP HTTP server in stateless mode.
  */
 async function startHttpServer(): Promise<void> {
-  try {
-    const server = createServer((req, res) => handleRequest(req, res));
+  const port = parseMcpPort();
+  const server = createServer((req, res) => handleRequest(req, res));
 
-    server.listen(MCP_PORT, () => {
-      console.error(`MCP Streamable HTTP Server listening on port ${MCP_PORT}`);
-    });
-
-    process.on("SIGINT", () => {
-      console.error("Shutting down server...");
-      server.close(() => {
-        console.error("Server shutdown complete");
-        process.exit(0);
-      });
-    });
-  } catch (error) {
-    console.error("Failed to start MCP HTTP server:", error);
+  server.on("error", (error: NodeJS.ErrnoException) => {
+    if (error.code === "EADDRINUSE") {
+      console.error(`Port ${port} is already in use. Choose a different port via MCP_PORT.`);
+    } else {
+      console.error("HTTP server error:", error);
+    }
     process.exit(1);
-  }
+  });
+
+  server.listen(port, () => {
+    console.error(`MCP Streamable HTTP Server listening on port ${port}`);
+  });
+
+  process.on("SIGINT", () => {
+    console.error("Shutting down server...");
+    server.close(() => {
+      console.error("Server shutdown complete");
+      process.exit(0);
+    });
+  });
 }
 
-export { startHttpServer, handleRequest, validateTagoToken, createMcpServer, DEFAULT_TAGOIO_REGION, VALID_REGIONS };
+export { startHttpServer, handleRequest };

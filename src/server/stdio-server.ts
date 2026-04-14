@@ -25,8 +25,12 @@ async function startStdioServer() {
     const resources = new Resources({ token: ENV.TAGOIO_TOKEN, region });
 
     // Validate the connection to TagoIO API
-    await resources.account.info().catch(() => {
-      throw new Error("Failed to connect to TagoIO API. Please check your TAGOIO_TOKEN and TAGOIO_API configuration.");
+    await resources.account.info().catch((originalError) => {
+      const detail = originalError instanceof Error ? originalError.message : String(originalError);
+      throw new Error(
+        `Failed to connect to TagoIO API: ${detail}. Please check your TAGOIO_TOKEN and TAGOIO_API configuration.`,
+        { cause: originalError },
+      );
     });
 
     const mcpServer = new McpServer(

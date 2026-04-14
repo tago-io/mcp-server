@@ -1,13 +1,15 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 
-import { createMcpServer, validateTagoToken, DEFAULT_TAGOIO_REGION, VALID_REGIONS } from "./http-server";
-
-const CORS_HEADERS: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization, mcp-session-id, mcp-protocol-version, x-tagoio-region",
-};
+import {
+  CORS_HEADERS,
+  DEFAULT_TAGOIO_REGION,
+  VALID_REGIONS,
+  extractBearerToken,
+  validateTagoToken,
+  createMcpServer,
+  isTokenError,
+} from "./shared";
 
 function jsonResult(statusCode: number, body: unknown, extraHeaders?: Record<string, string>): APIGatewayProxyResultV2 {
   return {
@@ -44,8 +46,7 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
 
   // Extract Bearer token
   const authHeader = event.headers["authorization"] ?? event.headers["Authorization"] ?? "";
-  const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/i);
-  const token = tokenMatch?.[1] ?? null;
+  const token = extractBearerToken(authHeader);
 
   if (!token) {
     return jsonResult(401, {
@@ -65,12 +66,12 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
     });
   }
 
-  const resources = await validateTagoToken(token, tagoioRegion);
+  const result = await validateTagoToken(token, tagoioRegion);
 
-  if (!resources) {
-    return jsonResult(401, {
+  if (isTokenError(result)) {
+    return jsonResult(result.statusCode, {
       jsonrpc: "2.0",
-      error: { code: -32000, message: "Unauthorized: Invalid TagoIO token" },
+      error: { code: -32000, message: result.error },
       id: null,
     });
   }
@@ -90,22 +91,35 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
     enableJsonResponse: true,
   });
 
-  const mcpServer = createMcpServer(resources, token);
-  await mcpServer.connect(transport);
+  const mcpServer = createMcpServer(result.resources, token);
 
-  const webResponse = await transport.handleRequest(webRequest);
+  try {
+    await mcpServer.connect(transport);
 
-  const responseBody = await webResponse.text();
-  const responseHeaders: Record<string, string> = { ...CORS_HEADERS };
-  webResponse.headers.forEach((value, key) => {
-    responseHeaders[key] = value;
-  });
+    const webResponse = await transport.handleRequest(webRequest);
+    const responseBody = await webResponse.text();
 
-  return {
-    statusCode: webResponse.status,
-    headers: responseHeaders,
-    body: responseBody,
-  };
+    const responseHeaders: Record<string, string> = { ...CORS_HEADERS };
+    webResponse.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
+
+    return {
+      statusCode: webResponse.status,
+      headers: responseHeaders,
+      body: responseBody,
+    };
+  } catch (error) {
+    console.error("Lambda MCP handler error:", error);
+    return jsonResult(500, {
+      jsonrpc: "2.0",
+      error: { code: -32603, message: "Internal server error processing MCP request" },
+      id: null,
+    });
+  } finally {
+    await mcpServer.close();
+    await transport.close();
+  }
 }
 
 export { handler };
