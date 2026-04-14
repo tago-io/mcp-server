@@ -18,7 +18,7 @@ async function handlerDevicesTools(server: McpServer, resources: Resources) {
       async (params) => {
         const result = await toolConfig.tool(resources, params);
         return { content: [{ type: "text", text: result }] };
-      },
+      }
     );
   }
 }

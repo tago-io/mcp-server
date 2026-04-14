@@ -1,5 +1,5 @@
-import { ZodRawShape } from "zod/v3";
 import { Resources } from "@tago-io/sdk";
+import { ZodRawShape } from "zod/v3";
 
 /**
  * @description Interface for tool configuration.
@@ -39,7 +39,7 @@ interface IDeviceToolConfig {
    * @param params - Parsed and validated parameters from the Zod schema
    * @returns Promise that resolves to a string response (usually Markdown)
    */
-  tool: (resources: Resources, params: any) => Promise<string>;
+  tool: (resources: Resources, params: any, token?: string) => Promise<string>;
 }
 
 export { IDeviceToolConfig };

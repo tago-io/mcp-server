@@ -1,7 +1,7 @@
 import { IDeviceToolConfig } from "../../types";
-import { deviceOperationsConfigJSON } from "./device-operations";
-import { deviceDeleteDataConfigJSON } from "./device-delete-data";
 import { deviceDataConfigJSON } from "./device-data";
+import { deviceDeleteDataConfigJSON } from "./device-delete-data";
+import { deviceOperationsConfigJSON } from "./device-operations";
 
 /**
  * @description Array of all device tool configurations.

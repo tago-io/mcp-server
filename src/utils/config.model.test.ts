@@ -1,17 +1,11 @@
-import { describe, it, expect } from "vitest";
-import { environmentModel, headersModel } from "./config.model";
+import { describe, expect, it } from "vitest";
+import { environmentModel } from "./config.model";
 
 // Helper to create a valid base object for environment
 const defaultEnv = {
   TAGOIO_TOKEN: "token123",
   TAGOIO_API: "https://api.us-e1.tago.io",
   LOG_LEVEL: "DEBUG",
-};
-
-// Helper to create a valid base object for headers
-const defaultHeaders = {
-  authorization: "Bearer token123",
-  "tagoio-api": "https://api.us-e1.tago.io",
 };
 
 describe("environmentModel", () => {
@@ -30,46 +24,20 @@ describe("environmentModel", () => {
     expect(parsed.LOG_LEVEL).toBe("INFO");
   });
 
-  it("throws error if TAGOIO_TOKEN is missing", () => {
+  it("defaults TAGOIO_TOKEN to empty string if missing", () => {
     const { TAGOIO_TOKEN, ...env } = defaultEnv;
-    expect(() => environmentModel.parse(env)).toThrow();
+    const parsed = environmentModel.parse(env);
+    expect(parsed.TAGOIO_TOKEN).toBe("");
+  });
+
+  it("accepts SILENT as a valid LOG_LEVEL", () => {
+    const env = { ...defaultEnv, LOG_LEVEL: "SILENT" };
+    const parsed = environmentModel.parse(env);
+    expect(parsed.LOG_LEVEL).toBe("SILENT");
   });
 
   it("throws error if LOG_LEVEL is invalid", () => {
-    const env = { ...defaultEnv, LOG_LEVEL: "SILENT" };
+    const env = { ...defaultEnv, LOG_LEVEL: "VERBOSE" };
     expect(() => environmentModel.parse(env)).toThrow();
-  });
-});
-
-describe("headersModel", () => {
-  it("validates a complete and valid set of headers", () => {
-    const parsed = headersModel.parse(defaultHeaders);
-    expect(parsed).toEqual({
-      authorization: "token123", // Bearer prefix should be removed
-      "tagoio-api": "https://api.us-e1.tago.io",
-    });
-  });
-
-  it("uses default value for tagoio-api", () => {
-    const { "tagoio-api": tagoApi, ...headers } = defaultHeaders;
-    const parsed = headersModel.parse(headers);
-    expect(parsed["tagoio-api"]).toBe("https://api.us-e1.tago.io");
-  });
-
-  it("throws error if authorization is missing", () => {
-    const { authorization, ...headers } = defaultHeaders;
-    expect(() => headersModel.parse(headers)).toThrow("Authorization header is required");
-  });
-
-  it("removes 'Bearer' prefix from authorization token", () => {
-    const headers = { ...defaultHeaders, authorization: "Bearer mytoken" };
-    const parsed = headersModel.parse(headers);
-    expect(parsed.authorization).toBe("mytoken");
-  });
-
-  it("keeps token as is if it doesn't have 'Bearer' prefix", () => {
-    const headers = { ...defaultHeaders, authorization: "mytoken" };
-    const parsed = headersModel.parse(headers);
-    expect(parsed.authorization).toBe("mytoken");
   });
 });

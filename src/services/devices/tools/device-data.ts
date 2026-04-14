@@ -1,12 +1,12 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
 import { Device, Resources } from "@tago-io/sdk";
-import { DataCreate, DataEdit, DataQuery } from "@tago-io/sdk/lib/types";
+import type { DataCreate, DataEdit, DataQuery } from "@tago-io/sdk";
 
 import { getEnvVariables } from "../../../utils/get-env-variables";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
-import { IDeviceToolConfig } from "../../types";
 import { createOperationFactory } from "../../../utils/operation-factory";
+import { IDeviceToolConfig } from "../../types";
 
 // Zod schema for LocationLatLng
 const locationLatLngSchema = z
