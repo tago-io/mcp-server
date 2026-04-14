@@ -22,7 +22,7 @@
 	"keywords": ["mcp", "model-context-protocol", "tagoio", "ai", "tools"],
 	"author": "TagoIO",
 	"engines": {
-		"node": ">=20"
+		"node": ">=24"
 	},
 	"repository": {
 		"type": "git",
@@ -33,22 +33,22 @@
 	"homepage": "https://github.com/tago-io/mcp-server",
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
-		"@types/aws-lambda": "^8.10.160",
+		"@types/aws-lambda": "^8.10.161",
 		"@types/node": "^24",
-		"aws-cdk-lib": "^2.237.1",
-		"constructs": "^10.4.5",
+		"aws-cdk-lib": "^2.249.0",
+		"constructs": "^10.6.0",
 		"ts-node": "^10.9.2",
 		"ts-node-dev": "^2.0.0",
-		"typescript": "^5.9.3",
+		"typescript": "^6.0.2",
 		"unplugin-swc": "^1.5.9",
-		"vitest": "^3.1.4"
+		"vitest": "^4.1.4"
 	},
 	"dependencies": {
-		"@modelcontextprotocol/sdk": "^1.26.0",
-		"@tago-io/sdk": "^11.3.10",
+		"@modelcontextprotocol/sdk": "^1.29.0",
+		"@tago-io/sdk": "^12.2.2",
 		"dotenv": "^16.5.0",
 		"mcps-logger": "^1.0.0",
 		"shx": "^0.4.0",
-		"zod": "^3.23.8"
+		"zod": "^4.3.6"
 	}
 }

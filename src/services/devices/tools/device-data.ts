@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
 import { Device, Resources } from "@tago-io/sdk";
 import type { DataCreate, DataEdit, DataQuery } from "@tago-io/sdk";

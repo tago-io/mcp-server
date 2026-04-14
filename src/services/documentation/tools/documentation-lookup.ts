@@ -1,5 +1,5 @@
 import { Resources } from "@tago-io/sdk";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { IDeviceToolConfig } from "../../types";
 

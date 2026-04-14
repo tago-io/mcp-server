@@ -1,5 +1,5 @@
 import { Resources } from "@tago-io/sdk";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 import type { SecretsQuery } from "@tago-io/sdk";
 import { convertJSONToMarkdown } from "../../../utils/markdown";

@@ -1,6 +1,6 @@
 import { Device, Resources } from "@tago-io/sdk";
 import type { DataQuery } from "@tago-io/sdk";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { getEnvVariables } from "../../../utils/get-env-variables";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { IDeviceToolConfig } from "../../types";

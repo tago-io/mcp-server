@@ -20,7 +20,7 @@ Connect your AI assistant to your TagoIO devices, data, and platform resources â
 
 ### Prerequisites
 
-- Node.js 20+ installed (https://nodejs.org/en/download/)
+- Node.js 24+ installed (https://nodejs.org/en/download/)
 - TagoIO account with a valid Profile token or Analysis token
 - A supported AI platform or IDE (see [Platform-Specific Setup](#platform-specific-setup))
 
