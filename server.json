@@ -6,7 +6,7 @@
 		"url": "https://github.com/tago-io/mcp-server",
 		"source": "github"
 	},
-	"version": "2.1.4",
+	"version": "3.0.0",
 	"remotes": [
 		{
 			"transportType": "streamable-http",
@@ -17,7 +17,7 @@
 		{
 			"registryType": "npm",
 			"identifier": "@tago-io/mcp-server",
-			"version": "2.1.4",
+			"version": "3.0.0",
 			"runtimeHint": "npx",
 			"transport": {
 				"type": "stdio"
@@ -42,7 +42,7 @@
 		{
 			"registryType": "npm",
 			"identifier": "@tago-io/mcp-server",
-			"version": "2.1.4",
+			"version": "3.0.0",
 			"runtimeHint": "npx",
 			"packageArguments": ["http"],
 			"transport": {

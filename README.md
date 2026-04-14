@@ -302,7 +302,7 @@ Best for desktop AI assistants and IDEs. Add this configuration to your platform
 For **Claude Code**, use the CLI:
 
 ```bash
-claude mcp add @tago-io/mcp -e TAGOIO_TOKEN=YOUR-TAGOIO-TOKEN -- npx -y @tago-io/mcp-server
+claude mcp add @tago-io/mcp-server -e TAGOIO_TOKEN=YOUR-TAGOIO-TOKEN -- npx -y @tago-io/mcp-server
 ```
 
 For **VS Code / GitHub Copilot**, use the `inputs` pattern for secure token prompting:

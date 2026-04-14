@@ -28,7 +28,7 @@ async function main() {
       break;
     default:
       console.error(`Error: Unknown transport mode "${mode}"`);
-      console.error("Usage: tago-mcp-server [stdio|http]");
+      console.error("Usage: tago-mcp [stdio|http]");
       console.error("  stdio - Use STDIO transport (default)");
       console.error("  http  - Use HTTP transport with Streamable protocol");
       process.exit(1);
