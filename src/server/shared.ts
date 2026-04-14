@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Network, Resources } from "@tago-io/sdk";
 
 import { handlerTools } from "../mcp-tools";
+import { logger } from "../utils/logger";
 import { SERVER_INSTRUCTIONS, SERVER_NAME, SERVER_VERSION } from "../utils/server-config";
 
 const VALID_REGIONS = ["us-e1", "eu-w1"] as const;
@@ -71,7 +72,7 @@ async function validateTagoToken(token: string, tagoioRegion: string): Promise<T
     const resources = new Resources({ token, region });
     return { resources };
   } catch (error) {
-    console.error("Token validation failed:", error);
+    logger.warn("Token validation failed:", error);
 
     if (error instanceof Error) {
       const code = (error as NodeJS.ErrnoException).code;

@@ -15,7 +15,7 @@ Connect your AI assistant to your TagoIO devices, data, and platform resources �
 
 ## Features
 
-- **Remote Server**: Connect instantly via `https://mcp.tago.io` — no local setup required
+- **Remote Server**: Connect instantly via `https://mcp.ai.tago.io` — no local setup required
 - **Device Management**: Access device information, configurations, and real-time data
 - **Data Analysis**: Perform statistical operations (sums, averages, reports) on stored data
 - **Platform Integration**: Retrieve users, actions, analysis scripts, and account statistics
@@ -36,7 +36,7 @@ Connect your AI assistant to your TagoIO devices, data, and platform resources �
 
 ## Remote Server (Recommended)
 
-Connect directly to the TagoIO hosted MCP server at `https://mcp.tago.io`. No local installation or Node.js required.
+Connect directly to the TagoIO hosted MCP server at `https://mcp.ai.tago.io`. No local installation or Node.js required.
 
 Authentication is done via the `Authorization` header with your Profile Token.
 
@@ -58,7 +58,7 @@ Add to `.vscode/mcp.json` in your project (or User Settings for global access):
   "servers": {
     "@tago-io/mcp": {
       "type": "http",
-      "url": "https://mcp.tago.io",
+      "url": "https://mcp.ai.tago.io",
       "headers": {
         "Authorization": "Bearer ${input:tagoToken}"
       }
@@ -82,7 +82,7 @@ Same configuration as [VS Code](#vs-code). Add to `.vscode/mcp.json` or User Set
 ### Claude Code
 
 ```bash
-claude mcp add-json @tago-io/mcp '{"type":"http","url":"https://mcp.tago.io","headers":{"Authorization":"Bearer YOUR-TAGOIO-TOKEN"}}'
+claude mcp add-json @tago-io/mcp '{"type":"http","url":"https://mcp.ai.tago.io","headers":{"Authorization":"Bearer YOUR-TAGOIO-TOKEN"}}'
 ```
 
 ### Claude Desktop
@@ -99,7 +99,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
       "args": [
         "-y",
         "mcp-remote",
-        "https://mcp.tago.io",
+        "https://mcp.ai.tago.io",
         "--header",
         "Authorization: Bearer YOUR-TAGOIO-TOKEN"
       ]
@@ -116,7 +116,7 @@ Add to `~/.cursor/mcp.json`:
 {
   "mcpServers": {
     "@tago-io/mcp": {
-      "url": "https://mcp.tago.io",
+      "url": "https://mcp.ai.tago.io",
       "headers": {
         "Authorization": "Bearer YOUR-TAGOIO-TOKEN"
       }
@@ -133,7 +133,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 {
   "mcpServers": {
     "@tago-io/mcp": {
-      "serverUrl": "https://mcp.tago.io",
+      "serverUrl": "https://mcp.ai.tago.io",
       "headers": {
         "Authorization": "Bearer YOUR-TAGOIO-TOKEN"
       }
@@ -150,7 +150,7 @@ Go to **Settings** > **Tools** > **AI Assistant** > **Model Context Protocol (MC
 {
   "servers": {
     "@tago-io/mcp": {
-      "url": "https://mcp.tago.io",
+      "url": "https://mcp.ai.tago.io",
       "requestInit": {
         "headers": {
           "Authorization": "Bearer YOUR-TAGOIO-TOKEN"
@@ -170,7 +170,7 @@ Add to `.vscode/mcp.json` (VS Code) or configure via CLI:
   "servers": {
     "@tago-io/mcp": {
       "type": "http",
-      "url": "https://mcp.tago.io",
+      "url": "https://mcp.ai.tago.io",
       "headers": {
         "Authorization": "Bearer ${input:tagoToken}"
       }
@@ -195,7 +195,7 @@ Add to `~/.gemini/settings.json`:
 {
   "mcpServers": {
     "@tago-io/mcp": {
-      "httpUrl": "https://mcp.tago.io",
+      "httpUrl": "https://mcp.ai.tago.io",
       "headers": {
         "Authorization": "Bearer YOUR-TAGOIO-TOKEN"
       }
@@ -212,7 +212,7 @@ Add to `~/.aws/amazonq/mcp.json`:
 {
   "mcpServers": {
     "@tago-io/mcp": {
-      "url": "https://mcp.tago.io",
+      "url": "https://mcp.ai.tago.io",
       "headers": {
         "Authorization": "Bearer YOUR-TAGOIO-TOKEN"
       }
@@ -225,7 +225,7 @@ Add to `~/.aws/amazonq/mcp.json`:
 
 In the OpenAI Agent Builder or ChatGPT MCP settings:
 
-- **Server URL**: `https://mcp.tago.io`
+- **Server URL**: `https://mcp.ai.tago.io`
 - **Protocol**: Streamable HTTP
 - **Authentication**: Add `Authorization: Bearer YOUR-TAGOIO-TOKEN` header
 
@@ -243,7 +243,7 @@ Add to `~/.warp/mcp.json`:
       "args": [
         "-y",
         "mcp-remote",
-        "https://mcp.tago.io",
+        "https://mcp.ai.tago.io",
         "--header",
         "Authorization: Bearer YOUR-TAGOIO-TOKEN"
       ]
@@ -266,7 +266,7 @@ Add to `.kiro/mcp.json` in your project root:
       "args": [
         "-y",
         "mcp-remote",
-        "https://mcp.tago.io",
+        "https://mcp.ai.tago.io",
         "--header",
         "Authorization: Bearer YOUR-TAGOIO-TOKEN"
       ]
@@ -341,7 +341,7 @@ npx -y @tago-io/mcp-server http
 MCP_PORT=8080 npx -y @tago-io/mcp-server http
 ```
 
-Your server will be available at `http://localhost:3000/mcp`.
+Your server will be available at `http://localhost:3000`.
 
 **Authentication:** Pass your TagoIO token in the `Authorization` header:
 ```
@@ -399,7 +399,7 @@ Dedicated TagoIO instances are also supported — pass your full API URL as the 
 
 - Check your Profile Token is valid at [TagoIO Profile Settings](https://admin.tago.io/profile)
 - Ensure correct API endpoint for your region
-- For the remote server, verify `https://mcp.tago.io` is reachable
+- For the remote server, verify `https://mcp.ai.tago.io` is reachable
 
 ### Authentication Error
 
@@ -416,8 +416,8 @@ Dedicated TagoIO instances are also supported — pass your full API URL as the 
 If using `mcp-remote` for Claude Desktop, Warp, or Kiro:
 
 - Ensure Node.js 22+ is installed (required for `npx`)
-- Check that `mcp-remote` can reach `https://mcp.tago.io`
-- Try running `npx -y mcp-remote https://mcp.tago.io --header "Authorization: Bearer YOUR-TOKEN"` manually to verify connectivity
+- Check that `mcp-remote` can reach `https://mcp.ai.tago.io`
+- Try running `npx -y mcp-remote https://mcp.ai.tago.io --header "Authorization: Bearer YOUR-TOKEN"` manually to verify connectivity
 
 ## License
 

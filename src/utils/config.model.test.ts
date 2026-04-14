@@ -30,8 +30,14 @@ describe("environmentModel", () => {
     expect(parsed.TAGOIO_TOKEN).toBe("");
   });
 
-  it("throws error if LOG_LEVEL is invalid", () => {
+  it("accepts SILENT as a valid LOG_LEVEL", () => {
     const env = { ...defaultEnv, LOG_LEVEL: "SILENT" };
+    const parsed = environmentModel.parse(env);
+    expect(parsed.LOG_LEVEL).toBe("SILENT");
+  });
+
+  it("throws error if LOG_LEVEL is invalid", () => {
+    const env = { ...defaultEnv, LOG_LEVEL: "VERBOSE" };
     expect(() => environmentModel.parse(env)).toThrow();
   });
 });

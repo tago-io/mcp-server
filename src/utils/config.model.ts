@@ -4,7 +4,7 @@ import { z } from "zod/v3";
  * Zod schema for environment variables.
  */
 const environmentModel = z.object({
-  LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARNING", "ERROR"]).optional().default("INFO"),
+  LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARNING", "ERROR", "SILENT"]).optional().default("INFO"),
   TAGOIO_TOKEN: z.string().optional().default(""),
   TAGOIO_API: z.string().optional().default("https://api.us-e1.tago.io"),
 });

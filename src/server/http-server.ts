@@ -1,18 +1,19 @@
 import { IncomingMessage, ServerResponse, createServer } from "node:http";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
-import { CORS_HEADERS, DEFAULT_TAGOIO_REGION, createMcpServer, extractToken, isTokenError, validateTagoToken } from "./shared";
+import { logger } from "../utils/logger";
 import { SERVER_NAME, SERVER_VERSION } from "../utils/server-config";
+import { CORS_HEADERS, DEFAULT_TAGOIO_REGION, createMcpServer, extractToken, isTokenError, validateTagoToken } from "./shared";
 
 const MAX_BODY_SIZE = 1_048_576; // 1 MB
-const MCP_ENDPOINT = "/mcp";
+const MCP_ENDPOINT = "/";
 const HEALTH_ENDPOINT = "/health";
 
 function parseMcpPort(): number {
   const raw = process.env.MCP_PORT || "3000";
   const port = Number.parseInt(raw, 10);
   if (Number.isNaN(port) || port < 0 || port > 65535) {
-    console.error(`Invalid MCP_PORT "${raw}". Must be a number between 0 and 65535.`);
+    logger.error(`Invalid MCP_PORT "${raw}". Must be a number between 0 and 65535.`);
     process.exit(1);
   }
   return port;
@@ -163,11 +164,11 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
     return;
   }
 
-  // Check path first — only /mcp is supported (except OPTIONS which applies globally for CORS)
+  // Check path first — only root is supported (except OPTIONS which applies globally for CORS)
   if (url !== MCP_ENDPOINT && method !== "OPTIONS") {
     sendJsonResponse(res, 404, {
       error: "Not Found",
-      message: `Only ${MCP_ENDPOINT} and ${HEALTH_ENDPOINT} endpoints are supported`,
+      message: `Only the root (${MCP_ENDPOINT}) and ${HEALTH_ENDPOINT} endpoints are supported`,
     });
     return;
   }
@@ -178,7 +179,7 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
   }
 
   try {
-    // Set CORS headers for all /mcp responses
+    // Set CORS headers for all MCP responses
     for (const [key, value] of Object.entries(CORS_HEADERS)) {
       res.setHeader(key, value);
     }
@@ -200,7 +201,7 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
       });
     }
   } catch (error) {
-    console.error("Error handling MCP request:", error);
+    logger.error("Error handling MCP request:", error);
     if (!res.headersSent) {
       sendJsonResponse(res, 500, {
         jsonrpc: "2.0",
@@ -223,21 +224,21 @@ async function startHttpServer(): Promise<void> {
 
   server.on("error", (error: NodeJS.ErrnoException) => {
     if (error.code === "EADDRINUSE") {
-      console.error(`Port ${port} is already in use. Choose a different port via MCP_PORT.`);
+      logger.error(`Port ${port} is already in use. Choose a different port via MCP_PORT.`);
     } else {
-      console.error("HTTP server error:", error);
+      logger.error("HTTP server error:", error);
     }
     process.exit(1);
   });
 
   server.listen(port, () => {
-    console.error(`MCP Streamable HTTP Server listening on port ${port}`);
+    logger.info(`MCP Streamable HTTP Server listening on port ${port}`);
   });
 
   process.on("SIGINT", () => {
-    console.error("Shutting down server...");
+    logger.info("Shutting down server...");
     server.close(() => {
-      console.error("Server shutdown complete");
+      logger.info("Server shutdown complete");
       process.exit(0);
     });
   });

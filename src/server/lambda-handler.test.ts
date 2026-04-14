@@ -22,9 +22,7 @@ const { mockHandleRequest, mockClose } = vi.hoisted(() => ({
   mockClose: vi.fn(),
 }));
 vi.mock("@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js", () => ({
-  WebStandardStreamableHTTPServerTransport: vi.fn().mockImplementation(function () {
-    return { handleRequest: mockHandleRequest, close: mockClose };
-  }),
+  WebStandardStreamableHTTPServerTransport: vi.fn().mockImplementation(() => ({ handleRequest: mockHandleRequest, close: mockClose })),
 }));
 
 import { handler as rawHandler } from "./lambda-handler";
@@ -35,7 +33,7 @@ async function invoke(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyStr
 }
 
 function makeEvent(overrides: Partial<APIGatewayProxyEventV2> & { method?: string; path?: string } = {}): APIGatewayProxyEventV2 {
-  const { method = "POST", path = "/mcp", ...rest } = overrides;
+  const { method = "POST", path = "/", ...rest } = overrides;
   return {
     version: "2.0",
     routeKey: "$default",
@@ -83,7 +81,7 @@ describe("Lambda handler", () => {
   });
 
   describe("path validation", () => {
-    it("returns 404 for non-/mcp paths", async () => {
+    it("returns 404 for non-root paths", async () => {
       const event = makeEvent({ path: "/other" });
       const result = await invoke(event);
 

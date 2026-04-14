@@ -2,6 +2,11 @@
 
 import { startHttpServer } from "./server/http-server";
 import { startStdioServer } from "./server/stdio-server";
+import { LogLevel, logger } from "./utils/logger";
+
+if (process.env.LOG_LEVEL) {
+  logger.setLogLevel(process.env.LOG_LEVEL as LogLevel);
+}
 
 if (process.env.NODE_ENV === "dev") {
   import("mcps-logger/console");

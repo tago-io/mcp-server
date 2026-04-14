@@ -4,6 +4,7 @@ import { Resources } from "@tago-io/sdk";
 import { getEnvVariables } from "../utils/get-env-variables.js";
 
 import { handlerTools } from "../mcp-tools";
+import { logger } from "../utils/logger";
 import { SERVER_INSTRUCTIONS, SERVER_NAME, SERVER_VERSION } from "../utils/server-config";
 
 /**
@@ -13,9 +14,11 @@ async function startStdioServer() {
   try {
     const ENV = getEnvVariables();
 
+    logger.setLogLevel(ENV.LOG_LEVEL);
+
     // Validate required environment variables
     if (!ENV.TAGOIO_TOKEN) {
-      console.error("Error: TAGOIO_TOKEN environment variable is required");
+      logger.error("TAGOIO_TOKEN environment variable is required");
       process.exit(1);
     }
 
@@ -41,12 +44,10 @@ async function startStdioServer() {
     // Connect server to transport
     await mcpServer.connect(transport);
 
-    if (ENV.LOG_LEVEL === "DEBUG") {
-      console.error("MCP server started successfully with stdio transport");
-      console.error("Tools registered and ready to receive requests");
-    }
+    logger.debug("MCP server started successfully with stdio transport");
+    logger.debug("Tools registered and ready to receive requests");
   } catch (error) {
-    console.error("Failed to start MCP server:", error);
+    logger.error("Failed to start MCP server:", error);
     process.exit(1);
   }
 }

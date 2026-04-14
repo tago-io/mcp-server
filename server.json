@@ -10,7 +10,7 @@
 	"remotes": [
 		{
 			"transportType": "streamable-http",
-			"url": "https://mcp.tago.io"
+			"url": "https://mcp.ai.tago.io"
 		}
 	],
 	"packages": [
@@ -47,7 +47,7 @@
 			"packageArguments": ["http"],
 			"transport": {
 				"type": "streamable-http",
-				"url": "http://localhost:3000/mcp"
+				"url": "http://localhost:3000"
 			},
 			"environmentVariables": [
 				{

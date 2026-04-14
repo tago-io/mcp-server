@@ -3,7 +3,7 @@ import { JsonRpcRequest, JsonRpcResponse } from "./types";
 
 const MCP_PORT = Number.parseInt(process.env.MCP_PORT || "3000");
 const TAGOIO_TOKEN = process.env.TAGOIO_TOKEN || "";
-const BASE_URL = `http://localhost:${MCP_PORT}/mcp`;
+const BASE_URL = `http://localhost:${MCP_PORT}`;
 
 let requestIdCounter = 1;
 

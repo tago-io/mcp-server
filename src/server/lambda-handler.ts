@@ -1,6 +1,7 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 
+import { logger } from "../utils/logger";
 import { CORS_HEADERS, DEFAULT_TAGOIO_REGION, createMcpServer, extractToken, isTokenError, validateTagoToken } from "./shared";
 
 function jsonResult(statusCode: number, body: unknown, extraHeaders?: Record<string, string>): APIGatewayProxyResultV2 {
@@ -28,8 +29,8 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
   }
 
   const requestPath = event.requestContext.http.path;
-  if (requestPath !== "/mcp") {
-    return jsonResult(404, { error: "Not Found", message: "Only /mcp endpoint is supported" });
+  if (requestPath !== "/") {
+    return jsonResult(404, { error: "Not Found", message: "Only the root endpoint is supported" });
   }
 
   if (method !== "POST") {
@@ -93,7 +94,7 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
       body: responseBody,
     };
   } catch (error) {
-    console.error("Lambda MCP handler error:", error);
+    logger.error("Lambda MCP handler error:", error);
     return jsonResult(500, {
       jsonrpc: "2.0",
       error: { code: -32603, message: "Internal server error processing MCP request" },
