@@ -22,7 +22,7 @@ const { mockHandleRequest, mockClose } = vi.hoisted(() => ({
   mockClose: vi.fn(),
 }));
 vi.mock("@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js", () => ({
-  WebStandardStreamableHTTPServerTransport: vi.fn().mockImplementation(() => ({ handleRequest: mockHandleRequest, close: mockClose })),
+  WebStandardStreamableHTTPServerTransport: vi.fn().mockImplementation(function () { return { handleRequest: mockHandleRequest, close: mockClose }; }),
 }));
 
 import { handler as rawHandler } from "./lambda-handler";
