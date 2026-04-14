@@ -5,7 +5,7 @@
 
 # TagoIO | MCP Server
 
-The TagoIO MCP Server enables AI models to interact directly with your TagoIO account, providing contextual access to devices, data, and platform resources for enhanced development workflows and intelligent data analysis.
+Connect your AI assistant to your TagoIO devices, data, and platform resources — directly from your IDE or AI tool.
 
 ## Features
 
@@ -20,9 +20,9 @@ The TagoIO MCP Server enables AI models to interact directly with your TagoIO ac
 
 ### Prerequisites
 
-- Installed Node.js 18+ (https://nodejs.org/en/download/)
-- TagoIO account with valid profile token or analysis token
-- Compatible AI platform or IDE (see [Supported Platforms](#supported-platforms))
+- Node.js 20+ installed (https://nodejs.org/en/download/)
+- TagoIO account with a valid Profile token or Analysis token
+- A supported AI platform or IDE (see [Platform-Specific Setup](#platform-specific-setup))
 
 ### Installation
 
@@ -68,30 +68,43 @@ You can also explicitly specify STDIO mode:
 
 ##### HTTP Streamable Transport
 
-Required for OpenAI Agent Builder and web-based AI platforms:
+For OpenAI Agent Builder and web-based AI platforms, start the MCP server in HTTP mode:
 
 ```bash
-# Start HTTP server on default port 3000
+# Start on default port 3000
 npx -y @tago-io/mcp-server http
 
-# Or specify custom port
+# Or pick a custom port
 MCP_PORT=8080 npx -y @tago-io/mcp-server http
 ```
 
-The HTTP server will be available at: `http://localhost:3000/mcp`
+Your server will be available at `http://localhost:3000/mcp`.
 
-**Authentication:** HTTP mode uses Bearer token authentication. Include your TagoIO token in the `Authorization` header:
+**Authentication:** Pass your TagoIO token in the `Authorization` header — with or without the `Bearer` prefix:
 ```
 Authorization: Bearer YOUR-TAGOIO-TOKEN
 ```
+or:
+```
+Authorization: YOUR-TAGOIO-TOKEN
+```
 
-**HTTP Configuration for OpenAI Agent Builder:**
+**Region:** Requests default to US East (`us-e1`). To connect to a different region, add the `x-tagoio-region` header:
+```
+x-tagoio-region: eu-w1
+```
+
+For dedicated TagoIO instances, pass your full API URL instead:
+```
+x-tagoio-region: https://api.your-instance.tagoio.net
+```
+
+**OpenAI Agent Builder quick setup:**
 - Server URL: `http://localhost:3000/mcp`
 - Protocol: Streamable HTTP (MCP 2025-03-26)
-- Authentication: Bearer token (passed in Authorization header on each request)
-- CORS: Enabled for web-based integrations
+- Authentication: Token in Authorization header (sent with each request)
 
-**Note:** Unlike STDIO mode, HTTP mode does not require `TAGOIO_TOKEN` environment variable. Each client connection authenticates with their own Bearer token, allowing multiple clients with different credentials to connect simultaneously.
+In HTTP mode, each request carries its own token — no `TAGOIO_TOKEN` environment variable needed. Multiple clients with different credentials can connect at the same time.
 
 ##### AWS Lambda (Remote HTTP)
 
@@ -117,10 +130,10 @@ Replace `YOUR-API-GATEWAY-URL` with your Lambda API Gateway endpoint and `YOUR-T
 
 **Configuration Parameters:**
 
-- Replace `YOUR-TOKEN` with your TagoIO Profile token or an Analysis Token
-  - Using an Analysis token is recommended for better security, as you can limit the token's permissions to only the resources you need. Your analysis must be set to run "External" so you can use the token.
-  - Using a Profile token is going to instantly grant the MCP access to your entire profile, but it's not recommended for production environments.
-- Update API endpoint to `https://api.eu-w1.tago.io` for European accounts
+- Replace `YOUR-TOKEN` with your TagoIO Profile token or an Analysis token
+  - **Analysis token (recommended):** Scoped permissions — you control exactly which resources the MCP server can access. Your analysis must be set to run "External" to use its token.
+  - **Profile token:** Grants full access to your profile. Convenient for development, but not recommended for production.
+- For European accounts, set the API endpoint to `https://api.eu-w1.tago.io` (STDIO mode) or pass `x-tagoio-region: eu-w1` header (HTTP mode)
 
 ### Platform-Specific Setup
 
@@ -148,21 +161,25 @@ Or place the configuration file in the appropriate location for your IDE and res
 
 ## Authentication
 
-The MCP server requires a **TagoIO Profile Token** for authentication:
+The MCP server accepts two types of TagoIO tokens:
 
-1. Log into your TagoIO account
-2. Navigate to **Account Settings** → **Profile Tokens**
-3. Generate a new token with appropriate permissions
-4. Replace `YOUR-PROFILE-TOKEN` in the configuration
+- **Analysis token (recommended):** Go to **Analysis** → select your analysis → copy the token. Your analysis must be set to run "External". This gives the MCP server access only to the resources the analysis can reach.
+- **Profile token:** Go to **Account Settings** → **Profile Tokens** → generate a new token. This grants full access to your profile — use it for development only.
 
-**Security Note**: Keep your profile token secure and never commit it to version control.
+Replace `YOUR-TOKEN` in the configuration with whichever token you choose.
+
+**Security tip:** Never commit tokens to version control.
 
 ## API Endpoints
 
-The server supports both US and European TagoIO instances:
+The server connects to these TagoIO regions out of the box:
 
 - **US East**: `https://api.us-e1.tago.io` (default)
 - **EU West**: `https://api.eu-w1.tago.io`
+
+For STDIO mode, set the `TAGOIO_API` environment variable. For HTTP mode, pass the `x-tagoio-region` header.
+
+Dedicated TagoIO instances are also supported — pass your full API URL as the region value.
 
 ## Troubleshooting
 

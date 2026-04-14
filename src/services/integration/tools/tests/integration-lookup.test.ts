@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { integrationBaseSchema } from "../integration-lookup";
 
 describe("integrationBaseSchema Parse", () => {
-  describe("Query Array Validation", () => {
+  describe("Query Object Validation", () => {
     it("should require query field", () => {
       const result = integrationBaseSchema.safeParse({});
 
@@ -14,9 +14,9 @@ describe("integrationBaseSchema Parse", () => {
       }
     });
 
-    it("should require query to be an array", () => {
+    it("should require query to be an object", () => {
       const result = integrationBaseSchema.safeParse({
-        query: "not-an-array",
+        query: "not-an-object",
       });
 
       expect(result.success).toBe(false);
@@ -26,291 +26,98 @@ describe("integrationBaseSchema Parse", () => {
       }
     });
 
-    it("should require at least one query object", () => {
+    it("should accept valid query object with connector only", () => {
       const result = integrationBaseSchema.safeParse({
-        query: [],
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues[0].code).toBe("too_small");
-        expect(result.error.issues[0].path).toEqual(["query"]);
-      }
-    });
-
-    it("should accept valid query array with single object", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            name: "test-connector",
-          },
-        ],
+        query: {
+          connector: "test-connector",
+        },
       });
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.query).toHaveLength(1);
-        expect(result.data.query[0].type).toBe("connector");
-        expect(result.data.query[0].name).toBe("test-connector");
+        expect(result.data.query.connector).toBe("test-connector");
+        expect(result.data.query.network).toBeUndefined();
       }
     });
 
-    it("should accept valid query array with multiple objects", () => {
+    it("should accept valid query object with network only", () => {
       const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            name: "test-connector",
-          },
-          {
-            type: "network",
-            id: "123456789012345678901234",
-          },
-        ],
+        query: {
+          network: "test-network",
+        },
       });
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.query).toHaveLength(2);
-        expect(result.data.query[0].type).toBe("connector");
-        expect(result.data.query[1].type).toBe("network");
+        expect(result.data.query.network).toBe("test-network");
+        expect(result.data.query.connector).toBeUndefined();
+      }
+    });
+
+    it("should accept valid query object with both connector and network", () => {
+      const result = integrationBaseSchema.safeParse({
+        query: {
+          connector: "test-connector",
+          network: "test-network",
+        },
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.query.connector).toBe("test-connector");
+        expect(result.data.query.network).toBe("test-network");
+      }
+    });
+
+    it("should accept empty query object", () => {
+      const result = integrationBaseSchema.safeParse({
+        query: {},
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.query.connector).toBeUndefined();
+        expect(result.data.query.network).toBeUndefined();
       }
     });
   });
 
-  describe("Query Object Type Validation", () => {
-    it("should require type field", () => {
+  describe("Field Type Validation", () => {
+    it("should reject non-string connector values", () => {
       const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            name: "test-connector",
-          },
-        ],
+        query: {
+          connector: 123,
+        },
       });
 
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.issues[0].code).toBe("invalid_type");
-        expect(result.error.issues[0].path).toEqual(["query", 0, "type"]);
+        expect(result.error.issues[0].path).toEqual(["query", "connector"]);
       }
     });
 
-    it("should accept 'connector' type", () => {
+    it("should reject non-string network values", () => {
       const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            name: "test-connector",
-          },
-        ],
-      });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.query[0].type).toBe("connector");
-      }
-    });
-
-    it("should accept 'network' type", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "network",
-            name: "test-network",
-          },
-        ],
-      });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.query[0].type).toBe("network");
-      }
-    });
-
-    it("should reject invalid type values", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "invalid-type",
-            name: "test",
-          },
-        ],
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues[0].code).toBe("invalid_enum_value");
-        expect(result.error.issues[0].path).toEqual(["query", 0, "type"]);
-      }
-    });
-  });
-
-  describe("Query Object ID and Name Validation", () => {
-    it("should accept valid ID", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            id: "123456789012345678901234",
-          },
-        ],
-      });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.query[0].id).toBe("123456789012345678901234");
-      }
-    });
-
-    it("should accept valid name", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            name: "Test Connector",
-          },
-        ],
-      });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.query[0].name).toBe("Test Connector");
-      }
-    });
-
-    it("should accept both ID and name", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            id: "123456789012345678901234",
-            name: "Test Connector",
-          },
-        ],
-      });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.query[0].id).toBe("123456789012345678901234");
-        expect(result.data.query[0].name).toBe("Test Connector");
-      }
-    });
-
-    it("should reject non-string ID values", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            id: 123,
-          },
-        ],
+        query: {
+          network: 123,
+        },
       });
 
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.issues[0].code).toBe("invalid_type");
-        expect(result.error.issues[0].path).toEqual(["query", 0, "id"]);
-      }
-    });
-
-    it("should reject non-string name values", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            name: 123,
-          },
-        ],
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues[0].code).toBe("invalid_type");
-        expect(result.error.issues[0].path).toEqual(["query", 0, "name"]);
-      }
-    });
-  });
-
-  describe("Query Object Public Field Validation", () => {
-    it("should accept true public value", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            name: "test-connector",
-            public: true,
-          },
-        ],
-      });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.query[0].public).toBe(true);
-      }
-    });
-
-    it("should accept false public value", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            name: "test-connector",
-            public: false,
-          },
-        ],
-      });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.query[0].public).toBe(false);
-      }
-    });
-
-    it("should accept undefined public value", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            name: "test-connector",
-          },
-        ],
-      });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.query[0].public).toBeUndefined();
-      }
-    });
-
-    it("should reject non-boolean public values", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            name: "test-connector",
-            public: "true",
-          },
-        ],
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues[0].code).toBe("invalid_type");
-        expect(result.error.issues[0].path).toEqual(["query", 0, "public"]);
+        expect(result.error.issues[0].path).toEqual(["query", "network"]);
       }
     });
   });
 
   describe("Complete Valid Schemas", () => {
-    it("should parse connector query with name only", () => {
+    it("should parse connector query", () => {
       const schema = {
-        query: [
-          {
-            type: "connector",
-            name: "HTTP Connector",
-          },
-        ],
+        query: {
+          connector: "HTTP Connector",
+        },
       };
 
       const result = integrationBaseSchema.safeParse(schema);
@@ -321,14 +128,11 @@ describe("integrationBaseSchema Parse", () => {
       }
     });
 
-    it("should parse network query with ID only", () => {
+    it("should parse network query", () => {
       const schema = {
-        query: [
-          {
-            type: "network",
-            id: "123456789012345678901234",
-          },
-        ],
+        query: {
+          network: "123456789012345678901234",
+        },
       };
 
       const result = integrationBaseSchema.safeParse(schema);
@@ -339,24 +143,12 @@ describe("integrationBaseSchema Parse", () => {
       }
     });
 
-    it("should parse mixed query types", () => {
+    it("should parse mixed query with both connector and network", () => {
       const schema = {
-        query: [
-          {
-            type: "connector",
-            name: "HTTP",
-            public: false,
-          },
-          {
-            type: "network",
-            id: "123456789012345678901234",
-          },
-          {
-            type: "connector",
-            id: "987654321098765432109876",
-            name: "LoRaWAN Connector",
-          },
-        ],
+        query: {
+          connector: "HTTP",
+          network: "LoRaWAN",
+        },
       };
 
       const result = integrationBaseSchema.safeParse(schema);
@@ -364,7 +156,6 @@ describe("integrationBaseSchema Parse", () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toEqual(schema);
-        expect(result.data.query).toHaveLength(3);
       }
     });
   });
@@ -372,84 +163,44 @@ describe("integrationBaseSchema Parse", () => {
   describe("Edge Cases", () => {
     it("should handle empty string values", () => {
       const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            id: "",
-            name: "",
-          },
-        ],
+        query: {
+          connector: "",
+          network: "",
+        },
       });
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.query[0].id).toBe("");
-        expect(result.data.query[0].name).toBe("");
+        expect(result.data.query.connector).toBe("");
+        expect(result.data.query.network).toBe("");
       }
     });
 
     it("should handle special characters in strings", () => {
       const specialName = "Connector/with@special#chars$%^&*()";
       const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            name: specialName,
-          },
-        ],
+        query: {
+          connector: specialName,
+        },
       });
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.query[0].name).toBe(specialName);
+        expect(result.data.query.connector).toBe(specialName);
       }
     });
 
     it("should handle very long strings", () => {
       const longString = "a".repeat(1000);
       const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "connector",
-            name: longString,
-          },
-        ],
+        query: {
+          connector: longString,
+        },
       });
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.query[0].name).toBe(longString);
-      }
-    });
-  });
-
-  describe("Error Message Quality", () => {
-    it("should provide clear error for missing required fields", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [{}],
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        const typeError = result.error.issues.find((issue) => issue.path.join(".") === "query.0.type");
-        expect(typeError?.message).toBe("Required");
-      }
-    });
-
-    it("should provide clear error for invalid enum values", () => {
-      const result = integrationBaseSchema.safeParse({
-        query: [
-          {
-            type: "invalid",
-            name: "test",
-          },
-        ],
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        const enumError = result.error.issues.find((issue) => issue.code === "invalid_enum_value");
-        expect(enumError?.message).toContain("Invalid enum value");
+        expect(result.data.query.connector).toBe(longString);
       }
     });
   });

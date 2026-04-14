@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ZodError } from "zod/v3";
 import { deviceBaseSchema } from "../device-operations";
 

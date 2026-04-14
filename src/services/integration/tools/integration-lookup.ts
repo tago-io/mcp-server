@@ -1,8 +1,8 @@
-import { z } from "zod";
 import { Resources } from "@tago-io/sdk";
-import { ConnectorQuery, NetworkQuery } from "@tago-io/sdk/lib/types";
-import { IDeviceToolConfig } from "../../types";
+import type { ConnectorQuery, NetworkQuery } from "@tago-io/sdk";
+import { z } from "zod";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
+import { IDeviceToolConfig } from "../../types";
 
 const integrationQuerySchema = z.object({
   type: z.enum(["connector", "network"]).describe("The type of resource to query - either connector or network"),
@@ -14,7 +14,12 @@ const integrationQuerySchema = z.object({
 // Base schema without refinement - this provides the .shape property needed by MCP
 const integrationBaseSchema = z
   .object({
-    query: z.array(integrationQuerySchema).min(1).describe("Array of query objects to lookup connectors and networks"),
+    query: z
+      .object({
+        connector: z.string().describe("The ID or name of the connector to perform the operation on.").optional(),
+        network: z.string().describe("The ID or name of the network to perform the operation on.").optional(),
+      })
+      .describe("The query to perform the operation on."),
   })
   .describe("Schema for the integration operation.");
 
@@ -103,7 +108,7 @@ async function integrationOperationsTool(resources: Resources, params: Integrati
   const results: string[] = [];
 
   // Process each query object in the array
-  for (const queryObj of query) {
+  for (const queryObj of query as IntegrationQuery[]) {
     if (queryObj.type === "connector") {
       const connectorResult = await lookupConnector(resources, queryObj);
       results.push(`## Connector Results\n\n${connectorResult}`);

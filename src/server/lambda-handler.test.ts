@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the shared module
 vi.mock("./shared", () => ({
@@ -10,27 +10,28 @@ vi.mock("./shared", () => ({
   },
   DEFAULT_TAGOIO_REGION: "us-e1",
   VALID_REGIONS: ["us-e1", "eu-w1"],
-  extractBearerToken: vi.fn(),
+  extractToken: vi.fn(),
   validateTagoToken: vi.fn(),
   createMcpServer: vi.fn(),
   isTokenError: vi.fn(),
 }));
 
 // Mock the MCP SDK transport
-const mockHandleRequest = vi.fn();
-const mockClose = vi.fn();
+const { mockHandleRequest, mockClose } = vi.hoisted(() => ({
+  mockHandleRequest: vi.fn(),
+  mockClose: vi.fn(),
+}));
 vi.mock("@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js", () => ({
-  WebStandardStreamableHTTPServerTransport: vi.fn().mockImplementation(() => ({
-    handleRequest: mockHandleRequest,
-    close: mockClose,
-  })),
+  WebStandardStreamableHTTPServerTransport: vi.fn().mockImplementation(function () {
+    return { handleRequest: mockHandleRequest, close: mockClose };
+  }),
 }));
 
 import { handler as rawHandler } from "./lambda-handler";
-import { extractBearerToken, validateTagoToken, createMcpServer, isTokenError } from "./shared";
+import { createMcpServer, extractToken, isTokenError, validateTagoToken } from "./shared";
 
 async function invoke(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyStructuredResultV2> {
-  return await rawHandler(event) as APIGatewayProxyStructuredResultV2;
+  return (await rawHandler(event)) as APIGatewayProxyStructuredResultV2;
 }
 
 function makeEvent(overrides: Partial<APIGatewayProxyEventV2> & { method?: string; path?: string } = {}): APIGatewayProxyEventV2 {
@@ -111,19 +112,19 @@ describe("Lambda handler", () => {
   });
 
   describe("authentication", () => {
-    it("returns 401 when Bearer token is missing", async () => {
-      vi.mocked(extractBearerToken).mockReturnValue(null);
+    it("returns 401 when token is missing", async () => {
+      vi.mocked(extractToken).mockReturnValue(null);
 
       const event = makeEvent({ headers: {} });
       const result = await invoke(event);
 
       expect(result.statusCode).toBe(401);
       const body = JSON.parse(result.body as string);
-      expect(body.error.message).toContain("Bearer token required");
+      expect(body.error.message).toContain("Token required");
     });
 
     it("returns 401 when token validation fails", async () => {
-      vi.mocked(extractBearerToken).mockReturnValue("bad-token");
+      vi.mocked(extractToken).mockReturnValue("bad-token");
       vi.mocked(isTokenError).mockReturnValue(true);
       vi.mocked(validateTagoToken).mockResolvedValue({
         error: "Unauthorized: Invalid TagoIO token",
@@ -139,10 +140,10 @@ describe("Lambda handler", () => {
     });
 
     it("returns 502 when TagoIO API is unreachable", async () => {
-      vi.mocked(extractBearerToken).mockReturnValue("valid-token");
+      vi.mocked(extractToken).mockReturnValue("valid-token");
       vi.mocked(isTokenError).mockReturnValue(true);
       vi.mocked(validateTagoToken).mockResolvedValue({
-        error: "Unable to reach TagoIO API for region \"us-e1\". Check network connectivity.",
+        error: 'Unable to reach TagoIO API for region "us-e1". Check network connectivity.',
         statusCode: 502,
       });
 
@@ -153,22 +154,9 @@ describe("Lambda handler", () => {
     });
   });
 
-  describe("region validation", () => {
-    it("returns 400 for invalid region", async () => {
-      vi.mocked(extractBearerToken).mockReturnValue("valid-token");
-
-      const event = makeEvent({ headers: { authorization: "Bearer valid-token", "x-tagoio-region": "invalid-region" } });
-      const result = await invoke(event);
-
-      expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body as string);
-      expect(body.error.message).toContain("Invalid region");
-    });
-  });
-
   describe("successful MCP request", () => {
     it("processes a valid MCP request and returns the response", async () => {
-      vi.mocked(extractBearerToken).mockReturnValue("valid-token");
+      vi.mocked(extractToken).mockReturnValue("valid-token");
       vi.mocked(isTokenError).mockReturnValue(false);
 
       const fakeResources = {} as any;
@@ -195,7 +183,7 @@ describe("Lambda handler", () => {
     });
 
     it("handles base64-encoded bodies", async () => {
-      vi.mocked(extractBearerToken).mockReturnValue("valid-token");
+      vi.mocked(extractToken).mockReturnValue("valid-token");
       vi.mocked(isTokenError).mockReturnValue(false);
 
       const fakeResources = {} as any;
@@ -223,8 +211,12 @@ describe("Lambda handler", () => {
   });
 
   describe("error handling", () => {
+    beforeEach(() => {
+      vi.spyOn(console, "error").mockImplementation(() => undefined);
+    });
+
     it("returns 500 when MCP transport throws", async () => {
-      vi.mocked(extractBearerToken).mockReturnValue("valid-token");
+      vi.mocked(extractToken).mockReturnValue("valid-token");
       vi.mocked(isTokenError).mockReturnValue(false);
 
       const fakeResources = {} as any;
@@ -250,7 +242,7 @@ describe("Lambda handler", () => {
     });
 
     it("cleans up MCP server even when response.text() throws", async () => {
-      vi.mocked(extractBearerToken).mockReturnValue("valid-token");
+      vi.mocked(extractToken).mockReturnValue("valid-token");
       vi.mocked(isTokenError).mockReturnValue(false);
 
       const fakeResources = {} as any;

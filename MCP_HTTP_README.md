@@ -385,7 +385,7 @@ Content-Type: application/json
 2. **Server validates token**:
 ```typescript
 // Extract token from Authorization header
-const token = extractBearerToken(req);
+const token = extractToken(req);
 
 // Validate by calling TagoIO API
 const resources = new Resources({ token });

@@ -4,13 +4,13 @@ import { Resources } from "@tago-io/sdk";
 import { getEnvVariables } from "../utils/get-env-variables.js";
 
 import { handlerTools } from "../mcp-tools";
-import { SERVER_NAME, SERVER_VERSION, SERVER_INSTRUCTIONS } from "../utils/server-config";
+import { SERVER_INSTRUCTIONS, SERVER_NAME, SERVER_VERSION } from "../utils/server-config";
 
 /**
  * @description Start the MCP server using stdio transport.
  */
 async function startStdioServer() {
-  try {   
+  try {
     const ENV = getEnvVariables();
 
     // Validate required environment variables
@@ -19,7 +19,7 @@ async function startStdioServer() {
       process.exit(1);
     }
 
-    const region = !ENV.TAGOIO_API ? undefined :  { api: ENV.TAGOIO_API, sse: ENV.TAGOIO_API.replace("api", "sse") };
+    const region = !ENV.TAGOIO_API ? undefined : { api: ENV.TAGOIO_API, sse: ENV.TAGOIO_API.replace("api", "sse") };
 
     // Initialize TagoIO Resources with the token
     const resources = new Resources({ token: ENV.TAGOIO_TOKEN, region });
@@ -27,16 +27,10 @@ async function startStdioServer() {
     // Validate the connection to TagoIO API
     await resources.account.info().catch((originalError) => {
       const detail = originalError instanceof Error ? originalError.message : String(originalError);
-      throw new Error(
-        `Failed to connect to TagoIO API: ${detail}. Please check your TAGOIO_TOKEN and TAGOIO_API configuration.`,
-        { cause: originalError },
-      );
+      throw new Error(`Failed to connect to TagoIO API: ${detail}. Please check your TAGOIO_TOKEN and TAGOIO_API configuration.`, { cause: originalError });
     });
 
-    const mcpServer = new McpServer(
-      { name: SERVER_NAME, version: SERVER_VERSION },
-      { instructions: SERVER_INSTRUCTIONS },
-    );
+    const mcpServer = new McpServer({ name: SERVER_NAME, version: SERVER_VERSION }, { instructions: SERVER_INSTRUCTIONS });
 
     // Register all tools
     await handlerTools(mcpServer, resources, ENV.TAGOIO_TOKEN);

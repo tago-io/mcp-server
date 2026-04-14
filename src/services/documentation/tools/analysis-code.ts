@@ -1,8 +1,8 @@
+import { Resources } from "@tago-io/sdk";
 import { z } from "zod";
-import { IDeviceToolConfig } from "../../types";
 import { getEnvVariables } from "../../../utils/get-env-variables";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
-import { Resources } from "@tago-io/sdk";
+import { IDeviceToolConfig } from "../../types";
 
 // Base schema without refinement - this provides the .shape property needed by MCP
 const analysisCodeBaseSchema = z

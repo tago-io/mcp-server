@@ -1,9 +1,9 @@
-import { z } from "zod";
 import { Resources } from "@tago-io/sdk";
+import { z } from "zod";
 
-import { IDeviceToolConfig } from "../../types";
+import type { SecretsQuery } from "@tago-io/sdk";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
-import { SecretsQuery } from "@tago-io/sdk/lib/modules/Resources/secrets.type";
+import { IDeviceToolConfig } from "../../types";
 
 const profileLookupSchema = z.object({
   operation: z.enum(["profile_info", "secrets_list"]).describe("Operation to perform. 'profile_info' gets current profile information, 'secrets_list' lists profile secrets"),

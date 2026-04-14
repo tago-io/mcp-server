@@ -1,15 +1,7 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 
-import {
-  CORS_HEADERS,
-  DEFAULT_TAGOIO_REGION,
-  VALID_REGIONS,
-  extractBearerToken,
-  validateTagoToken,
-  createMcpServer,
-  isTokenError,
-} from "./shared";
+import { CORS_HEADERS, DEFAULT_TAGOIO_REGION, createMcpServer, extractToken, isTokenError, validateTagoToken } from "./shared";
 
 function jsonResult(statusCode: number, body: unknown, extraHeaders?: Record<string, string>): APIGatewayProxyResultV2 {
   return {
@@ -44,27 +36,18 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
     return jsonResult(405, { error: "Method Not Allowed", message: `Method ${method} is not supported` });
   }
 
-  // Extract Bearer token
   const authHeader = event.headers["authorization"] ?? event.headers["Authorization"] ?? "";
-  const token = extractBearerToken(authHeader);
+  const token = extractToken(authHeader);
 
   if (!token) {
     return jsonResult(401, {
       jsonrpc: "2.0",
-      error: { code: -32000, message: "Unauthorized: Bearer token required in Authorization header" },
+      error: { code: -32000, message: "Unauthorized: Token required in Authorization header" },
       id: null,
     });
   }
 
   const tagoioRegion = event.headers["x-tagoio-region"] ?? DEFAULT_TAGOIO_REGION;
-
-  if (!VALID_REGIONS.includes(tagoioRegion)) {
-    return jsonResult(400, {
-      jsonrpc: "2.0",
-      error: { code: -32000, message: `Bad Request: Invalid region "${tagoioRegion}". Valid regions: ${VALID_REGIONS.join(", ")}` },
-      id: null,
-    });
-  }
 
   const result = await validateTagoToken(token, tagoioRegion);
 

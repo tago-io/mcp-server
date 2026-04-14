@@ -1,15 +1,7 @@
 import { IncomingMessage, ServerResponse, createServer } from "node:http";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
-import {
-  CORS_HEADERS,
-  DEFAULT_TAGOIO_REGION,
-  VALID_REGIONS,
-  extractBearerToken,
-  validateTagoToken,
-  createMcpServer,
-  isTokenError,
-} from "./shared";
+import { CORS_HEADERS, DEFAULT_TAGOIO_REGION, createMcpServer, extractToken, isTokenError, validateTagoToken } from "./shared";
 
 const MAX_BODY_SIZE = 1_048_576; // 1 MB
 const MCP_ENDPOINT = "/mcp";
@@ -84,14 +76,14 @@ function handleCorsPreflightRequest(res: ServerResponse): void {
  * and the response is returned -- no session state is retained.
  */
 async function handlePostRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const token = extractBearerToken(req.headers.authorization);
+  const token = extractToken(req.headers.authorization);
 
   if (!token) {
     sendJsonResponse(res, 401, {
       jsonrpc: "2.0",
       error: {
         code: -32000,
-        message: "Unauthorized: Bearer token required in Authorization header",
+        message: "Unauthorized: Token required in Authorization header",
       },
       id: null,
     });
@@ -99,18 +91,6 @@ async function handlePostRequest(req: IncomingMessage, res: ServerResponse): Pro
   }
 
   const tagoioRegion = (req.headers["x-tagoio-region"] as string) || DEFAULT_TAGOIO_REGION;
-
-  if (!VALID_REGIONS.includes(tagoioRegion)) {
-    sendJsonResponse(res, 400, {
-      jsonrpc: "2.0",
-      error: {
-        code: -32000,
-        message: `Bad Request: Invalid region "${tagoioRegion}". Valid regions: ${VALID_REGIONS.join(", ")}`,
-      },
-      id: null,
-    });
-    return;
-  }
 
   const result = await validateTagoToken(token, tagoioRegion);
 

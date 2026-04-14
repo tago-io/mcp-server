@@ -1,5 +1,5 @@
-import { Resources } from "@tago-io/sdk";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Resources } from "@tago-io/sdk";
 
 import { userTools } from "./tools";
 
@@ -18,7 +18,7 @@ async function handlerUsersTools(server: McpServer, resources: Resources) {
       async (params) => {
         const result = await toolConfig.tool(resources, params);
         return { content: [{ type: "text", text: result }] };
-      },
+      }
     );
   }
 }

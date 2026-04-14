@@ -1,33 +1,34 @@
-import { describe, it, expect } from "vitest";
-import { extractBearerToken, buildRegion, isTokenError, VALID_REGIONS, DEFAULT_TAGOIO_REGION } from "./shared";
+import { describe, expect, it } from "vitest";
+import { DEFAULT_TAGOIO_REGION, VALID_REGIONS, buildRegion, extractToken, isTokenError } from "./shared";
 
-describe("extractBearerToken", () => {
+describe("extractToken", () => {
   it("extracts a valid Bearer token", () => {
-    expect(extractBearerToken("Bearer my-token-123")).toBe("my-token-123");
+    expect(extractToken("Bearer my-token-123")).toBe("my-token-123");
   });
 
   it("is case-insensitive for Bearer prefix", () => {
-    expect(extractBearerToken("bearer my-token")).toBe("my-token");
-    expect(extractBearerToken("BEARER my-token")).toBe("my-token");
+    expect(extractToken("bearer my-token")).toBe("my-token");
+    expect(extractToken("BEARER my-token")).toBe("my-token");
   });
 
   it("returns null for missing header", () => {
-    expect(extractBearerToken(undefined)).toBeNull();
-    expect(extractBearerToken(null)).toBeNull();
-    expect(extractBearerToken("")).toBeNull();
+    expect(extractToken(undefined)).toBeNull();
+    expect(extractToken(null)).toBeNull();
+    expect(extractToken("")).toBeNull();
   });
 
-  it("returns null for non-Bearer auth schemes", () => {
-    expect(extractBearerToken("Basic dXNlcjpwYXNz")).toBeNull();
-    expect(extractBearerToken("Token abc123")).toBeNull();
+  it("accepts a raw token without Bearer prefix", () => {
+    expect(extractToken("my-raw-token-123")).toBe("my-raw-token-123");
+    expect(extractToken("abc123")).toBe("abc123");
   });
 
-  it("returns null for Bearer with no token value", () => {
-    expect(extractBearerToken("Bearer ")).toBeNull();
+  it("returns null for whitespace-only header", () => {
+    expect(extractToken("   ")).toBeNull();
   });
 
   it("preserves token with special characters", () => {
-    expect(extractBearerToken("Bearer abc-123_def.456")).toBe("abc-123_def.456");
+    expect(extractToken("Bearer abc-123_def.456")).toBe("abc-123_def.456");
+    expect(extractToken("abc-123_def.456")).toBe("abc-123_def.456");
   });
 });
 

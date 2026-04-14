@@ -19,7 +19,7 @@ async function handlerDocumentationTools(server: McpServer, resources: Resources
       async (params) => {
         const result = await toolConfig.tool(resources, params, token);
         return { content: [{ type: "text", text: result }] };
-      },
+      }
     );
   }
 }

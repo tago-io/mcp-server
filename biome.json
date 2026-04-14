@@ -99,21 +99,21 @@
 			"cli/*"
 		]
 	},
-  "javascript": {
-    "globals": ["test", "it", "describe", "expect"],
-    "formatter": {
-      "jsxQuoteStyle": "double",
-      "quoteProperties": "asNeeded",
-	    "trailingCommas": "es5",
-      "semicolons": "always",
-      "arrowParentheses": "always",
-      "bracketSpacing": true,
-      "bracketSameLine": false,
-      "quoteStyle": "double",
-      "attributePosition": "auto",
-      "lineWidth": 180,
-      "indentStyle": "space",
-      "indentWidth": 2
-    }
-  }
+	"javascript": {
+		"globals": ["test", "it", "describe", "expect"],
+		"formatter": {
+			"jsxQuoteStyle": "double",
+			"quoteProperties": "asNeeded",
+			"trailingCommas": "es5",
+			"semicolons": "always",
+			"arrowParentheses": "always",
+			"bracketSpacing": true,
+			"bracketSameLine": false,
+			"quoteStyle": "double",
+			"attributePosition": "auto",
+			"lineWidth": 180,
+			"indentStyle": "space",
+			"indentWidth": 2
+		}
+	}
 }

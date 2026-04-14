@@ -10,10 +10,7 @@ let requestIdCounter = 1;
 /**
  * Makes an HTTP POST request to the MCP server and returns the parsed JSON response.
  */
-function makePostRequest(
-  headers: Record<string, string>,
-  body: unknown
-): Promise<{ response: http.IncomingMessage; json: JsonRpcResponse | null }> {
+function makePostRequest(headers: Record<string, string>, body: unknown): Promise<{ response: http.IncomingMessage; json: JsonRpcResponse | null }> {
   return new Promise((resolve, reject) => {
     const options: http.RequestOptions = {
       method: "POST",

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { environmentModel } from "./config.model";
 
 // Helper to create a valid base object for environment

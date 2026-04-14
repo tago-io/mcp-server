@@ -5,7 +5,7 @@ import { startStdioServer } from "./server/stdio-server";
 
 if (process.env.NODE_ENV === "dev") {
   import("mcps-logger/console");
-} 
+}
 
 /**
  * @description Main entry point - parse command line arguments and start the appropriate server

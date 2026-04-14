@@ -1,6 +1,6 @@
-import { z } from "zod";
 import { Device, Resources } from "@tago-io/sdk";
-import { DataQuery } from "@tago-io/sdk/lib/types";
+import type { DataQuery } from "@tago-io/sdk";
+import { z } from "zod";
 import { getEnvVariables } from "../../../utils/get-env-variables";
 import { convertJSONToMarkdown } from "../../../utils/markdown";
 import { IDeviceToolConfig } from "../../types";
@@ -57,7 +57,9 @@ async function deviceDataDeleteTool(resources: Resources, params: DeviceDeleteDa
   const api = ENV.TAGOIO_API;
 
   // Simple token type check and direct function call
-  return ENV.TAGOIO_TOKEN.startsWith("a-") ? deleteWithAnalysisToken(resources, validatedParams.deviceID, query) : deleteWithDeviceToken(resources, api, validatedParams.deviceID, query);
+  return ENV.TAGOIO_TOKEN.startsWith("a-")
+    ? deleteWithAnalysisToken(resources, validatedParams.deviceID, query)
+    : deleteWithDeviceToken(resources, api, validatedParams.deviceID, query);
 }
 
 const deviceDeleteDataConfigJSON: IDeviceToolConfig = {

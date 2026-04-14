@@ -1,5 +1,5 @@
 import { Resources } from "@tago-io/sdk";
-import { ProfileSummary } from "@tago-io/sdk/lib/types";
+import type { ProfileSummary } from "@tago-io/sdk";
 import { z } from "zod";
 
 import { getProfileID } from "../../../utils/get-profile-id";
@@ -35,7 +35,8 @@ async function profileMetricsTool(resources: Resources, params: ProfileMetricsSc
       throw `**Error fetching profile limits:** ${error}`;
     });
 
-    const tabularFormat = Object.keys(rawLimits.limit).map((key: keyof ProfileSummary["limit"]) => {
+    const limitKeys = Object.keys(rawLimits.limit) as Array<keyof ProfileSummary["limit"]>;
+    const tabularFormat = limitKeys.map((key) => {
       const limit = rawLimits.limit[key];
       const usedLimit = rawLimits.limit_used[key];
 
