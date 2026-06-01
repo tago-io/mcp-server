@@ -34,13 +34,29 @@ function extractToken(authHeader: string | undefined | null): string | null {
 
 /**
  * Builds a region configuration object from a region identifier.
- * Maps any region string to its corresponding TagoIO API and SSE endpoints.
+ *
+ * Accepts three forms:
+ * - A short region code (e.g. "us-e1", "eu-w1") -> mapped to TagoIO's public endpoints.
+ * - A full API URL for a dedicated TagoDeploy instance (e.g. "https://api.acme.tagoio.net")
+ *   -> used as-is, with the SSE endpoint derived by swapping the "api." subdomain for "sse.".
+ * - A bare dedicated-instance host (e.g. "api.acme.tagoio.net") -> normalized to https.
  */
 function buildRegion(region: string): { api: string; sse: string } {
-  return {
-    api: `https://api.${region}.tago.io`,
-    sse: `https://sse.${region}.tago.io`,
-  };
+  const trimmed = region.trim();
+
+  // Short region code: no scheme and no host separators (e.g. "us-e1", "eu-w1").
+  if (!trimmed.includes(".") && !trimmed.includes("/")) {
+    return {
+      api: `https://api.${trimmed}.tago.io`,
+      sse: `https://sse.${trimmed}.tago.io`,
+    };
+  }
+
+  // Full URL or bare host pointing at a dedicated instance.
+  const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  const api = withScheme.replace(/\/+$/, "");
+  const sse = api.replace(/:\/\/api\./i, "://sse.");
+  return { api, sse };
 }
 
 interface TokenValidationSuccess {
