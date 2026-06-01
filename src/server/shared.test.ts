@@ -45,10 +45,28 @@ describe("buildRegion", () => {
     expect(region.sse).toBe("https://sse.eu-w1.tago.io");
   });
 
-  it("builds URLs for arbitrary region strings", () => {
+  it("builds URLs for arbitrary region codes", () => {
     const region = buildRegion("custom-region");
     expect(region.api).toBe("https://api.custom-region.tago.io");
     expect(region.sse).toBe("https://sse.custom-region.tago.io");
+  });
+
+  it("uses a full dedicated-instance URL as-is and derives the SSE endpoint", () => {
+    const region = buildRegion("https://api.6722812c934c3c3370e0b87d.tagoio.net");
+    expect(region.api).toBe("https://api.6722812c934c3c3370e0b87d.tagoio.net");
+    expect(region.sse).toBe("https://sse.6722812c934c3c3370e0b87d.tagoio.net");
+  });
+
+  it("normalizes a bare dedicated-instance host to https", () => {
+    const region = buildRegion("api.6722812c934c3c3370e0b87d.tagoio.net");
+    expect(region.api).toBe("https://api.6722812c934c3c3370e0b87d.tagoio.net");
+    expect(region.sse).toBe("https://sse.6722812c934c3c3370e0b87d.tagoio.net");
+  });
+
+  it("strips a trailing slash from a full URL", () => {
+    const region = buildRegion("https://api.acme.tagoio.net/");
+    expect(region.api).toBe("https://api.acme.tagoio.net");
+    expect(region.sse).toBe("https://sse.acme.tagoio.net");
   });
 });
 
