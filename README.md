@@ -24,6 +24,197 @@ Connect your AI assistant to your TagoIO devices, data, and platform resources �
 - **Development Support**: Debug assistance and tag relationship analysis
 - **Dual Protocol Support**: STDIO (default) and HTTP Streamable transport protocols
 
+## Available Tools
+
+The server exposes 12 tools across 8 service areas. Every tool returns Markdown-formatted output.
+
+### Devices
+
+#### `device-operations`
+
+Manages IoT device entities (not the data stored within them). Supports five operations:
+
+| Operation | Description | Required params |
+|---|---|---|
+| `lookup` | List devices or get a single device by ID | `deviceID` or `lookupDevice.filter` |
+| `create` | Provision a new device | `createDevice.name`, `createDevice.type` |
+| `update` | Modify an existing device | `deviceID`, `updateDevice` |
+| `delete` | Permanently remove a device and all its data | `deviceID` |
+| `configure` | Set or update configuration parameters | `deviceID`, `configureDevice.configuration_params` |
+
+Lookup supports filters: `name` (wildcard), `active`, `type` (`mutable`/`immutable`), `tags`, `connector`, `network`. When a lookup resolves to a single device, `include_data_amount` and `include_configuration_params` are available.
+
+Create supports: `name`, `type`, `connector`, `network`, `tags`, `description`, `active`, `serie_number`, `chunk_period` (immutable), `chunk_retention` (immutable), `configuration_params`, `payload_decoder`. Device type cannot be changed after creation.
+
+#### `device-data-operations`
+
+CRUD for data records stored within a device. Mutable devices support all three operations; immutable devices support `create` and `read` only. Variable names must be snake_case.
+
+| Operation | Description | Required params |
+|---|---|---|
+| `create` | Send data points to a device | `deviceID`, `createData[]` |
+| `update` | Edit existing records by ID | `deviceID`, `editData[]` |
+| `read` | Retrieve data with flexible query strategies | `deviceID` |
+
+Each data point in `createData` / `editData` accepts: `variable`, `value`, `unit`, `group`, `location` (`{ lat, lng }`), `metadata`, `time`.
+
+The `read` operation accepts a `query` object with:
+
+- **`query`** (type) — `default`, `last_item`, `last_value`, `last_location`, `last_insert`, `first_item`, `first_value`, `first_location`, `first_insert`, `min`, `max`, `count`, `avg`, `sum`, `aggregate`, `conditional`. Aggregation queries (`min`/`max`/`count`/`avg`/`sum`) require `start_date` and a window of at most one month.
+- **Common filters** — `variables`, `groups`, `ids`, `values`, `start_date`, `end_date`, `qty` (1–10,000, default 15), `ordination`, `skip`
+- **Aggregate** — additionally requires `interval` (`minute`/`hour`/`day`/`month`/`quarter`/`year`) and `function` (`avg`/`sum`/`min`/`max`)
+- **Conditional** — additionally requires `start_date`, `value` (number), and `function` (`gt`/`gte`/`lt`/`lte`/`eq`/`ne`)
+
+#### `device-delete-data`
+
+Deletes data records from a mutable device. Will fail on immutable devices. Filter params apply per variable — `qty: 2` deletes 2 records from each listed variable.
+
+| Param | Type | Description |
+|---|---|---|
+| `deviceID` | string | Required. 24-char device ID. |
+| `query.variables` | string[] | Variable names to target. |
+| `query.groups` | string[] | Group names to target. |
+| `query.ids` | string[] | Specific record IDs to delete. |
+| `query.start_date` / `end_date` | string | ISO 8601 date range. |
+| `query.qty` | number | Max records to delete per variable. |
+| `query.skip` | number | Records to skip before deleting. |
+
+---
+
+### Actions
+
+#### `action-operations`
+
+CRUD for automation actions — workflows that fire responses when triggers occur.
+
+| Operation | Description | Required params |
+|---|---|---|
+| `lookup` | List actions or get one by ID | `actionID` or `lookupAction.filter` |
+| `create` | Define a new action | `createAction.name`, `createAction.type`, `createAction.action` |
+| `update` | Modify an existing action | `actionID`, `updateAction` |
+| `delete` | Remove an action | `actionID` |
+
+**Trigger types** (`createAction.type`): `condition`, `resource`, `interval`, `schedule`, `mqtt_topic`, `usage_alert`, `condition_geofence`
+
+**Action types** (`createAction.action.type`): `script`, `notification`, `notification_run`, `email`, `sms`, `mqtt`, `post`, `sms-twilio`, `whatsapp-twilio`, `email-sendgrid`, `email-smtp`, `queue-sqs`
+
+When targeting multiple devices, prefer `tag_key` / `tag_value` triggers over specific resource IDs. Actions that use Secrets require the Secret ID — retrieve it with `profile-lookup`.
+
+---
+
+### Analysis
+
+#### `analysis-lookup`
+
+Read-only lookup for analysis configurations (serverless scripts running Node.js or Python on TagoIO).
+
+| Param | Type | Description |
+|---|---|---|
+| `operation` | enum | Must be `"lookup"`. |
+| `analysisID` | string | Optional. Returns full detail when present. |
+| `lookupAnalysis.filter.name` | string | Wildcard name search. |
+| `lookupAnalysis.filter.runtime` | enum | `node` or `python` |
+| `lookupAnalysis.filter.run_on` | enum | `tago` or `external` |
+| `lookupAnalysis.filter.tags` | array | Key/value tag filter. |
+| `lookupAnalysis.filter.include_console` | boolean | Include console output. Only for console-specific queries. |
+
+---
+
+### Entities
+
+#### `entity-operations`
+
+Read-only lookup for TagoIO Entities — the next-generation database replacing Mutable Devices for complex structured data. Returns entity metadata and schema, not the data records stored within.
+
+| Param | Type | Description |
+|---|---|---|
+| `operation` | enum | Must be `"lookup"`. |
+| `entityID` | string | Optional. Returns full detail when present. |
+| `lookupEntity.filter.id` | string | Exact 24-char entity ID. |
+| `lookupEntity.filter.name` | string | Wildcard name search. |
+| `lookupEntity.filter.tags` | array | Key/value tag filter. |
+
+---
+
+### Run Users
+
+#### `run-user-lookup`
+
+Look up users in TagoRUN — TagoIO's limited-access portal for end users.
+
+| Param | Type | Description |
+|---|---|---|
+| `runUserID` | string | Optional. Returns full detail when present. |
+| `lookupUser.filter.name` | string | Wildcard name search. |
+| `lookupUser.filter.email` | string | Wildcard email search. |
+| `lookupUser.filter.active` | boolean | Filter by active status. |
+| `lookupUser.filter.tags` | array | Key/value tag filter. |
+
+---
+
+### Profile
+
+#### `profile-metrics`
+
+Returns resource limits or time-series usage statistics for the current profile. All metrics are monthly.
+
+| Param | Type | Description |
+|---|---|---|
+| `type` | enum | `limits` — allocation vs. usage. `statistics` — time-series data. |
+| `statisticsQuery.start_date` | string | ISO 8601. Only for `statistics`. |
+| `statisticsQuery.end_date` | string | ISO 8601. Defaults to now. |
+| `statisticsQuery.periodicity` | enum | `day`, `month`, or `year`. |
+
+#### `profile-lookup`
+
+Returns profile information or lists stored secrets (credentials for Twilio, SendGrid, SMTP, SQS integrations).
+
+| Param | Type | Description |
+|---|---|---|
+| `operation` | enum | `profile_info` or `secrets_list` |
+| `secrets_query.filter.id` | string | Filter secrets by ID. |
+| `secrets_query.filter.key` | string | Filter secrets by key name. |
+| `secrets_query.orderBy` | enum | `created_at`, `updated_at`, or `key` |
+
+---
+
+### Integration
+
+#### `connector-network-lookup`
+
+Finds connectors (protocol decoders) and networks (communication integrations) by ID or name. Accepts multiple queries in a single call. Returns at most 10 results per query.
+
+| Param | Type | Description |
+|---|---|---|
+| `query` | array | Array of query objects, each resolved independently. |
+| `query[].type` | enum | `connector` or `network` |
+| `query[].id` | string | Exact 24-char ID for direct lookup. |
+| `query[].name` | string | Partial name for wildcard search. |
+| `query[].public` | boolean | `false` returns only account-owned resources. |
+
+---
+
+### Documentation
+
+#### `tagoio-documentation-search`
+
+Queries TagoIO's documentation knowledge base and returns relevant articles and links. Use when users ask about platform features, widget configuration, APIs, or TagoIO-specific concepts.
+
+| Param | Type | Description |
+|---|---|---|
+| `search` | string[] | 1 to 5 search questions. Precise queries return better results. |
+
+#### `tagoio-code-search`
+
+Returns JavaScript code examples and SDK guidance for Analysis scripts and Payload Parsers. Analysis scripts are single-file serverless Node.js functions (no package.json). External libraries require webpack bundling via `@tago-io/builder`.
+
+| Param | Type | Description |
+|---|---|---|
+| `search` | string[] | 1 to 5 search questions. |
+| `type` | enum | `analysis` or `payload-parser` |
+
+---
+
 ## Quick Start
 
 1. **Get a token** — Go to [TagoIO Profile Settings](https://admin.tago.io/profile) and generate a Profile Token
