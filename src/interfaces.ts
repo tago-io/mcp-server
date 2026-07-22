@@ -2,14 +2,14 @@
 interface JSONRPCRequest {
   jsonrpc: "2.0";
   method: string;
-  params?: any; // ou params?: Record<string, any> | any[];
+  params?: unknown;
   id?: string | number | null;
 }
 
 // JSON-RPC Success Response
 interface JSONRPCSuccess {
   jsonrpc: "2.0";
-  result: any;
+  result: unknown;
   id: string | number | null;
 }
 
@@ -19,7 +19,7 @@ interface JSONRPCError {
   error: {
     code: number;
     message: string;
-    data?: any;
+    data?: unknown;
   };
   id: string | number | null;
 }

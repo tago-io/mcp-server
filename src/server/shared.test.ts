@@ -1,5 +1,8 @@
-import { describe, expect, it } from "vitest";
-import { DEFAULT_TAGOIO_REGION, VALID_REGIONS, buildRegion, extractToken, isTokenError } from "./shared";
+import { inspect } from "node:util";
+
+import type { Resources } from "@tago-io/sdk";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { DEFAULT_TAGOIO_REGION, VALID_REGIONS, classifyCredential, extractToken, isTokenError, regionFromApiUrl, regionFromCode, validateTagoToken } from "./shared";
 
 describe("extractToken", () => {
   it("extracts a valid Bearer token", () => {
@@ -32,41 +35,170 @@ describe("extractToken", () => {
   });
 });
 
-describe("buildRegion", () => {
+describe("classifyCredential", () => {
+  it("classifies p- tokens as profile", () => {
+    expect(classifyCredential("p-0000000000000000000000000000000000")).toBe("profile");
+  });
+
+  it("classifies a- tokens as analysis", () => {
+    expect(classifyCredential("a-0000000000000000000000000000000000")).toBe("analysis");
+  });
+
+  it("classifies unprefixed tokens as device", () => {
+    expect(classifyCredential("00000000-0000-4000-8000-000000000001")).toBe("device");
+  });
+
+  it("rejects unsupported single-letter prefixes", () => {
+    expect(() => classifyCredential("t-0000000000000000000000000000000000")).toThrow(/Unsupported token kind/);
+    expect(() => classifyCredential("X-0000000000000000000000000000000000")).toThrow(/Unsupported token kind/);
+    expect(() => classifyCredential("u-0000000000000000000000000000000000")).toThrow(/Unsupported token kind/);
+    expect(() => classifyCredential("n-0000000000000000000000000000000000")).toThrow(/Unsupported token kind/);
+  });
+
+  it("rejects Service Authorization tokens (at prefix) instead of treating them as device tokens", () => {
+    expect(() => classifyCredential("at")).toThrow(/Service Authorization/);
+    expect(() => classifyCredential("at-0000000000000000000000000000000000")).toThrow(/Service Authorization/);
+    expect(() => classifyCredential("at0000000000000000000000000000000000")).toThrow(/Service Authorization/);
+  });
+});
+
+describe("regionFromCode", () => {
   it("builds correct URLs for us-e1 region", () => {
-    const region = buildRegion("us-e1");
-    expect(region.api).toBe("https://api.us-e1.tago.io");
-    expect(region.sse).toBe("https://sse.us-e1.tago.io");
+    const region = regionFromCode("us-e1");
+    expect(region?.api).toBe("https://api.us-e1.tago.io");
+    expect(region?.sse).toBe("https://sse.us-e1.tago.io");
   });
 
   it("builds correct URLs for eu-w1 region", () => {
-    const region = buildRegion("eu-w1");
-    expect(region.api).toBe("https://api.eu-w1.tago.io");
-    expect(region.sse).toBe("https://sse.eu-w1.tago.io");
+    const region = regionFromCode("eu-w1");
+    expect(region?.api).toBe("https://api.eu-w1.tago.io");
+    expect(region?.sse).toBe("https://sse.eu-w1.tago.io");
   });
 
-  it("builds URLs for arbitrary region codes", () => {
-    const region = buildRegion("custom-region");
-    expect(region.api).toBe("https://api.custom-region.tago.io");
-    expect(region.sse).toBe("https://sse.custom-region.tago.io");
+  it.each([
+    "custom-region",
+    "http://evil.example.com",
+    "https://127.0.0.1",
+    "localhost",
+    "api.internal:8080",
+    "169.254.169.254",
+    "10.0.0.1",
+    "us-e1/../eu-w1",
+    "https://user:pass@api.us-e1.tago.io",
+    "https://api.us-e1.tago.io",
+    "api.6722812c934c3c3370e0b87d.tagoio.net",
+    "",
+  ])("rejects %j (outside the allowlist)", (value) => {
+    expect(regionFromCode(value), value).toBeNull();
   });
+});
 
-  it("uses a full dedicated-instance URL as-is and derives the SSE endpoint", () => {
-    const region = buildRegion("https://api.6722812c934c3c3370e0b87d.tagoio.net");
+describe("regionFromApiUrl", () => {
+  it("accepts an operator-configured https endpoint and derives the SSE endpoint", () => {
+    const region = regionFromApiUrl("https://api.6722812c934c3c3370e0b87d.tagoio.net");
     expect(region.api).toBe("https://api.6722812c934c3c3370e0b87d.tagoio.net");
     expect(region.sse).toBe("https://sse.6722812c934c3c3370e0b87d.tagoio.net");
   });
 
-  it("normalizes a bare dedicated-instance host to https", () => {
-    const region = buildRegion("api.6722812c934c3c3370e0b87d.tagoio.net");
-    expect(region.api).toBe("https://api.6722812c934c3c3370e0b87d.tagoio.net");
-    expect(region.sse).toBe("https://sse.6722812c934c3c3370e0b87d.tagoio.net");
-  });
-
-  it("strips a trailing slash from a full URL", () => {
-    const region = buildRegion("https://api.acme.tagoio.net/");
+  it("strips paths and trailing slashes down to the origin", () => {
+    const region = regionFromApiUrl("https://api.acme.tagoio.net/some/path/");
     expect(region.api).toBe("https://api.acme.tagoio.net");
     expect(region.sse).toBe("https://sse.acme.tagoio.net");
+  });
+
+  it("rejects non-https URLs", () => {
+    expect(() => regionFromApiUrl("http://api.acme.tagoio.net")).toThrow(/https/);
+  });
+
+  it("rejects bare hosts without a scheme", () => {
+    expect(() => regionFromApiUrl("api.acme.tagoio.net")).toThrow();
+  });
+});
+
+describe("validateTagoToken", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it.each(["http://evil.example.com", "https://127.0.0.1", "localhost", "api.internal:8080", "unknown-code"])(
+    "rejects hostile region header %j before any outbound request",
+    async (value) => {
+      const fetchMock = vi.fn(() => Promise.reject(new Error("must not be called")));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await validateTagoToken("a-0000000000000000000000000000000000", value);
+      expect(isTokenError(result), value).toBe(true);
+      expect((result as { statusCode: number }).statusCode).toBe(400);
+      expect((result as { error: string }).error).toContain("Invalid x-tagoio-region");
+
+      expect(fetchMock).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each(["t-0000000000000000000000000000000000", "u-0000000000000000000000000000000000", "at-0000000000000000000000000000000000"])(
+    "rejects unsupported token kind %j before any outbound request",
+    async (token) => {
+      const fetchMock = vi.fn(() => Promise.reject(new Error("must not be called")));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await validateTagoToken(token, "us-e1");
+      expect(isTokenError(result), token).toBe(true);
+      expect((result as { statusCode: number }).statusCode).toBe(401);
+      expect((result as { error: string }).error).toContain("Unsupported token kind");
+
+      expect(fetchMock).not.toHaveBeenCalled();
+    }
+  );
+
+  function stubInfoResponse(result: unknown) {
+    const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify({ status: true, result }), { status: 200, headers: { "content-type": "application/json" } })));
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  it("preserves the authenticated device identity for device tokens", async () => {
+    stubInfoResponse({ id: "61f0000000000000000d0001", name: "Sensor", type: "mutable" });
+
+    const result = await validateTagoToken("00000000-0000-4000-8000-000000000001", "us-e1");
+    expect(isTokenError(result)).toBe(false);
+    expect((result as { credential: unknown }).credential).toEqual({ credentialKind: "device", authenticatedDeviceId: "61f0000000000000000d0001" });
+  });
+
+  it("rejects device tokens whose introspection carries no device identity", async () => {
+    stubInfoResponse({ name: "Profile-shaped response without an id" });
+
+    const result = await validateTagoToken("00000000-0000-4000-8000-000000000001", "us-e1");
+    expect(isTokenError(result)).toBe(true);
+    expect((result as { statusCode: number }).statusCode).toBe(401);
+  });
+
+  it("never logs the request credential when the API reflects it in a validation failure", async () => {
+    const token = "p-c1sentinel00000000000000000000000000";
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(new Response(JSON.stringify({ status: false, message: `Invalid token: ${token}` }), { status: 401, headers: { "content-type": "application/json" } }))
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      const result = await validateTagoToken(token, "us-e1");
+      expect(isTokenError(result)).toBe(true);
+      expect((result as { statusCode: number }).statusCode).toBe(401);
+      expect((result as { error: string }).error).not.toContain(token);
+
+      const logged = consoleSpy.mock.calls.map((call) => call.map((arg) => inspect(arg, { depth: Infinity })).join(" ")).join("\n");
+      expect(logged).not.toContain(token);
+    } finally {
+      consoleSpy.mockRestore();
+    }
+  });
+
+  it("carries no device identity for profile and analysis tokens", async () => {
+    stubInfoResponse({ name: "Test Profile Token", type: "profile" });
+
+    const result = await validateTagoToken("p-0000000000000000000000000000000000", "us-e1");
+    expect(isTokenError(result)).toBe(false);
+    expect((result as { credential: unknown }).credential).toEqual({ credentialKind: "profile" });
   });
 });
 
@@ -76,8 +208,14 @@ describe("isTokenError", () => {
   });
 
   it("returns false for success results", () => {
-    const fakeResources = {} as any;
-    expect(isTokenError({ resources: fakeResources })).toBe(false);
+    const fakeResources = {} as Resources;
+    expect(
+      isTokenError({
+        resources: fakeResources,
+        region: { api: "https://api.us-e1.tago.io", sse: "https://sse.us-e1.tago.io" },
+        credential: { credentialKind: "analysis" },
+      })
+    ).toBe(false);
   });
 });
 

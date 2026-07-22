@@ -1,7 +1,8 @@
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { Resources } from "@tago-io/sdk";
 import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the shared module
 vi.mock("./shared", () => ({
   CORS_HEADERS: {
     "Access-Control-Allow-Origin": "*",
@@ -12,21 +13,26 @@ vi.mock("./shared", () => ({
   VALID_REGIONS: ["us-e1", "eu-w1"],
   extractToken: vi.fn(),
   validateTagoToken: vi.fn(),
-  createMcpServer: vi.fn(),
   isTokenError: vi.fn(),
 }));
 
-// Mock the MCP SDK transport
+vi.mock("./build-server", () => ({
+  buildServer: vi.fn(),
+}));
+
 const { mockHandleRequest, mockClose } = vi.hoisted(() => ({
   mockHandleRequest: vi.fn(),
   mockClose: vi.fn(),
 }));
 vi.mock("@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js", () => ({
-  WebStandardStreamableHTTPServerTransport: vi.fn().mockImplementation(function () { return { handleRequest: mockHandleRequest, close: mockClose }; }),
+  WebStandardStreamableHTTPServerTransport: vi.fn().mockImplementation(function () {
+    return { handleRequest: mockHandleRequest, close: mockClose };
+  }),
 }));
 
 import { handler as rawHandler } from "./lambda-handler";
-import { createMcpServer, extractToken, isTokenError, validateTagoToken } from "./shared";
+import { buildServer } from "./build-server";
+import { extractToken, isTokenError, validateTagoToken } from "./shared";
 
 async function invoke(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyStructuredResultV2> {
   return (await rawHandler(event)) as APIGatewayProxyStructuredResultV2;
@@ -157,11 +163,15 @@ describe("Lambda handler", () => {
       vi.mocked(extractToken).mockReturnValue("valid-token");
       vi.mocked(isTokenError).mockReturnValue(false);
 
-      const fakeResources = {} as any;
-      vi.mocked(validateTagoToken).mockResolvedValue({ resources: fakeResources });
+      const fakeResources = {} as Resources;
+      vi.mocked(validateTagoToken).mockResolvedValue({
+        resources: fakeResources,
+        region: { api: "https://api.us-e1.tago.io", sse: "https://sse.us-e1.tago.io" },
+        credential: { credentialKind: "analysis" },
+      });
 
       const mockMcpServer = { connect: vi.fn(), close: vi.fn() };
-      vi.mocked(createMcpServer).mockReturnValue(mockMcpServer as any);
+      vi.mocked(buildServer).mockReturnValue(mockMcpServer as unknown as McpServer);
 
       const responseHeaders = new Headers({ "content-type": "application/json" });
       mockHandleRequest.mockResolvedValue({
@@ -184,11 +194,15 @@ describe("Lambda handler", () => {
       vi.mocked(extractToken).mockReturnValue("valid-token");
       vi.mocked(isTokenError).mockReturnValue(false);
 
-      const fakeResources = {} as any;
-      vi.mocked(validateTagoToken).mockResolvedValue({ resources: fakeResources });
+      const fakeResources = {} as Resources;
+      vi.mocked(validateTagoToken).mockResolvedValue({
+        resources: fakeResources,
+        region: { api: "https://api.us-e1.tago.io", sse: "https://sse.us-e1.tago.io" },
+        credential: { credentialKind: "analysis" },
+      });
 
       const mockMcpServer = { connect: vi.fn(), close: vi.fn() };
-      vi.mocked(createMcpServer).mockReturnValue(mockMcpServer as any);
+      vi.mocked(buildServer).mockReturnValue(mockMcpServer as unknown as McpServer);
 
       const responseHeaders = new Headers({ "content-type": "application/json" });
       mockHandleRequest.mockResolvedValue({
@@ -217,11 +231,15 @@ describe("Lambda handler", () => {
       vi.mocked(extractToken).mockReturnValue("valid-token");
       vi.mocked(isTokenError).mockReturnValue(false);
 
-      const fakeResources = {} as any;
-      vi.mocked(validateTagoToken).mockResolvedValue({ resources: fakeResources });
+      const fakeResources = {} as Resources;
+      vi.mocked(validateTagoToken).mockResolvedValue({
+        resources: fakeResources,
+        region: { api: "https://api.us-e1.tago.io", sse: "https://sse.us-e1.tago.io" },
+        credential: { credentialKind: "analysis" },
+      });
 
       const mockMcpServer = { connect: vi.fn(), close: vi.fn() };
-      vi.mocked(createMcpServer).mockReturnValue(mockMcpServer as any);
+      vi.mocked(buildServer).mockReturnValue(mockMcpServer as unknown as McpServer);
 
       mockHandleRequest.mockRejectedValue(new Error("Transport error"));
       mockClose.mockResolvedValue(undefined);
@@ -243,11 +261,15 @@ describe("Lambda handler", () => {
       vi.mocked(extractToken).mockReturnValue("valid-token");
       vi.mocked(isTokenError).mockReturnValue(false);
 
-      const fakeResources = {} as any;
-      vi.mocked(validateTagoToken).mockResolvedValue({ resources: fakeResources });
+      const fakeResources = {} as Resources;
+      vi.mocked(validateTagoToken).mockResolvedValue({
+        resources: fakeResources,
+        region: { api: "https://api.us-e1.tago.io", sse: "https://sse.us-e1.tago.io" },
+        credential: { credentialKind: "analysis" },
+      });
 
       const mockMcpServer = { connect: vi.fn(), close: vi.fn() };
-      vi.mocked(createMcpServer).mockReturnValue(mockMcpServer as any);
+      vi.mocked(buildServer).mockReturnValue(mockMcpServer as unknown as McpServer);
 
       const responseHeaders = new Headers();
       mockHandleRequest.mockResolvedValue({

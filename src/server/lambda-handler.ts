@@ -2,7 +2,9 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 
 import { logger } from "../utils/logger";
-import { CORS_HEADERS, DEFAULT_TAGOIO_REGION, createMcpServer, extractToken, isTokenError, validateTagoToken } from "./shared";
+import { describeErrorSafely } from "../utils/safe-error";
+import { buildServer } from "./build-server";
+import { CORS_HEADERS, DEFAULT_TAGOIO_REGION, extractToken, isTokenError, validateTagoToken } from "./shared";
 
 function jsonResult(statusCode: number, body: unknown, extraHeaders?: Record<string, string>): APIGatewayProxyResultV2 {
   return {
@@ -10,6 +12,21 @@ function jsonResult(statusCode: number, body: unknown, extraHeaders?: Record<str
     headers: { "Content-Type": "application/json", ...CORS_HEADERS, ...extraHeaders },
     body: JSON.stringify(body),
   };
+}
+
+// API Gateway delivers headers in the client's original casing (unlike Node's
+// http module, which lowercases them), so lookups must be case-insensitive.
+function findHeader(headers: APIGatewayProxyEventV2["headers"], lowercaseName: string): string | undefined {
+  const direct = headers[lowercaseName];
+  if (direct !== undefined) {
+    return direct;
+  }
+  for (const [key, value] of Object.entries(headers)) {
+    if (key.toLowerCase() === lowercaseName) {
+      return value;
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -37,7 +54,7 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
     return jsonResult(405, { error: "Method Not Allowed", message: `Method ${method} is not supported` });
   }
 
-  const authHeader = event.headers["authorization"] ?? event.headers["Authorization"] ?? "";
+  const authHeader = findHeader(event.headers, "authorization") ?? "";
   const token = extractToken(authHeader);
 
   if (!token) {
@@ -48,7 +65,7 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
     });
   }
 
-  const tagoioRegion = event.headers["x-tagoio-region"] ?? DEFAULT_TAGOIO_REGION;
+  const tagoioRegion = findHeader(event.headers, "x-tagoio-region") ?? DEFAULT_TAGOIO_REGION;
 
   const result = await validateTagoToken(token, tagoioRegion);
 
@@ -75,7 +92,7 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
     enableJsonResponse: true,
   });
 
-  const mcpServer = createMcpServer(result.resources, token);
+  const mcpServer = buildServer({ resources: result.resources, token, region: result.region, ...result.credential });
 
   try {
     await mcpServer.connect(transport);
@@ -84,9 +101,9 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
     const responseBody = await webResponse.text();
 
     const responseHeaders: Record<string, string> = { ...CORS_HEADERS };
-    webResponse.headers.forEach((value, key) => {
+    for (const [key, value] of webResponse.headers.entries()) {
       responseHeaders[key] = value;
-    });
+    }
 
     return {
       statusCode: webResponse.status,
@@ -94,7 +111,8 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
       body: responseBody,
     };
   } catch (error) {
-    logger.error("Lambda MCP handler error:", error);
+    // Defense in depth: never log the raw error object with the credential in scope.
+    logger.error("Lambda MCP handler error:", describeErrorSafely(error, [token]));
     return jsonResult(500, {
       jsonrpc: "2.0",
       error: { code: -32603, message: "Internal server error processing MCP request" },
