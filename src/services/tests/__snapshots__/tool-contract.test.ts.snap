@@ -1,0 +1,5395 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`tool listing snapshot > matches the committed catalog snapshot (names, titles, annotations, full input schemas) 1`] = `
+[
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "configuration_params": {
+          "description": "Parameters to create (no id) or update (with id).",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "description": "Existing parameter ID (update). Omit to create a new parameter.",
+                "type": "string",
+              },
+              "key": {
+                "description": "Parameter key.",
+                "type": "string",
+              },
+              "sent": {
+                "description": "Whether the parameter was already sent to the device.",
+                "type": "boolean",
+              },
+              "value": {
+                "description": "Parameter value.",
+                "type": "string",
+              },
+            },
+            "required": [
+              "sent",
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+        "device_id": {
+          "description": "The 24-character device ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "device_id",
+        "configuration_params",
+      ],
+      "type": "object",
+    },
+    "name": "configure_device",
+    "title": "Configure Device Parameters",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "script": {
+                  "description": "The analysis IDs to run when the action triggers.",
+                  "items": {
+                    "type": "string",
+                  },
+                  "minItems": 1,
+                  "type": "array",
+                },
+                "type": {
+                  "const": "script",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "script",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "message": {
+                  "description": "The message of the notification.",
+                  "type": "string",
+                },
+                "subject": {
+                  "description": "The subject of the notification.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "notification",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "subject",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "message": {
+                  "description": "The message of the notification.",
+                  "type": "string",
+                },
+                "run_user": {
+                  "description": "The Run user ID that will receive the notification.",
+                  "type": "string",
+                },
+                "subject": {
+                  "description": "The subject of the notification.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "notification_run",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "subject",
+                "run_user",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "message": {
+                  "description": "The body of the email.",
+                  "type": "string",
+                },
+                "subject": {
+                  "description": "The subject of the email.",
+                  "type": "string",
+                },
+                "to": {
+                  "description": "The email address to send the email to.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "email",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "subject",
+                "to",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "message": {
+                  "description": "The SMS message.",
+                  "type": "string",
+                },
+                "to": {
+                  "description": "The phone number to send the SMS to.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "sms",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "to",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bucket": {
+                  "description": "The device ID to receive the MQTT published message.",
+                  "type": "string",
+                },
+                "payload": {
+                  "description": "The message that will be published to the MQTT topic.",
+                  "type": "string",
+                },
+                "topic": {
+                  "description": "The topic of the MQTT message.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "mqtt",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "bucket",
+                "payload",
+                "topic",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "headers": {
+                  "additionalProperties": {
+                    "type": "string",
+                  },
+                  "description": "The headers of the POST request. Pass an empty object \`{}\` when no headers are needed.",
+                  "type": "object",
+                },
+                "type": {
+                  "const": "post",
+                  "type": "string",
+                },
+                "url": {
+                  "description": "The URL of the POST request.",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "url",
+                "headers",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "from": {
+                  "description": "The Twilio phone number that sends the SMS.",
+                  "type": "string",
+                },
+                "message": {
+                  "description": "The SMS message.",
+                  "type": "string",
+                },
+                "to": {
+                  "description": "The phone number to send the SMS to.",
+                  "type": "string",
+                },
+                "twilio_sid": {
+                  "description": "The ID of the secret that contains the Twilio SID.",
+                  "type": "string",
+                },
+                "twilio_token": {
+                  "description": "The ID of the secret that contains the Twilio token.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "sms-twilio",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "to",
+                "from",
+                "twilio_sid",
+                "twilio_token",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "content_sid": {
+                  "description": "The ID of the secret that contains the WhatsApp message template SID.",
+                  "type": "string",
+                },
+                "content_variables": {
+                  "description": "The variables to be sent to the Twilio WhatsApp message template. Pass an empty array \`[]\` when the template has no variables.",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "description": "The name of the variable.",
+                        "type": "string",
+                      },
+                      "value": {
+                        "description": "The value of the variable.",
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "name",
+                      "value",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "array",
+                },
+                "from": {
+                  "description": "The Twilio phone number that sends the WhatsApp message.",
+                  "type": "string",
+                },
+                "message": {
+                  "description": "The WhatsApp message.",
+                  "type": "string",
+                },
+                "to": {
+                  "description": "The phone number to send the WhatsApp message to.",
+                  "type": "string",
+                },
+                "twilio_sid": {
+                  "description": "The ID of the secret that contains the Twilio SID.",
+                  "type": "string",
+                },
+                "twilio_token": {
+                  "description": "The ID of the secret that contains the Twilio token.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "whatsapp-twilio",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "to",
+                "from",
+                "content_sid",
+                "twilio_sid",
+                "twilio_token",
+                "content_variables",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "from": {
+                  "description": "The email address that sends the email.",
+                  "type": "string",
+                },
+                "message": {
+                  "description": "The body of the email.",
+                  "type": "string",
+                },
+                "sendgrid_api_key": {
+                  "description": "The ID of the secret that contains the SendGrid API key.",
+                  "type": "string",
+                },
+                "subject": {
+                  "description": "The subject of the email.",
+                  "type": "string",
+                },
+                "to": {
+                  "description": "The email address to send the email to.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "email-sendgrid",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "subject",
+                "to",
+                "from",
+                "sendgrid_api_key",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "from": {
+                  "description": "The email address that sends the email.",
+                  "type": "string",
+                },
+                "message": {
+                  "description": "The body of the email.",
+                  "type": "string",
+                },
+                "smtp_secret": {
+                  "description": "The ID of the secret that contains the SMTP credentials.",
+                  "type": "string",
+                },
+                "subject": {
+                  "description": "The subject of the email.",
+                  "type": "string",
+                },
+                "to": {
+                  "description": "The email address to send the email to.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "email-smtp",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "subject",
+                "to",
+                "from",
+                "smtp_secret",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "batch_enabled": {
+                  "description": "Whether the SQS queue is batch enabled.",
+                  "type": "boolean",
+                },
+                "sqs_secret": {
+                  "description": "The ID of the secret that contains the AWS SQS credentials.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "queue-sqs",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "sqs_secret",
+                "batch_enabled",
+              ],
+              "type": "object",
+            },
+          ],
+          "description": "What the action executes when triggered, discriminated by \`type\`. Each type has its own required fields.",
+        },
+        "active": {
+          "description": "Whether the action starts enabled. Defaults to true.",
+          "type": "boolean",
+        },
+        "description": {
+          "description": "The description for the action.",
+          "type": "string",
+        },
+        "name": {
+          "description": "The name for the action.",
+          "minLength": 1,
+          "type": "string",
+        },
+        "tags": {
+          "description": "The tags for the action. E.g: [{ key: 'action_type', value: 'notification' }]",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "trigger": {
+          "description": "The trigger configuration matching the action's \`type\`.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "description": "This schema is used when the trigger is based on type resource.",
+                "properties": {
+                  "resource": {
+                    "description": "The resource to monitor",
+                    "enum": [
+                      "device",
+                      "bucket",
+                      "file",
+                      "analysis",
+                      "action",
+                      "am",
+                      "user",
+                      "financial",
+                      "profile",
+                    ],
+                    "type": "string",
+                  },
+                  "tag_key": {
+                    "description": "The tag key to match",
+                    "type": "string",
+                  },
+                  "tag_value": {
+                    "description": "The tag value to match",
+                    "type": "string",
+                  },
+                  "when": {
+                    "description": "The event type to trigger on",
+                    "enum": [
+                      "create",
+                      "update",
+                      "delete",
+                    ],
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "resource",
+                  "when",
+                  "tag_key",
+                  "tag_value",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "description": "This schema is used when the trigger is based on type interval.",
+                "properties": {
+                  "interval": {
+                    "description": "This is the time between each trigger.
+      This is the time between each trigger. Could be in:
+      - minutes - 3 minutes
+      - hours - 8 hours
+      - days - 10 days
+      - weeks - 2 week
+      - months - 4 month
+      - quarters - 3 quarter
+      - years - 1 year
+      ",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "interval",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "description": "This schema is used when the trigger is based on type schedule.",
+                "properties": {
+                  "cron": {
+                    "description": "The cron expression for scheduling",
+                    "type": "string",
+                  },
+                  "timezone": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                      },
+                      {
+                        "format": "date-time",
+                        "type": "string",
+                      },
+                    ],
+                    "description": "The timezone for the schedule",
+                  },
+                },
+                "required": [
+                  "timezone",
+                  "cron",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "description": "This schema is used when the trigger is based on type condition.",
+                "properties": {
+                  "device": {
+                    "description": "The device ID to monitor",
+                    "type": "string",
+                  },
+                  "is": {
+                    "description": "The comparison operator: "<", ">", "=", "!" (not equal), "><" (between, requires second_value), "*" (any value)",
+                    "enum": [
+                      "<",
+                      ">",
+                      "=",
+                      "!",
+                      "><",
+                      "*",
+                    ],
+                    "type": "string",
+                  },
+                  "second_value": {
+                    "description": "Second value for "><" (between) comparisons",
+                    "type": "string",
+                  },
+                  "unlock": {
+                    "description": "Whether to unlock when condition is met",
+                    "type": "boolean",
+                  },
+                  "value": {
+                    "description": "The value to compare against",
+                    "type": "string",
+                  },
+                  "value_type": {
+                    "description": "The type of value being compared",
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "*",
+                    ],
+                    "type": "string",
+                  },
+                  "variable": {
+                    "description": "The variable name to check",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "device",
+                  "variable",
+                  "is",
+                  "value",
+                  "value_type",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "description": "This schema is used when the trigger is based on type usage_alert.",
+                "properties": {
+                  "condition": {
+                    "description": "The comparison operator",
+                    "enum": [
+                      "=",
+                      ">",
+                    ],
+                    "type": "string",
+                  },
+                  "condition_value": {
+                    "description": "The threshold value",
+                    "type": "number",
+                  },
+                  "service_or_resource": {
+                    "description": "The service/resource to monitor",
+                    "enum": [
+                      "input",
+                      "output",
+                      "analysis",
+                      "data_records",
+                      "sms",
+                      "email",
+                      "run_users",
+                      "push_notification",
+                      "file_storage",
+                      "device",
+                      "dashboard",
+                      "action",
+                      "tcore",
+                      "team_members",
+                      "am",
+                    ],
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "service_or_resource",
+                  "condition",
+                  "condition_value",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "description": "This schema is used when the trigger is based on type condition_geofence.",
+                "properties": {
+                  "device": {
+                    "description": "The device ID to monitor",
+                    "type": "string",
+                  },
+                  "is": {
+                    "description": "Whether to trigger when entering or exiting",
+                    "enum": [
+                      "IN",
+                      "OUT",
+                    ],
+                    "type": "string",
+                  },
+                  "unlock": {
+                    "description": "Whether to unlock when condition is met",
+                    "type": "boolean",
+                  },
+                  "value": {
+                    "additionalProperties": false,
+                    "description": "The geofence definition",
+                    "properties": {
+                      "center": {
+                        "description": "Center coordinates [longitude, latitude]",
+                        "items": {
+                          "type": "number",
+                        },
+                        "type": "array",
+                      },
+                      "coordinates": {
+                        "description": "Polygon coordinates [[lon,lat], ...]",
+                        "items": {
+                          "items": {
+                            "type": "number",
+                          },
+                          "type": "array",
+                        },
+                        "type": "array",
+                      },
+                      "radius": {
+                        "description": "Radius in kilometers",
+                        "type": "number",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "variable": {
+                    "description": "The variable containing location data",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "device",
+                  "variable",
+                  "is",
+                  "value",
+                ],
+                "type": "object",
+              },
+            ],
+          },
+          "type": "array",
+        },
+        "trigger_when_unlock": {
+          "description": "Trigger the action when the unlock condition is met (the trigger with the unlock property set to true). Only available for actions of type condition or condition_geofence.",
+          "type": "boolean",
+        },
+        "type": {
+          "description": "The type of trigger for the action.
+
+The type parameter accepts one of seven values:
+- "condition": Monitors device variables against specified conditions (threshold, comparison operators)
+- "resource": Responds to CRUD operations on platform resources (device, file, analysis, action, am, user)
+  - Resource triggers must specify which resource type to monitor (device, file, analysis, action, am, user) and which operations (create, update, delete).
+- "interval": Executes actions at regular time intervals (minutes, hours, days)
+- "schedule": Executes actions at specific dates/times using cron-like scheduling
+- "mqtt_topic": Responds to publications on specified MQTT topics
+- "condition_geofence": Triggers when devices enter or exit defined geographical boundaries
+- "usage_alert": Monitors account usage metrics against thresholds for services like input/output data, analysis minutes, SMS, email, push notifications, file storage, and resource counts
+  - Usage alert triggers must specify the monitored resource (input, output, analysis, data_records, sms, email, run_users, push_notification, file_storage, device, dashboard, action, tcore, team_members, am) and threshold values.",
+          "enum": [
+            "condition",
+            "resource",
+            "interval",
+            "schedule",
+            "mqtt_topic",
+            "usage_alert",
+            "condition_geofence",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "name",
+        "type",
+        "action",
+      ],
+      "type": "object",
+    },
+    "name": "create_action",
+    "title": "Create Action",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "description": "Whether the analysis starts enabled. Defaults to true.",
+          "type": "boolean",
+        },
+        "description": {
+          "description": "The description for the analysis.",
+          "type": "string",
+        },
+        "environment_variables": {
+          "description": "Environment variables available to the script (max 20, unique keys). Values are sensitive and never echoed back. Replaces the current set entirely when updating.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Environment variable name.",
+                "minLength": 1,
+                "type": "string",
+              },
+              "value": {
+                "description": "Environment variable value. Sensitive; never echoed back in results.",
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                ],
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "maxItems": 20,
+          "type": "array",
+        },
+        "interval": {
+          "description": "Schedule interval for automatic runs, e.g. '5 minutes' or '1 hour'. Omit for trigger-only analyses.",
+          "type": "string",
+        },
+        "name": {
+          "description": "The name for the analysis.",
+          "minLength": 1,
+          "type": "string",
+        },
+        "runtime": {
+          "description": "Runtime for the new analysis. Defaults to node-rt2025. New analyses are created hosted on TagoIO.",
+          "enum": [
+            "node-rt2025",
+            "python-rt2025",
+            "deno-rt2025",
+          ],
+          "type": "string",
+        },
+        "tags": {
+          "description": "The tags for the analysis. E.g: [{ key: 'analysis_type', value: 'invoice' }]",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "name",
+      ],
+      "type": "object",
+    },
+    "name": "create_analysis",
+    "title": "Create Analysis",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "arrangement": {
+          "description": "Widget placement grid. Replaces the current arrangement atomically; always send the complete desired arrangement.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "height": {
+                "description": "Height in grid units.",
+                "type": "number",
+              },
+              "tab": {
+                "description": "Tab key the widget is placed on. Nullable; stored arrangements may carry null.",
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "widget_id": {
+                "description": "The 24-character widget ID.",
+                "maxLength": 24,
+                "minLength": 24,
+                "type": "string",
+              },
+              "width": {
+                "description": "Width in grid units.",
+                "type": "number",
+              },
+              "x": {
+                "description": "Column position (grid units).",
+                "type": "number",
+              },
+              "y": {
+                "description": "Row position (grid units).",
+                "type": "number",
+              },
+            },
+            "required": [
+              "widget_id",
+              "x",
+              "y",
+              "width",
+              "height",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "label": {
+          "description": "The label (display name) for the dashboard.",
+          "minLength": 1,
+          "type": "string",
+        },
+        "tabs": {
+          "description": "Dashboard tabs. Keys must be unique. E.g: [{ "key": "overview", "value": "Overview" }]",
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "hidden": {
+                "description": "Whether the tab is hidden. Nullable; stored dashboards may carry null.",
+                "type": [
+                  "boolean",
+                  "null",
+                ],
+              },
+              "key": {
+                "description": "Unique tab key.",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tab display name.",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "tags": {
+          "description": "The tags for the dashboard. E.g: [{ key: 'team', value: 'ops' }]",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "visible": {
+          "description": "Whether the dashboard is visible in the sidebar. Defaults to true.",
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "label",
+      ],
+      "type": "object",
+    },
+    "name": "create_dashboard",
+    "title": "Create Dashboard",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "description": "Active status (default true).",
+          "type": "boolean",
+        },
+        "chunk_period": {
+          "description": "Data chunk period. Required for immutable devices.",
+          "enum": [
+            "day",
+            "week",
+            "month",
+            "quarter",
+          ],
+          "type": "string",
+        },
+        "chunk_retention": {
+          "description": "How many chunk periods to retain data. Required for immutable devices.",
+          "maximum": 36500,
+          "minimum": 0,
+          "type": "integer",
+        },
+        "configuration_params": {
+          "description": "Configuration parameters to set after creation.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "description": "Existing parameter ID (update). Omit to create a new parameter.",
+                "type": "string",
+              },
+              "key": {
+                "description": "Parameter key.",
+                "type": "string",
+              },
+              "sent": {
+                "description": "Whether the parameter was already sent to the device.",
+                "type": "boolean",
+              },
+              "value": {
+                "description": "Parameter value.",
+                "type": "string",
+              },
+            },
+            "required": [
+              "sent",
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "connector": {
+          "description": "The connector ID (required, find one with search_connectors).",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "description": {
+          "description": "Device description.",
+          "type": "string",
+        },
+        "name": {
+          "description": "The device name.",
+          "minLength": 1,
+          "type": "string",
+        },
+        "network": {
+          "description": "The network ID. Optional: when omitted it is derived from the connector if the connector supports exactly one network. Find candidates with search_networks.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "payload_decoder": {
+          "description": "Payload parser JavaScript source. Sent base64-encoded automatically.",
+          "type": "string",
+        },
+        "serie_number": {
+          "description": "Serial number (EUI, MQTT client ID, or IMEI).",
+          "type": "string",
+        },
+        "tags": {
+          "description": "Tags. E.g: [{ key: 'device_type', value: 'sensor' }]",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "type": {
+          "description": "Data storage type. Defaults to 'mutable'. Cannot be changed after creation.",
+          "enum": [
+            "mutable",
+            "immutable",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "name",
+        "connector",
+      ],
+      "type": "object",
+    },
+    "name": "create_device",
+    "title": "Create Device",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "index": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "fields": {
+                "description": "The schema fields the index covers, in order (1-5 fields).",
+                "items": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "maxItems": 5,
+                "minItems": 1,
+                "type": "array",
+              },
+            },
+            "required": [
+              "fields",
+            ],
+            "type": "object",
+          },
+          "description": "Index definitions keyed by index name. Every index field must exist in the submitted \`schema\`. Indexes drive entity data querying (filters must prefix an index).",
+          "type": "object",
+        },
+        "name": {
+          "description": "The name for the entity (1-100 characters).",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string",
+        },
+        "payload_decoder": {
+          "description": "Payload decoder as plain JavaScript source, never base64; the encoding for the API happens internally. At most 64 KiB once encoded.",
+          "type": "string",
+        },
+        "schema": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "required": {
+                "description": "Whether every data row must carry this field. Defaults to false.",
+                "type": "boolean",
+              },
+              "type": {
+                "description": "Field type. One of: string, text, int, float, json, timestamp.",
+                "enum": [
+                  "string",
+                  "text",
+                  "int",
+                  "float",
+                  "json",
+                  "timestamp",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "type",
+            ],
+            "type": "object",
+          },
+          "description": "Field definitions keyed by field name. Field names must match ^[a-z_]+$; types are string, text, int, float, json, timestamp. The server creates id, created_at, and updated_at automatically; do not define them.",
+          "type": "object",
+        },
+        "tags": {
+          "description": "The tags for the entity. E.g: [{ key: 'entity_type', value: 'sensor' }]",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "name",
+      ],
+      "type": "object",
+    },
+    "name": "create_entity",
+    "title": "Create Entity",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "description": "Whether the user starts enabled. The server default is INACTIVE; pass true to let the user log in immediately.",
+          "type": "boolean",
+        },
+        "company": {
+          "description": "The end user's company.",
+          "type": "string",
+        },
+        "email": {
+          "description": "The end user's login email. This is permanent; a run user cannot be renamed to a different email later.",
+          "format": "email",
+          "type": "string",
+        },
+        "language": {
+          "description": "The end user's language code, e.g. 'en'.",
+          "type": "string",
+        },
+        "name": {
+          "description": "The end user's display name.",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string",
+        },
+        "password": {
+          "description": "The end user's initial password (write-only, never echoed back in results, logs, or errors). The account's TagoRUN password policy applies on top of the 6-character minimum; a policy rejection is surfaced verbatim so you can adjust.",
+          "minLength": 6,
+          "type": "string",
+        },
+        "phone": {
+          "description": "The end user's phone number.",
+          "type": "string",
+        },
+        "tags": {
+          "description": "The tags for the run user. E.g: [{ key: 'user_type', value: 'admin' }]",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "timezone": {
+          "description": "The end user's timezone, e.g. 'America/New_York' or 'UTC'.",
+          "minLength": 1,
+          "type": "string",
+        },
+      },
+      "required": [
+        "name",
+        "email",
+        "password",
+        "timezone",
+      ],
+      "type": "object",
+    },
+    "name": "create_run_user",
+    "title": "Create Run User",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "configuration": {
+          "additionalProperties": {},
+          "description": "Compact widget configuration object. Must include "type", "label", and "display" as the widget schema demands (see widget_schema_lookup).",
+          "type": "object",
+        },
+        "dashboard_id": {
+          "description": "The 24-character dashboard ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "dashboard_id",
+        "configuration",
+      ],
+      "type": "object",
+    },
+    "name": "create_widget",
+    "title": "Create Widget",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "description": "The 24-character action ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "action_id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_action",
+    "title": "Delete Action",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "analysis_id": {
+          "description": "The 24-character analysis ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "analysis_id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_analysis",
+    "title": "Delete Analysis",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "dashboard_id": {
+          "description": "The 24-character dashboard ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "dashboard_id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_dashboard",
+    "title": "Delete Dashboard",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "device_id": {
+          "description": "The 24-character device ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "device_id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_device",
+    "title": "Delete Device",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "device_id": {
+          "description": "The 24-character device ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "end_date": {
+          "description": "End date as ISO 8601 string. Defaults to now.",
+          "type": "string",
+        },
+        "groups": {
+          "description": "Filter by groups. E.g: ['1738000000000']",
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "ids": {
+          "description": "Filter by record IDs.",
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "ordination": {
+          "description": "Sort order by time. Default 'descending'.",
+          "enum": [
+            "descending",
+            "ascending",
+          ],
+          "type": "string",
+        },
+        "qty": {
+          "description": "Quantity of records (min 1, max 10000, default 15).",
+          "maximum": 10000,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "skip": {
+          "description": "Records to skip, for pagination.",
+          "minimum": 0,
+          "type": "integer",
+        },
+        "start_date": {
+          "description": "Start date as ISO 8601 string. E.g: '2026-06-01T00:00:00Z'",
+          "type": "string",
+        },
+        "values": {
+          "description": "Filter by values. E.g: [25.5, 'high', true]",
+          "items": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+            ],
+          },
+          "type": "array",
+        },
+        "variables": {
+          "description": "Filter by variable names. E.g: ['temperature', 'humidity']",
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "device_id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_device_data",
+    "title": "Delete Device Data",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "description": "The 24-character entity ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "entity_id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_entity",
+    "title": "Delete Entity",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "description": "The 24-character entity ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "ids": {
+          "description": "IDs of the rows to delete (1-10 per request, a server cap).",
+          "items": {
+            "description": "Row ID from read_entity_data.",
+            "minLength": 1,
+            "type": "string",
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "type": "array",
+        },
+      },
+      "required": [
+        "entity_id",
+        "ids",
+      ],
+      "type": "object",
+    },
+    "name": "delete_entity_data",
+    "title": "Delete Entity Data",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "run_user_id": {
+          "description": "The 24-character run user ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "run_user_id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_run_user",
+    "title": "Delete Run User",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "notification_id": {
+          "description": "The 24-character notification ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "notification_id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_run_user_notification",
+    "title": "Delete Run User Notification",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "dashboard_id": {
+          "description": "The 24-character dashboard ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "widget_id": {
+          "description": "The 24-character widget ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "dashboard_id",
+        "widget_id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_widget",
+    "title": "Delete Widget",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "analysis_id": {
+          "description": "The 24-character analysis ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "version": {
+          "description": "Script version to download. Defaults to the current version.",
+          "exclusiveMinimum": 0,
+          "type": "integer",
+        },
+      },
+      "required": [
+        "analysis_id",
+      ],
+      "type": "object",
+    },
+    "name": "download_analysis_script",
+    "title": "Download Analysis Script",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "description": "Edits to apply; each entry targets one record by ID.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "group": {
+                "description": "New group.",
+                "type": "string",
+              },
+              "id": {
+                "description": "ID of the existing data record to edit (from read_device_data).",
+                "type": "string",
+              },
+              "location": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "lat": {
+                        "description": "Latitude.",
+                        "type": "number",
+                      },
+                      "lng": {
+                        "description": "Longitude.",
+                        "type": "number",
+                      },
+                    },
+                    "required": [
+                      "lat",
+                      "lng",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+                "description": "New coordinates.",
+              },
+              "metadata": {
+                "additionalProperties": {},
+                "description": "New metadata object.",
+                "type": "object",
+              },
+              "time": {
+                "description": "New ISO 8601 timestamp.",
+                "type": "string",
+              },
+              "unit": {
+                "description": "New unit.",
+                "type": "string",
+              },
+              "value": {
+                "description": "New value.",
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                ],
+              },
+            },
+            "required": [
+              "id",
+            ],
+            "type": "object",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+        "device_id": {
+          "description": "The 24-character device ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "device_id",
+        "data",
+      ],
+      "type": "object",
+    },
+    "name": "edit_device_data",
+    "title": "Edit Device Data",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "description": "Edits to apply. Each entry targets one row by \`id\` and carries only the fields to change.",
+          "items": {
+            "additionalProperties": {},
+            "properties": {
+              "id": {
+                "description": "ID of the existing row to update (from read_entity_data).",
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+            ],
+            "type": "object",
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "type": "array",
+        },
+        "entity_id": {
+          "description": "The 24-character entity ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "entity_id",
+        "data",
+      ],
+      "type": "object",
+    },
+    "name": "edit_entity_data",
+    "title": "Edit Entity Data",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "description": "The 24-character entity ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "entity_id",
+      ],
+      "type": "object",
+    },
+    "name": "empty_entity_data",
+    "title": "Empty Entity Data",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "description": "The 24-character action ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "action_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_action",
+    "title": "Get Action",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "analysis_id": {
+          "description": "The 24-character analysis ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "analysis_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_analysis",
+    "title": "Get Analysis",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "filename": {
+          "description": "The exact filename from a search_code_examples result row, e.g. "console.js".",
+          "minLength": 1,
+          "type": "string",
+        },
+        "runtime": {
+          "description": "The Analysis runtime the example belongs to, from the search_code_examples result. Required for type "analysis"; omit for "payload-parser".",
+          "enum": [
+            "node-legacy",
+            "python-legacy",
+            "node-rt2025",
+            "python-rt2025",
+            "deno-rt2025",
+          ],
+          "type": "string",
+        },
+        "type": {
+          "description": "The catalog the example belongs to, as returned by search_code_examples.",
+          "enum": [
+            "analysis",
+            "payload-parser",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "type",
+        "filename",
+      ],
+      "type": "object",
+    },
+    "name": "get_code_example",
+    "title": "Get TagoIO Code Example",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "connector_id": {
+          "description": "The 24-character connector ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "connector_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_connector",
+    "title": "Get Connector",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "dashboard_id": {
+          "description": "The 24-character dashboard ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "widget_id": {
+          "description": "The 24-character widget ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "dashboard_id",
+        "widget_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_custom_widget_code",
+    "title": "Get Custom Widget Code",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "dashboard_id": {
+          "description": "The 24-character dashboard ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "dashboard_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_dashboard",
+    "title": "Get Dashboard",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "device_id": {
+          "description": "The 24-character device ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "include_configuration_params": {
+          "description": "Also fetch the device's configuration parameters.",
+          "type": "boolean",
+        },
+        "include_data_amount": {
+          "description": "Also fetch the number of data records stored on the device.",
+          "type": "boolean",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "device_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_device",
+    "title": "Get Device",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "description": "The 24-character entity ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "entity_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_entity",
+    "title": "Get Entity",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "network_id": {
+          "description": "The 24-character network ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "network_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_network",
+    "title": "Get Network",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "get_profile",
+    "title": "Get Profile Info",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "get_profile_limits",
+    "title": "Get Profile Limits",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "end_date": {
+          "description": "End date as ISO string. E.g: '2026-06-30' or '2026-06-30T23:59:59Z'",
+          "type": "string",
+        },
+        "periodicity": {
+          "description": "Aggregation period for the statistics series.",
+          "enum": [
+            "day",
+            "month",
+            "year",
+          ],
+          "type": "string",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+        "start_date": {
+          "description": "Start date as ISO string. E.g: '2026-01-01' or '2026-01-01T00:00:00Z'",
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "get_profile_statistics",
+    "title": "Get Profile Usage Statistics",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+        "run_user_id": {
+          "description": "The 24-character run user ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "run_user_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_run_user",
+    "title": "Get Run User",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "dashboard_id": {
+          "description": "The 24-character dashboard ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+        "widget_id": {
+          "description": "The 24-character widget ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "dashboard_id",
+        "widget_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_widget",
+    "title": "Get Widget",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "expire_time": {
+          "description": "How long the minted token stays valid, as a relative duration. Accepts minute or hour forms only (e.g. "30 minutes", "1 hour", "2 hours"). Default "1 hour", hard ceiling 2 hours. "never" and any longer or unparseable value are refused because minted tokens cannot be revoked individually.",
+          "type": "string",
+        },
+        "run_user_id": {
+          "description": "The 24-character run user ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "run_user_id",
+      ],
+      "type": "object",
+    },
+    "name": "login_as_run_user",
+    "title": "Login as Run User",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {},
+      "type": "object",
+    },
+    "name": "platform_overview",
+    "title": "TagoIO Platform Overview",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "analysis_id": {
+          "description": "The 24-character analysis ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "analysis_id",
+      ],
+      "type": "object",
+    },
+    "name": "read_analysis_console",
+    "title": "Read Analysis Console",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "device_id": {
+          "description": "The 24-character device ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "end_date": {
+          "description": "End date as ISO 8601 string. Defaults to now.",
+          "type": "string",
+        },
+        "function": {
+          "description": "Aggregate function (avg/sum/min/max for query='aggregate') or comparison operator (gt/gte/lt/lte/eq/ne for query='conditional').",
+          "enum": [
+            "avg",
+            "sum",
+            "min",
+            "max",
+            "gt",
+            "gte",
+            "lt",
+            "lte",
+            "eq",
+            "ne",
+          ],
+          "type": "string",
+        },
+        "groups": {
+          "description": "Filter by groups. E.g: ['1738000000000']",
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "ids": {
+          "description": "Filter by record IDs.",
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "interval": {
+          "description": "Aggregation interval, required for query='aggregate'.",
+          "enum": [
+            "minute",
+            "hour",
+            "day",
+            "month",
+            "quarter",
+            "year",
+          ],
+          "type": "string",
+        },
+        "ordination": {
+          "description": "Sort order by time. Default 'descending'.",
+          "enum": [
+            "descending",
+            "ascending",
+          ],
+          "type": "string",
+        },
+        "qty": {
+          "description": "Quantity of records (min 1, max 10000, default 15).",
+          "maximum": 10000,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "query": {
+          "description": "Query type. 'default' pages through records (qty/skip). last_*/first_* return single records. min/max/count compute over filtered records. avg/sum also compute but require start_date (period must not exceed one month). 'aggregate' groups by time interval (requires interval + function avg/sum/min/max). 'conditional' filters by value comparison (requires start_date + value + function gt/gte/lt/lte/eq/ne). interval/function/value are only valid on aggregate/conditional queries.",
+          "enum": [
+            "default",
+            "last_item",
+            "last_value",
+            "last_location",
+            "last_insert",
+            "first_item",
+            "first_value",
+            "first_location",
+            "first_insert",
+            "min",
+            "max",
+            "count",
+            "avg",
+            "sum",
+            "aggregate",
+            "conditional",
+          ],
+          "type": "string",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+        "skip": {
+          "description": "Records to skip, for pagination.",
+          "minimum": 0,
+          "type": "integer",
+        },
+        "start_date": {
+          "description": "Start date as ISO 8601 string. E.g: '2026-06-01T00:00:00Z'",
+          "type": "string",
+        },
+        "value": {
+          "description": "Comparison value, required for query='conditional'.",
+          "type": "number",
+        },
+        "values": {
+          "description": "Filter by values. E.g: [25.5, 'high', true]",
+          "items": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+            ],
+          },
+          "type": "array",
+        },
+        "variables": {
+          "description": "Filter by variable names. E.g: ['temperature', 'humidity']",
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "device_id",
+      ],
+      "type": "object",
+    },
+    "name": "read_device_data",
+    "title": "Read Device Data",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "A doc path returned by search_docs, e.g. "/docs/tagoio/devices/device-token.md". Not a full URL.",
+          "minLength": 1,
+          "type": "string",
+        },
+      },
+      "required": [
+        "path",
+      ],
+      "type": "object",
+    },
+    "name": "read_doc",
+    "title": "Read TagoIO Doc Page",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Number of items to return (min 1, max 10000, default 20).",
+          "maximum": 10000,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "entity_id": {
+          "description": "The 24-character entity ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "fields": {
+          "description": "Schema fields to return per row. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "filter": {
+          "additionalProperties": {
+            "type": "string",
+          },
+          "description": "Field/value pairs to match. Keys must be fields of the chosen index, forming a left-to-right prefix of it (skipping an intermediate field is invalid).",
+          "type": "object",
+        },
+        "index": {
+          "description": "Index to query through (from get_entity). Defaults to the server's \`id_created_at_idx\` index (fields: id, created_at).",
+          "type": "string",
+        },
+        "order_by": {
+          "description": "Sort direction, applied to the chosen index's LAST field; there is no arbitrary order-by.",
+          "enum": [
+            "asc",
+            "desc",
+          ],
+          "type": "string",
+        },
+        "page": {
+          "description": "Page of results, starting from 1.",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "entity_id",
+      ],
+      "type": "object",
+    },
+    "name": "read_entity_data",
+    "title": "Read Entity Data",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+        "run_user_id": {
+          "description": "The 24-character run user ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "run_user_id",
+      ],
+      "type": "object",
+    },
+    "name": "read_run_user_notifications",
+    "title": "Read Run User Notifications",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "analysis_id": {
+          "description": "The 24-character analysis ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "scope": {
+          "additionalProperties": {},
+          "description": "Optional JSON object handed to the analysis as its scope.",
+          "type": "object",
+        },
+      },
+      "required": [
+        "analysis_id",
+      ],
+      "type": "object",
+    },
+    "name": "run_analysis",
+    "title": "Run Analysis",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Number of items to return (min 1, max 200, default 20).",
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "fields": {
+          "description": "Fields to request from the API. Defaults to all of: id, active, name, created_at, updated_at, last_triggered, tags, type, action. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
+          "items": {
+            "enum": [
+              "id",
+              "active",
+              "name",
+              "created_at",
+              "updated_at",
+              "last_triggered",
+              "tags",
+              "type",
+              "action",
+            ],
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "filter": {
+          "additionalProperties": false,
+          "description": "Filter object to apply to the query.",
+          "properties": {
+            "active": {
+              "description": "Filter by active status. E.g: true",
+              "type": "boolean",
+            },
+            "created_at": {
+              "description": "Filter by creation date. E.g: '2021-01-01'",
+              "type": "string",
+            },
+            "name": {
+              "description": "Filter by action name. Wildcard matching is applied automatically, so "notification" matches "Notification Action" and "Notification Action 2".",
+              "type": "string",
+            },
+            "orderBy": {
+              "description": "Sort as "field,direction". Field is one of: name, active, last_triggered, created_at, updated_at; direction is asc or desc. E.g: "name,asc"",
+              "type": "string",
+            },
+            "tags": {
+              "description": "Filter by tags. E.g: [{ key: 'action_type', value: 'notification' }]",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "description": "Tag key",
+                    "type": "string",
+                  },
+                  "value": {
+                    "description": "Tag value",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "key",
+                  "value",
+                ],
+                "type": "object",
+              },
+              "type": "array",
+            },
+            "updated_at": {
+              "description": "Filter by last update date. E.g: '2021-01-01'",
+              "type": "string",
+            },
+          },
+          "type": "object",
+        },
+        "page": {
+          "description": "Page of results, starting from 1.",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "search_actions",
+    "title": "Search Actions",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Number of items to return (min 1, max 200, default 20).",
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "fields": {
+          "description": "Fields to include per analysis. Defaults to all key fields. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
+          "items": {
+            "enum": [
+              "id",
+              "active",
+              "name",
+              "created_at",
+              "updated_at",
+              "last_run",
+              "tags",
+              "runtime",
+              "variables",
+              "run_on",
+            ],
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "filter": {
+          "additionalProperties": false,
+          "description": "Filters to narrow the search.",
+          "properties": {
+            "created_at": {
+              "description": "Filter by creation date. E.g: '2026-01-01'",
+              "type": "string",
+            },
+            "name": {
+              "description": "Partial analysis name. Wildcard matching is applied automatically ('invoice' finds 'Invoice Analysis').",
+              "type": "string",
+            },
+            "orderBy": {
+              "description": "Sort as "field,direction". Field is one of: name, active, run_on, last_run, created_at, updated_at; direction is asc or desc. E.g: "name,asc"",
+              "type": "string",
+            },
+            "run_on": {
+              "description": "Filter by where the analysis runs.",
+              "enum": [
+                "tago",
+                "external",
+              ],
+              "type": "string",
+            },
+            "runtime": {
+              "description": "Filter by runtime.",
+              "enum": [
+                "node-legacy",
+                "python-legacy",
+                "node-rt2025",
+                "python-rt2025",
+                "deno-rt2025",
+                "other",
+              ],
+              "type": "string",
+            },
+            "tags": {
+              "description": "Filter by tags. E.g: [{ key: 'analysis_type', value: 'invoice' }]",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "description": "Tag key",
+                    "type": "string",
+                  },
+                  "value": {
+                    "description": "Tag value",
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "type": "array",
+            },
+            "updated_at": {
+              "description": "Filter by update date. E.g: '2026-01-01'",
+              "type": "string",
+            },
+          },
+          "type": "object",
+        },
+        "page": {
+          "description": "Page of results, starting from 1.",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "search_analyses",
+    "title": "Search Analyses",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "description": "Search terms matched against example titles, tags, descriptions, and filenames, e.g. "create a device" or "decode base64 payload".",
+          "maxLength": 512,
+          "minLength": 1,
+          "type": "string",
+        },
+        "runtime": {
+          "description": "Restrict Analysis examples to one runtime. Omit to search all runtimes. Only valid with type "analysis".",
+          "enum": [
+            "node-legacy",
+            "python-legacy",
+            "node-rt2025",
+            "python-rt2025",
+            "deno-rt2025",
+          ],
+          "type": "string",
+        },
+        "type": {
+          "description": "The kind of code you are writing: Analysis script or Payload Parser.",
+          "enum": [
+            "analysis",
+            "payload-parser",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "query",
+        "type",
+      ],
+      "type": "object",
+    },
+    "name": "search_code_examples",
+    "title": "Search TagoIO Code Examples",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Number of items to return (min 1, max 50, default 10).",
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "fields": {
+          "description": "Fields to include per connector. Defaults to: id, name, networks, public, device_parameters. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
+          "items": {
+            "enum": [
+              "id",
+              "name",
+              "description",
+              "logo_url",
+              "public",
+              "networks",
+              "device_parameters",
+              "payload_encoder",
+              "payload_decoder",
+              "install_text",
+              "install_end_text",
+              "device_annotation",
+              "created_at",
+              "updated_at",
+            ],
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "name": {
+          "description": "Full or partial connector name to match (wildcard search).",
+          "minLength": 1,
+          "type": "string",
+        },
+        "page": {
+          "description": "Page of results, starting from 1.",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "public": {
+          "description": "Filter by visibility: true for public marketplace connectors, false for the profile's private connectors.",
+          "type": "boolean",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "search_connectors",
+    "title": "Search Connectors",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Number of items to return (min 1, max 200, default 20).",
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "fields": {
+          "description": "Fields to include per dashboard. Defaults to all key fields. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
+          "items": {
+            "enum": [
+              "id",
+              "label",
+              "active",
+              "visible",
+              "tags",
+              "type",
+              "created_at",
+              "updated_at",
+              "last_access",
+            ],
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "filter": {
+          "additionalProperties": false,
+          "description": "Filters to narrow the search.",
+          "properties": {
+            "created_at": {
+              "description": "Filter by creation date. E.g: '2026-01-01'",
+              "type": "string",
+            },
+            "label": {
+              "description": "Partial dashboard label. Wildcard matching is applied automatically ('fleet' finds 'Fleet Overview').",
+              "type": "string",
+            },
+            "orderBy": {
+              "description": "Sort as "field,direction". Field is one of: label, active, created_at, updated_at; direction is asc or desc. E.g: "label,asc"",
+              "type": "string",
+            },
+            "tags": {
+              "description": "Filter by tags. E.g: [{ key: 'team', value: 'ops' }]",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "description": "Tag key",
+                    "type": "string",
+                  },
+                  "value": {
+                    "description": "Tag value",
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "type": "array",
+            },
+            "updated_at": {
+              "description": "Filter by update date. E.g: '2026-01-01'",
+              "type": "string",
+            },
+          },
+          "type": "object",
+        },
+        "page": {
+          "description": "Page of results, starting from 1.",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "search_dashboards",
+    "title": "Search Dashboards",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Number of items to return (min 1, max 200, default 20).",
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "fields": {
+          "description": "Fields to include per device. Defaults to all key fields. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
+          "items": {
+            "enum": [
+              "id",
+              "active",
+              "name",
+              "tags",
+              "connector",
+              "network",
+              "type",
+              "created_at",
+              "updated_at",
+            ],
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "filter": {
+          "additionalProperties": false,
+          "description": "Filters to narrow the search.",
+          "properties": {
+            "active": {
+              "description": "Filter by active status.",
+              "type": "boolean",
+            },
+            "connector": {
+              "description": "Filter by connector ID.",
+              "maxLength": 24,
+              "minLength": 24,
+              "type": "string",
+            },
+            "created_at": {
+              "description": "Filter by creation date. E.g: '2026-01-01'",
+              "type": "string",
+            },
+            "id": {
+              "description": "Exact device ID.",
+              "maxLength": 24,
+              "minLength": 24,
+              "type": "string",
+            },
+            "name": {
+              "description": "Partial device name. Wildcard matching is applied automatically ('sensor' finds 'Temperature Sensor').",
+              "type": "string",
+            },
+            "network": {
+              "description": "Filter by network ID.",
+              "maxLength": 24,
+              "minLength": 24,
+              "type": "string",
+            },
+            "orderBy": {
+              "description": "Sort as "field,direction". Field is one of: name, visible, active, last_input, created_at, updated_at; direction is asc or desc. E.g: "name,asc"",
+              "type": "string",
+            },
+            "tags": {
+              "description": "Filter by tags. E.g: [{ key: 'device_type', value: 'sensor' }]",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "description": "Tag key",
+                    "type": "string",
+                  },
+                  "value": {
+                    "description": "Tag value",
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "type": "array",
+            },
+            "type": {
+              "description": "Filter by storage type.",
+              "enum": [
+                "mutable",
+                "immutable",
+              ],
+              "type": "string",
+            },
+            "updated_at": {
+              "description": "Filter by update date. E.g: '2026-01-01'",
+              "type": "string",
+            },
+          },
+          "type": "object",
+        },
+        "page": {
+          "description": "Page of results, starting from 1.",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "search_devices",
+    "title": "Search Devices",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "description": "Maximum number of results to return. Defaults to 10.",
+          "maximum": 25,
+          "minimum": 1,
+          "type": "number",
+        },
+        "query": {
+          "description": "Search terms to match against page titles, descriptions, and paths, e.g. "device token" or "payload parser".",
+          "minLength": 2,
+          "type": "string",
+        },
+      },
+      "required": [
+        "query",
+      ],
+      "type": "object",
+    },
+    "name": "search_docs",
+    "title": "Search TagoIO Docs",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Number of items to return (min 1, max 200, default 20).",
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "fields": {
+          "description": "Fields to include per entity. Defaults to all key fields. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
+          "items": {
+            "enum": [
+              "id",
+              "name",
+              "schema",
+              "index",
+              "tags",
+              "created_at",
+              "updated_at",
+            ],
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "filter": {
+          "additionalProperties": false,
+          "description": "Filters to narrow the search.",
+          "properties": {
+            "created_at": {
+              "description": "Filter by creation date. E.g: '2026-01-01'",
+              "type": "string",
+            },
+            "id": {
+              "description": "Exact entity ID.",
+              "maxLength": 24,
+              "minLength": 24,
+              "type": "string",
+            },
+            "name": {
+              "description": "Partial entity name. Wildcard matching is applied automatically ('sensor' finds 'Temperature Sensor').",
+              "type": "string",
+            },
+            "orderBy": {
+              "description": "Sort as "field,direction". Field is one of: name, created_at, updated_at; direction is asc or desc. E.g: "name,asc"",
+              "type": "string",
+            },
+            "tags": {
+              "description": "Filter by tags. E.g: [{ key: 'entity_type', value: 'sensor' }]",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "description": "Tag key",
+                    "type": "string",
+                  },
+                  "value": {
+                    "description": "Tag value",
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "type": "array",
+            },
+            "updated_at": {
+              "description": "Filter by update date. E.g: '2026-01-01'",
+              "type": "string",
+            },
+          },
+          "type": "object",
+        },
+        "page": {
+          "description": "Page of results, starting from 1.",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "search_entities",
+    "title": "Search Entities",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Number of items to return (min 1, max 50, default 10).",
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "fields": {
+          "description": "Fields to include per network. Defaults to: id, name, public. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
+          "items": {
+            "enum": [
+              "id",
+              "name",
+              "description",
+              "logo_url",
+              "icon_url",
+              "banner_url",
+              "public",
+              "device_parameters",
+              "middleware_endpoint",
+              "payload_encoder",
+              "payload_decoder",
+              "documentation_url",
+              "serial_number",
+              "require_devices_access",
+            ],
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "name": {
+          "description": "Full or partial network name to match (wildcard search).",
+          "minLength": 1,
+          "type": "string",
+        },
+        "page": {
+          "description": "Page of results, starting from 1.",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "public": {
+          "description": "Filter by visibility: true for public networks, false for the profile's private networks.",
+          "type": "boolean",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "search_networks",
+    "title": "Search Networks",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Number of items to return (min 1, max 200, default 20).",
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "fields": {
+          "description": "Fields to include per user. Defaults to all key fields. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
+          "items": {
+            "enum": [
+              "id",
+              "name",
+              "email",
+              "timezone",
+              "company",
+              "phone",
+              "language",
+              "tags",
+              "active",
+              "last_login",
+              "created_at",
+              "updated_at",
+            ],
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "filter": {
+          "additionalProperties": false,
+          "description": "Filters to narrow the search.",
+          "properties": {
+            "active": {
+              "description": "Filter by active status.",
+              "type": "boolean",
+            },
+            "created_at": {
+              "description": "Filter by creation date. E.g: '2026-01-01'",
+              "type": "string",
+            },
+            "email": {
+              "description": "Partial email. Wildcard matching is applied automatically ('gmail' finds 'user@gmail.com').",
+              "type": "string",
+            },
+            "id": {
+              "description": "Exact run user ID.",
+              "maxLength": 24,
+              "minLength": 24,
+              "type": "string",
+            },
+            "name": {
+              "description": "Partial user name. Wildcard matching is applied automatically ('john' finds 'John Doe' and 'Johnny Smith').",
+              "type": "string",
+            },
+            "orderBy": {
+              "description": "Sort as "field,direction". Field is one of: name, active, last_login, created_at, updated_at; direction is asc or desc. E.g: "name,asc"",
+              "type": "string",
+            },
+            "tags": {
+              "description": "Filter by tags. E.g: [{ key: 'user_type', value: 'admin' }]",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "description": "Tag key",
+                    "type": "string",
+                  },
+                  "value": {
+                    "description": "Tag value",
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "type": "array",
+            },
+            "updated_at": {
+              "description": "Filter by update date. E.g: '2026-01-01'",
+              "type": "string",
+            },
+          },
+          "type": "object",
+        },
+        "page": {
+          "description": "Page of results, starting from 1.",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "search_run_users",
+    "title": "Search Run Users",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Number of items to return (min 1, max 200, default 20).",
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "fields": {
+          "description": "Fields to include per secret. Defaults to all key fields. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
+          "items": {
+            "enum": [
+              "id",
+              "key",
+              "tags",
+              "value_length",
+              "created_at",
+              "updated_at",
+            ],
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "filter": {
+          "additionalProperties": false,
+          "description": "Filters to narrow the search.",
+          "properties": {
+            "id": {
+              "description": "Exact secret ID.",
+              "maxLength": 24,
+              "minLength": 24,
+              "type": "string",
+            },
+            "key": {
+              "description": "Filter by secret key name.",
+              "type": "string",
+            },
+            "orderBy": {
+              "description": "Sort as "field,direction". Field is one of: key; direction is asc or desc. E.g: "key,asc"",
+              "type": "string",
+            },
+          },
+          "type": "object",
+        },
+        "page": {
+          "description": "Page of results, starting from 1.",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "search_secrets",
+    "title": "Search Profile Secrets",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "description": "Data records to store.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "group": {
+                "description": "Group ID to correlate values recorded together.",
+                "type": "string",
+              },
+              "location": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "lat": {
+                        "description": "Latitude.",
+                        "type": "number",
+                      },
+                      "lng": {
+                        "description": "Longitude.",
+                        "type": "number",
+                      },
+                    },
+                    "required": [
+                      "lat",
+                      "lng",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+                "description": "Coordinates for the value.",
+              },
+              "metadata": {
+                "additionalProperties": {},
+                "description": "Free-form metadata object.",
+                "type": "object",
+              },
+              "time": {
+                "description": "ISO 8601 timestamp. Defaults to now.",
+                "type": "string",
+              },
+              "unit": {
+                "description": "Unit of measurement, e.g. '°C'.",
+                "type": "string",
+              },
+              "value": {
+                "description": "The value.",
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                ],
+              },
+              "variable": {
+                "description": "Variable name in snake_case, alphanumeric only.",
+                "type": "string",
+              },
+            },
+            "required": [
+              "variable",
+            ],
+            "type": "object",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+        "device_id": {
+          "description": "The 24-character device ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "device_id",
+        "data",
+      ],
+      "type": "object",
+    },
+    "name": "send_device_data",
+    "title": "Send Device Data",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "description": "Rows to store. Each row is an object of schema fields (see get_entity); values are validated against the field types by the server.",
+          "items": {
+            "additionalProperties": {},
+            "properties": {
+              "id": {
+                "description": "Optional row ID. The server UPSERTS on id: re-sending an existing id overwrites that row.",
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "type": "array",
+        },
+        "entity_id": {
+          "description": "The 24-character entity ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "entity_id",
+        "data",
+      ],
+      "type": "object",
+    },
+    "name": "send_entity_data",
+    "title": "Send Entity Data",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "description": "The notification body text.",
+          "minLength": 1,
+          "type": "string",
+        },
+        "run_user_id": {
+          "description": "The 24-character run user ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "title": {
+          "description": "The notification title.",
+          "minLength": 1,
+          "type": "string",
+        },
+      },
+      "required": [
+        "run_user_id",
+        "title",
+        "message",
+      ],
+      "type": "object",
+    },
+    "name": "send_run_user_notification",
+    "title": "Send Run User Notification",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "script": {
+                  "description": "The analysis IDs to run when the action triggers.",
+                  "items": {
+                    "type": "string",
+                  },
+                  "minItems": 1,
+                  "type": "array",
+                },
+                "type": {
+                  "const": "script",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "script",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "message": {
+                  "description": "The message of the notification.",
+                  "type": "string",
+                },
+                "subject": {
+                  "description": "The subject of the notification.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "notification",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "subject",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "message": {
+                  "description": "The message of the notification.",
+                  "type": "string",
+                },
+                "run_user": {
+                  "description": "The Run user ID that will receive the notification.",
+                  "type": "string",
+                },
+                "subject": {
+                  "description": "The subject of the notification.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "notification_run",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "subject",
+                "run_user",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "message": {
+                  "description": "The body of the email.",
+                  "type": "string",
+                },
+                "subject": {
+                  "description": "The subject of the email.",
+                  "type": "string",
+                },
+                "to": {
+                  "description": "The email address to send the email to.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "email",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "subject",
+                "to",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "message": {
+                  "description": "The SMS message.",
+                  "type": "string",
+                },
+                "to": {
+                  "description": "The phone number to send the SMS to.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "sms",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "to",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bucket": {
+                  "description": "The device ID to receive the MQTT published message.",
+                  "type": "string",
+                },
+                "payload": {
+                  "description": "The message that will be published to the MQTT topic.",
+                  "type": "string",
+                },
+                "topic": {
+                  "description": "The topic of the MQTT message.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "mqtt",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "bucket",
+                "payload",
+                "topic",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "headers": {
+                  "additionalProperties": {
+                    "type": "string",
+                  },
+                  "description": "The headers of the POST request. Pass an empty object \`{}\` when no headers are needed.",
+                  "type": "object",
+                },
+                "type": {
+                  "const": "post",
+                  "type": "string",
+                },
+                "url": {
+                  "description": "The URL of the POST request.",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "url",
+                "headers",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "from": {
+                  "description": "The Twilio phone number that sends the SMS.",
+                  "type": "string",
+                },
+                "message": {
+                  "description": "The SMS message.",
+                  "type": "string",
+                },
+                "to": {
+                  "description": "The phone number to send the SMS to.",
+                  "type": "string",
+                },
+                "twilio_sid": {
+                  "description": "The ID of the secret that contains the Twilio SID.",
+                  "type": "string",
+                },
+                "twilio_token": {
+                  "description": "The ID of the secret that contains the Twilio token.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "sms-twilio",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "to",
+                "from",
+                "twilio_sid",
+                "twilio_token",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "content_sid": {
+                  "description": "The ID of the secret that contains the WhatsApp message template SID.",
+                  "type": "string",
+                },
+                "content_variables": {
+                  "description": "The variables to be sent to the Twilio WhatsApp message template. Pass an empty array \`[]\` when the template has no variables.",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "description": "The name of the variable.",
+                        "type": "string",
+                      },
+                      "value": {
+                        "description": "The value of the variable.",
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "name",
+                      "value",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "array",
+                },
+                "from": {
+                  "description": "The Twilio phone number that sends the WhatsApp message.",
+                  "type": "string",
+                },
+                "message": {
+                  "description": "The WhatsApp message.",
+                  "type": "string",
+                },
+                "to": {
+                  "description": "The phone number to send the WhatsApp message to.",
+                  "type": "string",
+                },
+                "twilio_sid": {
+                  "description": "The ID of the secret that contains the Twilio SID.",
+                  "type": "string",
+                },
+                "twilio_token": {
+                  "description": "The ID of the secret that contains the Twilio token.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "whatsapp-twilio",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "to",
+                "from",
+                "content_sid",
+                "twilio_sid",
+                "twilio_token",
+                "content_variables",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "from": {
+                  "description": "The email address that sends the email.",
+                  "type": "string",
+                },
+                "message": {
+                  "description": "The body of the email.",
+                  "type": "string",
+                },
+                "sendgrid_api_key": {
+                  "description": "The ID of the secret that contains the SendGrid API key.",
+                  "type": "string",
+                },
+                "subject": {
+                  "description": "The subject of the email.",
+                  "type": "string",
+                },
+                "to": {
+                  "description": "The email address to send the email to.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "email-sendgrid",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "subject",
+                "to",
+                "from",
+                "sendgrid_api_key",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "from": {
+                  "description": "The email address that sends the email.",
+                  "type": "string",
+                },
+                "message": {
+                  "description": "The body of the email.",
+                  "type": "string",
+                },
+                "smtp_secret": {
+                  "description": "The ID of the secret that contains the SMTP credentials.",
+                  "type": "string",
+                },
+                "subject": {
+                  "description": "The subject of the email.",
+                  "type": "string",
+                },
+                "to": {
+                  "description": "The email address to send the email to.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "email-smtp",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "message",
+                "subject",
+                "to",
+                "from",
+                "smtp_secret",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "batch_enabled": {
+                  "description": "Whether the SQS queue is batch enabled.",
+                  "type": "boolean",
+                },
+                "sqs_secret": {
+                  "description": "The ID of the secret that contains the AWS SQS credentials.",
+                  "type": "string",
+                },
+                "type": {
+                  "const": "queue-sqs",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "sqs_secret",
+                "batch_enabled",
+              ],
+              "type": "object",
+            },
+          ],
+          "description": "What the action executes when triggered, discriminated by \`type\`. Each type has its own required fields.",
+        },
+        "action_id": {
+          "description": "The 24-character action ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "active": {
+          "description": "Enable or disable the action.",
+          "type": "boolean",
+        },
+        "description": {
+          "description": "The new description for the action.",
+          "type": "string",
+        },
+        "name": {
+          "description": "The new name for the action.",
+          "minLength": 1,
+          "type": "string",
+        },
+        "tags": {
+          "description": "The new tags for the action, replacing the current ones.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "trigger": {
+          "description": "The new trigger configuration, replacing the current one. Must be sent together with \`type\`.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "description": "This schema is used when the trigger is based on type resource.",
+                "properties": {
+                  "resource": {
+                    "description": "The resource to monitor",
+                    "enum": [
+                      "device",
+                      "bucket",
+                      "file",
+                      "analysis",
+                      "action",
+                      "am",
+                      "user",
+                      "financial",
+                      "profile",
+                    ],
+                    "type": "string",
+                  },
+                  "tag_key": {
+                    "description": "The tag key to match",
+                    "type": "string",
+                  },
+                  "tag_value": {
+                    "description": "The tag value to match",
+                    "type": "string",
+                  },
+                  "when": {
+                    "description": "The event type to trigger on",
+                    "enum": [
+                      "create",
+                      "update",
+                      "delete",
+                    ],
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "resource",
+                  "when",
+                  "tag_key",
+                  "tag_value",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "description": "This schema is used when the trigger is based on type interval.",
+                "properties": {
+                  "interval": {
+                    "description": "This is the time between each trigger.
+      This is the time between each trigger. Could be in:
+      - minutes - 3 minutes
+      - hours - 8 hours
+      - days - 10 days
+      - weeks - 2 week
+      - months - 4 month
+      - quarters - 3 quarter
+      - years - 1 year
+      ",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "interval",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "description": "This schema is used when the trigger is based on type schedule.",
+                "properties": {
+                  "cron": {
+                    "description": "The cron expression for scheduling",
+                    "type": "string",
+                  },
+                  "timezone": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                      },
+                      {
+                        "format": "date-time",
+                        "type": "string",
+                      },
+                    ],
+                    "description": "The timezone for the schedule",
+                  },
+                },
+                "required": [
+                  "timezone",
+                  "cron",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "description": "This schema is used when the trigger is based on type condition.",
+                "properties": {
+                  "device": {
+                    "description": "The device ID to monitor",
+                    "type": "string",
+                  },
+                  "is": {
+                    "description": "The comparison operator: "<", ">", "=", "!" (not equal), "><" (between, requires second_value), "*" (any value)",
+                    "enum": [
+                      "<",
+                      ">",
+                      "=",
+                      "!",
+                      "><",
+                      "*",
+                    ],
+                    "type": "string",
+                  },
+                  "second_value": {
+                    "description": "Second value for "><" (between) comparisons",
+                    "type": "string",
+                  },
+                  "unlock": {
+                    "description": "Whether to unlock when condition is met",
+                    "type": "boolean",
+                  },
+                  "value": {
+                    "description": "The value to compare against",
+                    "type": "string",
+                  },
+                  "value_type": {
+                    "description": "The type of value being compared",
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "*",
+                    ],
+                    "type": "string",
+                  },
+                  "variable": {
+                    "description": "The variable name to check",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "device",
+                  "variable",
+                  "is",
+                  "value",
+                  "value_type",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "description": "This schema is used when the trigger is based on type usage_alert.",
+                "properties": {
+                  "condition": {
+                    "description": "The comparison operator",
+                    "enum": [
+                      "=",
+                      ">",
+                    ],
+                    "type": "string",
+                  },
+                  "condition_value": {
+                    "description": "The threshold value",
+                    "type": "number",
+                  },
+                  "service_or_resource": {
+                    "description": "The service/resource to monitor",
+                    "enum": [
+                      "input",
+                      "output",
+                      "analysis",
+                      "data_records",
+                      "sms",
+                      "email",
+                      "run_users",
+                      "push_notification",
+                      "file_storage",
+                      "device",
+                      "dashboard",
+                      "action",
+                      "tcore",
+                      "team_members",
+                      "am",
+                    ],
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "service_or_resource",
+                  "condition",
+                  "condition_value",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "description": "This schema is used when the trigger is based on type condition_geofence.",
+                "properties": {
+                  "device": {
+                    "description": "The device ID to monitor",
+                    "type": "string",
+                  },
+                  "is": {
+                    "description": "Whether to trigger when entering or exiting",
+                    "enum": [
+                      "IN",
+                      "OUT",
+                    ],
+                    "type": "string",
+                  },
+                  "unlock": {
+                    "description": "Whether to unlock when condition is met",
+                    "type": "boolean",
+                  },
+                  "value": {
+                    "additionalProperties": false,
+                    "description": "The geofence definition",
+                    "properties": {
+                      "center": {
+                        "description": "Center coordinates [longitude, latitude]",
+                        "items": {
+                          "type": "number",
+                        },
+                        "type": "array",
+                      },
+                      "coordinates": {
+                        "description": "Polygon coordinates [[lon,lat], ...]",
+                        "items": {
+                          "items": {
+                            "type": "number",
+                          },
+                          "type": "array",
+                        },
+                        "type": "array",
+                      },
+                      "radius": {
+                        "description": "Radius in kilometers",
+                        "type": "number",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "variable": {
+                    "description": "The variable containing location data",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "device",
+                  "variable",
+                  "is",
+                  "value",
+                ],
+                "type": "object",
+              },
+            ],
+          },
+          "type": "array",
+        },
+        "trigger_when_unlock": {
+          "description": "Trigger the action when the unlock condition is met. Only available for actions of type condition or condition_geofence.",
+          "type": "boolean",
+        },
+        "type": {
+          "description": "The type of trigger for the action.
+
+The type parameter accepts one of seven values:
+- "condition": Monitors device variables against specified conditions (threshold, comparison operators)
+- "resource": Responds to CRUD operations on platform resources (device, file, analysis, action, am, user)
+  - Resource triggers must specify which resource type to monitor (device, file, analysis, action, am, user) and which operations (create, update, delete).
+- "interval": Executes actions at regular time intervals (minutes, hours, days)
+- "schedule": Executes actions at specific dates/times using cron-like scheduling
+- "mqtt_topic": Responds to publications on specified MQTT topics
+- "condition_geofence": Triggers when devices enter or exit defined geographical boundaries
+- "usage_alert": Monitors account usage metrics against thresholds for services like input/output data, analysis minutes, SMS, email, push notifications, file storage, and resource counts
+  - Usage alert triggers must specify the monitored resource (input, output, analysis, data_records, sms, email, run_users, push_notification, file_storage, device, dashboard, action, tcore, team_members, am) and threshold values.",
+          "enum": [
+            "condition",
+            "resource",
+            "interval",
+            "schedule",
+            "mqtt_topic",
+            "usage_alert",
+            "condition_geofence",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "action_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_action",
+    "title": "Update Action",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "description": "Enable or disable the analysis.",
+          "type": "boolean",
+        },
+        "analysis_id": {
+          "description": "The 24-character analysis ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "description": {
+          "description": "The new description for the analysis.",
+          "type": "string",
+        },
+        "environment_variables": {
+          "description": "Environment variables available to the script (max 20, unique keys). Values are sensitive and never echoed back. Replaces the current set entirely when updating.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Environment variable name.",
+                "minLength": 1,
+                "type": "string",
+              },
+              "value": {
+                "description": "Environment variable value. Sensitive; never echoed back in results.",
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                ],
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "maxItems": 20,
+          "type": "array",
+        },
+        "interval": {
+          "description": "The new schedule interval, e.g. '5 minutes' or '1 hour'.",
+          "type": "string",
+        },
+        "name": {
+          "description": "The new name for the analysis.",
+          "minLength": 1,
+          "type": "string",
+        },
+        "tags": {
+          "description": "The new tags for the analysis, replacing the current ones.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "analysis_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_analysis",
+    "title": "Update Analysis",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "arrangement": {
+          "description": "Widget placement grid. Replaces the current arrangement atomically; always send the complete desired arrangement.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "height": {
+                "description": "Height in grid units.",
+                "type": "number",
+              },
+              "tab": {
+                "description": "Tab key the widget is placed on. Nullable; stored arrangements may carry null.",
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "widget_id": {
+                "description": "The 24-character widget ID.",
+                "maxLength": 24,
+                "minLength": 24,
+                "type": "string",
+              },
+              "width": {
+                "description": "Width in grid units.",
+                "type": "number",
+              },
+              "x": {
+                "description": "Column position (grid units).",
+                "type": "number",
+              },
+              "y": {
+                "description": "Row position (grid units).",
+                "type": "number",
+              },
+            },
+            "required": [
+              "widget_id",
+              "x",
+              "y",
+              "width",
+              "height",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "dashboard_id": {
+          "description": "The 24-character dashboard ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "label": {
+          "description": "The new label for the dashboard.",
+          "minLength": 1,
+          "type": "string",
+        },
+        "tabs": {
+          "description": "Dashboard tabs. Keys must be unique. E.g: [{ "key": "overview", "value": "Overview" }]",
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "hidden": {
+                "description": "Whether the tab is hidden. Nullable; stored dashboards may carry null.",
+                "type": [
+                  "boolean",
+                  "null",
+                ],
+              },
+              "key": {
+                "description": "Unique tab key.",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tab display name.",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "tags": {
+          "description": "The new tags for the dashboard, replacing the current ones.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "visible": {
+          "description": "Show or hide the dashboard in the sidebar.",
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "dashboard_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_dashboard",
+    "title": "Update Dashboard",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "description": "Active status.",
+          "type": "boolean",
+        },
+        "chunk_retention": {
+          "description": "New chunk retention (immutable devices).",
+          "maximum": 36500,
+          "minimum": 0,
+          "type": "integer",
+        },
+        "confirm_token_rotation": {
+          "description": "Must be true to proceed with connector, network, or serial-number changes: those delete and recreate every device token, invalidating credentials in use.",
+          "type": "boolean",
+        },
+        "connector": {
+          "description": "New connector ID. Changing it requires \`network\` too and rotates every device token (requires confirm_token_rotation).",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "description": {
+          "description": "Device description.",
+          "type": "string",
+        },
+        "device_id": {
+          "description": "The 24-character device ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "name": {
+          "description": "New device name.",
+          "type": "string",
+        },
+        "network": {
+          "description": "New network ID. Changing it requires \`connector\` too and rotates every device token (requires confirm_token_rotation).",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "payload_decoder": {
+          "description": "Payload parser JavaScript source. Sent base64-encoded automatically.",
+          "type": "string",
+        },
+        "serie_number": {
+          "description": "New serial number. Changing it rotates every device token (requires confirm_token_rotation).",
+          "type": "string",
+        },
+        "tags": {
+          "description": "Replacement tag set.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "visible": {
+          "description": "Visibility in listings.",
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "device_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_device",
+    "title": "Update Device",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "description": "The 24-character entity ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "name": {
+          "description": "The new name for the entity (1-100 characters).",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string",
+        },
+        "payload_decoder": {
+          "description": "New payload decoder as plain JavaScript source, never base64; the encoding for the API happens internally. At most 64 KiB once encoded. Send null to remove the decoder.",
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+        "tags": {
+          "description": "The new tags for the entity, replacing the current ones.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "entity_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_entity",
+    "title": "Update Entity",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "description": "The 24-character entity ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "fields": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "const": "create",
+                    "type": "string",
+                  },
+                  "required": {
+                    "description": "Whether every data row must carry this field. Defaults to false.",
+                    "type": "boolean",
+                  },
+                  "type": {
+                    "description": "Field type. One of: string, text, int, float, json, timestamp. Immutable once created.",
+                    "enum": [
+                      "string",
+                      "text",
+                      "int",
+                      "float",
+                      "json",
+                      "timestamp",
+                    ],
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "action",
+                  "type",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "const": "rename",
+                    "type": "string",
+                  },
+                  "new_name": {
+                    "description": "The new field name (^[a-z_]+$). The field's type and stored data are preserved.",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "action",
+                  "new_name",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "const": "update",
+                    "type": "string",
+                  },
+                  "required": {
+                    "description": "The new required flag. Only nullability can be updated; field types are immutable.",
+                    "type": "boolean",
+                  },
+                },
+                "required": [
+                  "action",
+                  "required",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "const": "delete",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "action",
+                ],
+                "type": "object",
+              },
+            ],
+          },
+          "description": "Field changes keyed by field name: create {type, required?}, rename {new_name}, update {required} (nullability only; types are immutable), or delete (drops the column AND its stored data).",
+          "type": "object",
+        },
+        "indexes": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "const": "create",
+                    "type": "string",
+                  },
+                  "fields": {
+                    "description": "The schema fields the index covers, in order (1-5 fields).",
+                    "items": {
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    "maxItems": 5,
+                    "minItems": 1,
+                    "type": "array",
+                  },
+                },
+                "required": [
+                  "action",
+                  "fields",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "const": "delete",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "action",
+                ],
+                "type": "object",
+              },
+            ],
+          },
+          "description": "Index changes keyed by index name: create {fields} or delete.",
+          "type": "object",
+        },
+      },
+      "required": [
+        "entity_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_entity_schema",
+    "title": "Update Entity Schema",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "description": "Whether the user is enabled.",
+          "type": "boolean",
+        },
+        "company": {
+          "description": "The new company.",
+          "type": "string",
+        },
+        "language": {
+          "description": "The new language code, e.g. 'en'.",
+          "type": "string",
+        },
+        "name": {
+          "description": "The new display name.",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string",
+        },
+        "password": {
+          "description": "A new password to set for the user (write-only, never echoed back in results, logs, or errors). The account's TagoRUN password policy applies on top of the 6-character minimum.",
+          "minLength": 6,
+          "type": "string",
+        },
+        "phone": {
+          "description": "The new phone number.",
+          "type": "string",
+        },
+        "run_user_id": {
+          "description": "The 24-character run user ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "tags": {
+          "description": "The new tags, replacing the current set entirely.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "timezone": {
+          "description": "The new timezone, e.g. 'America/New_York'.",
+          "minLength": 1,
+          "type": "string",
+        },
+      },
+      "required": [
+        "run_user_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_run_user",
+    "title": "Update Run User",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "description": "The new notification body text.",
+          "minLength": 1,
+          "type": "string",
+        },
+        "notification_id": {
+          "description": "The 24-character notification ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "title": {
+          "description": "The new notification title.",
+          "minLength": 1,
+          "type": "string",
+        },
+      },
+      "required": [
+        "notification_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_run_user_notification",
+    "title": "Update Run User Notification",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "dashboard_id": {
+          "description": "The 24-character dashboard ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "patch": {
+          "additionalProperties": {},
+          "description": "Partial widget configuration. Objects merge recursively, arrays replace atomically, explicit null clears a field. Send only what changes.",
+          "type": "object",
+        },
+        "widget_id": {
+          "description": "The 24-character widget ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "dashboard_id",
+        "widget_id",
+        "patch",
+      ],
+      "type": "object",
+    },
+    "name": "update_widget",
+    "title": "Update Widget",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "analysis_id": {
+          "description": "The 24-character analysis ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "filename": {
+          "description": "Script file name, e.g. 'main.js' or 'report.py'.",
+          "minLength": 1,
+          "type": "string",
+        },
+        "source": {
+          "description": "The script source as plain UTF-8 text, never base64. At most 1 MiB.",
+          "type": "string",
+        },
+      },
+      "required": [
+        "analysis_id",
+        "filename",
+        "source",
+      ],
+      "type": "object",
+    },
+    "name": "upload_analysis_script",
+    "title": "Upload Analysis Script",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "dashboard_id": {
+          "description": "The 24-character dashboard ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "source": {
+          "description": "The complete .tsx widget source as plain UTF-8 text, never base64. At most 1 MiB.",
+          "minLength": 1,
+          "type": "string",
+        },
+        "widget_id": {
+          "description": "The 24-character widget ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "dashboard_id",
+        "widget_id",
+        "source",
+      ],
+      "type": "object",
+    },
+    "name": "upload_custom_widget_code",
+    "title": "Upload Custom Widget Code",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "configuration": {
+          "additionalProperties": {},
+          "description": "Complete candidate widget configuration object. Must include "type"; the schema to validate against is inferred from it (see widget_schema_lookup).",
+          "type": "object",
+        },
+        "mode": {
+          "description": "Which schema to validate against: "create" (default) or "update".",
+          "enum": [
+            "create",
+            "update",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "configuration",
+      ],
+      "type": "object",
+    },
+    "name": "validate_widget_configuration",
+    "title": "Validate Widget Configuration",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "description": "Which schema to return: "create" (default) or "update".",
+          "enum": [
+            "create",
+            "update",
+          ],
+          "type": "string",
+        },
+        "type": {
+          "description": "Widget type to fetch the schema for (one of 40 supported types, e.g. "gauge"). Omit to list all types.",
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "widget_schema_lookup",
+    "title": "Widget Schema Lookup",
+  },
+]
+`;
