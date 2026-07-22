@@ -4,6 +4,5 @@ export default defineConfig({
   test: {
     globals: true,
     root: "./src",
-    exclude: ["server/tests/**"],
   },
 });

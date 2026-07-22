@@ -52,6 +52,7 @@ yarn.lock
 *.LOCAL.*
 *.local.*
 *.lock
+!pnpm-lock.yaml
 
 # ignore .cursor
 .cursor
@@ -59,3 +60,8 @@ yarn.lock
 # ignore mcpregistry tokens
 .mcpregistry_github_token
 .mcpregistry_registry_token
+# TypeScript incremental build artifact
+*.tsbuildinfo
+
+# ignore local agent worktrees
+.claude/worktrees/

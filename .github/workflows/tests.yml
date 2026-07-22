@@ -2,22 +2,29 @@ name: Run Unit Tests
 
 on:
   push:
+  pull_request:
 
 jobs:
   build:
     runs-on: macos-latest
-
     strategy:
       matrix:
-        node-version: [24.x]
-
+        # 22.12.0 is the oldest supported engine (unflagged require(esm) for
+        # the ESM-only dashboard-schema package); 24 matches .node-version.
+        node-version: ["22.12.0", "24"]
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm ci --ignore-scripts
-      - run: npm run linter
-      - run: npm test
-      - run: npm run build --if-present
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm run linter
+      - run: pnpm run format-check
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm test
+      - run: pnpm run build
+      # Proves the built CommonJS server can require() the ESM-only
+      # dashboard-schema validator on this Node version.
+      - run: pnpm run test:validator:node
