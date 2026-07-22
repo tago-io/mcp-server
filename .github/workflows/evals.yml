@@ -1,0 +1,82 @@
+name: LLM Evals (manual, owner-gated)
+
+# Provider-backed evals never run on push/PR. Anyone can trigger this
+# workflow, but only against an existing tag: the unprivileged resolve job
+# validates the tag name and pins it to an immutable commit SHA before the
+# protected "evals" environment job — whose required reviewers are repository
+# owners — checks out that exact SHA. OPENROUTER_API_KEY only flows after
+# approval, and never to mutable-ref code.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to evaluate"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.pin.outputs.tag }}
+      sha: ${{ steps.pin.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate tag and pin to immutable SHA
+        id: pin
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$TAG" | grep -Eq '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$'; then
+            echo "::error::Input must be a plain tag name (letters, digits, '.', '_', '-'); refs and branches are not accepted."
+            exit 1
+          fi
+          if printf '%s' "$TAG" | grep -Eiq '^[0-9a-f]{40}([0-9a-f]{24})?$'; then
+            echo "::error::Input looks like a commit SHA; pass a tag name."
+            exit 1
+          fi
+          refs="$(git ls-remote --tags origin "refs/tags/${TAG}" "refs/tags/${TAG}^{}")"
+          # Prefer the peeled ("^{}") entry so annotated tags resolve to the
+          # commit they point at, not the tag object.
+          sha="$(printf '%s\n' "$refs" | awk -v ref="refs/tags/${TAG}^{}" '$2 == ref { print $1 }')"
+          if [ -z "$sha" ]; then
+            sha="$(printf '%s\n' "$refs" | awk -v ref="refs/tags/${TAG}" '$2 == ref { print $1 }')"
+          fi
+          if ! printf '%s' "$sha" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::Tag '${TAG}' does not exist on origin."
+            exit 1
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Eval target pinned"
+            echo "- Tag: \`${TAG}\`"
+            echo "- Commit: \`${sha}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  evals:
+    needs: resolve
+    runs-on: ubuntu-latest
+    environment: evals
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve.outputs.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm run test:evals:offline
+      # test:evals sets EVAL_REQUIRE_PROVIDER=1, so a missing/blank key fails
+      # the run instead of silently skipping all provider cases.
+      - run: pnpm run test:evals
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          EVAL_TARGET_MODELS: ${{ vars.EVAL_TARGET_MODELS }}
+          EVAL_JUDGE_MODEL: ${{ vars.EVAL_JUDGE_MODEL }}
