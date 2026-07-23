@@ -49,13 +49,13 @@ Every import is `npm:<package>@<exact.version>`; unpinned resolves to `latest` a
 
 | Package           | Pin                                      |
 | ----------------- | ---------------------------------------- |
-| React             | `npm:react@19.2.8`                       |
+| React             | `npm:react@19.2.3`                       |
 | TagoIO widget SDK | `npm:@tago-io/custom-widget-react@2.2.0` |
 | Charts            | `npm:recharts@3.9.2`                     |
 | Icons             | `npm:lucide-react@0.562.0`               |
 | Dates             | `npm:luxon@3.7.2`                        |
 
-React is hard-gated to major 19 (unpinned sources get an older `19.2.3` injected; other majors fail the bundle). SDK `2.2.0` adds typed resource editing (2.1.0 added `useResourceData`); older versions may be warm-cached, so the first save can pay a cold registry fetch (a delay, not a failure). Other npm packages resolve but are unvetted against the widget runtime and install cold; prefer the tested set.
+The bundler injects React and ReactDOM at `19.2.3` (`react-dom` always at that version; an author pin cannot override it); pinning `react` to any other patch yields two React copies at different patches, which fails at mount with React error #527 even though the bundle reports success. The bundle gate checks only the major version, so a mismatched 19.x patch passes while other majors fail the bundle. SDK `2.2.0` adds typed resource editing (2.1.0 added `useResourceData`); older versions may be warm-cached, so the first save can pay a cold registry fetch (a delay, not a failure). Other npm packages resolve but are unvetted against the widget runtime and install cold; prefer the tested set.
 
 ### Tailwind
 
@@ -119,7 +119,7 @@ Mutate (each returns a named function + `isX`/`error`/`reset`):
 ## Example 1: minimal live-data widget
 
 ```tsx
-import React from "npm:react@19.2.8";
+import React from "npm:react@19.2.3";
 import { TagoIOProvider, useWidget, useRealtimeData } from "npm:@tago-io/custom-widget-react@2.2.0";
 
 function Dashboard() {
@@ -162,7 +162,7 @@ Single dominant metric, transparent root (the container owns the frame), loading
 
 ```tsx
 // tailwind
-import React, { useMemo } from "npm:react@19.2.8";
+import React, { useMemo } from "npm:react@19.2.3";
 import { TagoIOProvider, useRealtimeData, useWidget } from "npm:@tago-io/custom-widget-react@2.2.0";
 import { Droplets, TrendingUp } from "npm:lucide-react@0.562.0";
 import { DateTime } from "npm:luxon@3.7.2";

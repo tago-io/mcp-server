@@ -11,6 +11,10 @@ import { describe, expect, it } from "vitest";
 const SKILL_PATH = resolve(__dirname, "../../../skills/custom-widget-development/SKILL.md");
 const skill = readFileSync(SKILL_PATH, "utf8");
 
+// Mirrors the platform bundler's hardcoded REACT_VERSION. Any other patch leaves
+// react-dom at 19.2.3, so the widget bundles then renders blank (React #527).
+const REQUIRED_REACT_VERSION = "19.2.3";
+
 const EXACT_PIN_PATTERN = /^npm:(@[^/@]+\/[^/@]+|[^/@]+)@\d+\.\d+\.\d+(\/.*)?$/;
 
 function extractTsxExamples(markdown: string): string[] {
@@ -64,10 +68,26 @@ describe("custom-widget-development skill self-consistency", () => {
     expect(example).toContain("</TagoIOProvider>");
   });
 
-  it.each(examples.map((example, index) => [index + 1, example] as const))("example %d pins React to major 19 when it imports React", (_index, example) => {
+  it.each(examples.map((example, index) => [index + 1, example] as const))("example %d pins React to the exact required version when it imports React", (_index, example) => {
     const reactPins = extractImportSpecifiers(example).filter((specifier) => /^npm:react(-dom)?@/.test(specifier));
     for (const pin of reactPins) {
-      expect(pin).toMatch(/^npm:react(-dom)?@19\./);
+      expect([`npm:react@${REQUIRED_REACT_VERSION}`, `npm:react-dom@${REQUIRED_REACT_VERSION}`]).toContain(pin);
+    }
+  });
+
+  it("pin table React row carries the exact required pin", () => {
+    const reactRow = skill.split("\n").find((line) => /^\|\s*React\s*\|/.test(line));
+    expect(reactRow, "pin table must include a React row").toBeDefined();
+    expect(reactRow).toContain(`\`npm:react@${REQUIRED_REACT_VERSION}\``);
+  });
+
+  it("teaches no React version other than the required one", () => {
+    for (const [, version] of skill.matchAll(/npm:react(?:-dom)?@([^\s`"/)]+)/g)) {
+      expect(version).toBe(REQUIRED_REACT_VERSION);
+    }
+    // Prose states the version bare, without the npm: prefix, so the pin scan above misses it.
+    for (const [version] of skill.matchAll(/19\.\d+\.\d+/g)) {
+      expect(version).toBe(REQUIRED_REACT_VERSION);
     }
   });
 
