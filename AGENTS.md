@@ -21,7 +21,7 @@ This is a Model Context Protocol (MCP) server for TagoIO, enabling AI models to 
 
 - **Build**: `pnpm run build` - Compiles TypeScript to JavaScript in the `build/` directory
 - **Test**: `pnpm test` - Runs all tests using Vitest
-- **Test single file**: `pnpm run test:single -- [filename]` - Run tests for a specific file
+- **Test single file**: `pnpm run test:single [filename]` - Run tests for a specific file. Pass the filename directly, with no `--` separator: pnpm forwards `--` literally and vitest drops everything after it, silently running the whole suite
 - **Lint**: `pnpm run linter` - Check code quality with oxlint
 - **Lint and fix**: `pnpm run linter-fix` - Auto-fix linting issues
 - **Format**: `pnpm run format` - Format source files with oxfmt
