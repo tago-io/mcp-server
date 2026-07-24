@@ -1,8 +1,8 @@
-import type { AnalysisQuery } from "@tago-io/sdk";
 import { z } from "zod/v3";
 
 import { resourceIdSchema } from "../../../utils/global-params.model";
 import { IToolConfig, ServerContext } from "../../types";
+import { projectAnalysisConsole } from "../safe-projection";
 import { fenceUserContent } from "../user-content";
 
 const MAX_CONSOLE_ENTRIES = 200;
@@ -35,16 +35,16 @@ function boundConsoleTail(entries: string[]): { kept: string[]; omitted: number 
 }
 
 async function readAnalysisConsoleTool(context: ServerContext, params: ReadAnalysisConsoleSchema): Promise<string> {
-  // The list endpoint is the only path that exposes the console field;
-  // get_analysis/search_analyses deliberately project it away.
-  const query: AnalysisQuery = { filter: { id: params.analysis_id }, fields: ["id", "name", "console"], amount: 1 };
-  const results = await context.resources.analysis.list(query);
-  if (results.length === 0) {
-    throw new Error(`Analysis \`${params.analysis_id}\` was not found. Check the ID with search_analyses.`);
-  }
-
-  const rawConsole = results[0].console;
-  const entries = Array.isArray(rawConsole) ? rawConsole.map((entry) => String(entry)) : [];
+  // Only the info endpoint carries console. The dedicated projector is the
+  // sole exemption that can expose it from the otherwise secret-bearing payload.
+  const info = await context.resources.analysis.info(params.analysis_id).catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/not found/i.test(message)) {
+      throw new Error(`Analysis \`${params.analysis_id}\` was not found. Check the ID with search_analyses.`);
+    }
+    throw error;
+  });
+  const entries = projectAnalysisConsole(info);
   if (entries.length === 0) {
     return `Analysis \`${params.analysis_id}\` has no console output available. Output can take time to appear after run_analysis; try again shortly.`;
   }

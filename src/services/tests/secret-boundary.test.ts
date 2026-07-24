@@ -8,7 +8,7 @@ import { buildServer } from "../../server/build-server";
 import { TEST_REGION } from "../../testing/context";
 import { fixtures } from "../../testing/mocks/fixtures";
 import { mockServer, strictListenOptions } from "../../testing/mocks/server";
-import { projectAnalysis } from "../analysis/safe-projection";
+import { projectAnalysis, projectAnalysisConsole } from "../analysis/safe-projection";
 
 /**
  * Secret/error/output boundary tests. Every case goes through a real
@@ -184,10 +184,24 @@ describe("uploaded source never escapes through reflected failures", () => {
 });
 
 describe("request credential embedded in explicit user-content bodies", () => {
+  it("read_analysis_console exposes only console entries from the full analysis info response", async () => {
+    const { isError, text, serialized } = await callTool("read_analysis_console", { analysis_id: ANALYSIS_ID });
+    expect(isError).toBe(false);
+    expect(text).toContain("sentinel console line");
+    expect(serialized).not.toContain(fixtures.FAKE_ANALYSIS_TOKEN);
+    expect(serialized).not.toContain("sentinel-env-value-do-not-print");
+
+    const consoleProjection = projectAnalysisConsole(fixtures.analysisInfo);
+    expect(consoleProjection).toEqual(["sentinel console line"]);
+    expect(JSON.stringify(consoleProjection)).not.toContain(fixtures.FAKE_ANALYSIS_TOKEN);
+    expect(JSON.stringify(consoleProjection)).not.toContain("sentinel-env-value-do-not-print");
+    expect(projectAnalysis(fixtures.analysisInfo)).not.toHaveProperty("console");
+  });
+
   it("read_analysis_console redacts the credential and preserves the surrounding output", async () => {
     mockServer.use(
-      http.get(`${API}/analysis`, () =>
-        HttpResponse.json({ status: true, result: [{ ...fixtures.analysisInfo, console: [`leaked ${REQUEST_TOKEN} in output`, "benign console line"] }] })
+      http.get(`${API}/analysis/:analysisID`, () =>
+        HttpResponse.json({ status: true, result: { ...fixtures.analysisInfo, console: [`leaked ${REQUEST_TOKEN} in output`, "benign console line"] } })
       )
     );
     const { isError, text, serialized } = await callTool("read_analysis_console", { analysis_id: ANALYSIS_ID });

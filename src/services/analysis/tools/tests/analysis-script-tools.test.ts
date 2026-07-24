@@ -190,8 +190,14 @@ describe("run_analysis", () => {
 
 describe("read_analysis_console", () => {
   function useConsole(entries: unknown) {
-    mockServer.use(http.get(`${API}/analysis`, () => ok([{ id: ANALYSIS_ID, name: "Console Analysis", ...(entries === undefined ? {} : { console: entries }) }])));
+    mockServer.use(http.get(`${API}/analysis/:analysisID`, () => ok({ id: ANALYSIS_ID, name: "Console Analysis", ...(entries === undefined ? {} : { console: entries }) })));
   }
+
+  it("reads console output from the analysis info response", async () => {
+    const result = await readAnalysisConsoleConfigJSON.tool(makeContext(), { analysis_id: ANALYSIS_ID });
+
+    expect(result).toContain("sentinel console line");
+  });
 
   it("preserves the API order exactly and claims nothing about which end is newest", async () => {
     useConsole(["first-entry", "second-entry", "third-entry"]);
@@ -238,7 +244,7 @@ describe("read_analysis_console", () => {
   });
 
   it("raises an actionable not-found error when the analysis does not exist", async () => {
-    mockServer.use(http.get(`${API}/analysis`, () => ok([])));
-    await expect(readAnalysisConsoleConfigJSON.tool(makeContext(), { analysis_id: ANALYSIS_ID })).rejects.toThrow(/not found/i);
+    mockServer.use(http.get(`${API}/analysis/:analysisID`, () => HttpResponse.json({ status: false, message: "Analysis Not Found" }, { status: 404 })));
+    await expect(readAnalysisConsoleConfigJSON.tool(makeContext(), { analysis_id: ANALYSIS_ID })).rejects.toThrow("was not found. Check the ID with search_analyses.");
   });
 });

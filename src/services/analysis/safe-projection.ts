@@ -1,10 +1,11 @@
 import { stripTokenFields } from "../../utils/strip-token-fields";
 
 /**
- * Allowlisted projection every Analysis API response must pass through before
- * rendering. AnalysisInfo carries secrets (`token`, environment variable
- * values) and console output that must never reach tool results, even in
- * detailed mode, so raw payloads never go to renderItem/renderList.
+ * Allowlisted projection every general Analysis API response must pass through
+ * before rendering. AnalysisInfo carries secrets (`token`, environment
+ * variable values) and console output that must never reach general tool
+ * results, even in detailed mode, so raw payloads never go to
+ * renderItem/renderList.
  */
 
 const PROJECTED_ANALYSIS_FIELDS = [
@@ -42,4 +43,14 @@ function projectAnalysis(info: Record<string, unknown>): Record<string, unknown>
   return projected;
 }
 
-export { PROJECTED_ANALYSIS_FIELDS, projectAnalysis };
+/**
+ * The sole console-exposing exemption to the general safe projection. It reads
+ * only `console` from a full AnalysisInfo payload, never token or environment
+ * variable fields, and gives read_analysis_console a string-only boundary.
+ */
+function projectAnalysisConsole(info: { console?: unknown }): string[] {
+  const consoleEntries = info.console;
+  return Array.isArray(consoleEntries) ? consoleEntries.map((entry) => String(entry)) : [];
+}
+
+export { PROJECTED_ANALYSIS_FIELDS, projectAnalysis, projectAnalysisConsole };

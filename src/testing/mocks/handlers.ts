@@ -69,7 +69,7 @@ const handlers = [
   http.delete(`${API}/action/:actionID`, () => ok("Action Successfully Removed")),
 
   // Analysis
-  http.get(`${API}/analysis`, () => ok([fixtures.analysisInfo])),
+  http.get(`${API}/analysis`, () => ok([Object.fromEntries(Object.entries(fixtures.analysisInfo).filter(([key]) => key !== "console"))])),
   http.post(`${API}/analysis`, () => ok(fixtures.analysisCreateResponse)),
   http.get(`${API}/analysis/:analysisID/download`, () => ok(fixtures.analysisDownloadResponse)),
   http.post(`${API}/analysis/:analysisID/run`, () => ok({ analysis_token: fixtures.FAKE_RUN_TOKEN })),

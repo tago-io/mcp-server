@@ -39,6 +39,7 @@ function useStatefulAnalysis(record: FakeAnalysis) {
     id: ANALYSIS_ID,
     name: record.name,
     active: record.active,
+    console: record.console,
   });
 
   mockServer.use(
@@ -48,7 +49,7 @@ function useStatefulAnalysis(record: FakeAnalysis) {
       record.name = body.name;
       return ok({ id: ANALYSIS_ID, token: fixtures.FAKE_ANALYSIS_TOKEN });
     }),
-    http.get(`${API}/analysis`, () => (record.deleted ? ok([]) : ok([{ id: ANALYSIS_ID, name: record.name, console: record.console }]))),
+    http.get(`${API}/analysis`, () => (record.deleted ? ok([]) : ok([{ id: ANALYSIS_ID, name: record.name }]))),
     http.get(`${API}/analysis/:analysisID/download`, () =>
       record.deleted ? HttpResponse.json({ status: false, message: "Analysis Not Found" }, { status: 404 }) : ok(fixtures.analysisDownloadResponse)
     ),

@@ -6,7 +6,7 @@ See the repo-root `AGENTS.md` for the cross-cutting tool-design and credential-s
 
 ## Safe projection
 
-Analysis API responses render only through an allowlisted safe projection (`safe-projection.ts`): tokens, console output, and environment-variable values never reach tool results. `token`/`analysis_token` properties are stripped recursively at any depth, and environment variables render as keys only.
+General Analysis API responses render only through an allowlisted safe projection (`safe-projection.ts`): tokens, console output, and environment-variable values never reach general tool results. `token`/`analysis_token` properties are stripped recursively at any depth, and environment variables render as keys only. `read_analysis_console` is the sole console-exposing exemption and uses a dedicated projection that reads only console entries from the full info response.
 
 ## SSRF-guarded source fetch
 
