@@ -1,5 +1,6 @@
 import { HttpResponse, http } from "msw";
 
+import { createPolicy, deletePolicy, editPolicy, listPolicies, policyInfo } from "./am-policies";
 import { docsDeviceTokenPage, docsLlmsTxt } from "./docs-fixtures";
 import { deleteFiles, listFiles } from "./file-storage";
 import { fixtures } from "./fixtures";
@@ -156,6 +157,73 @@ const handlers = [
   http.delete(`${API}/files`, async ({ request }) => {
     const body = (await request.json()) as string[];
     return ok(deleteFiles(body));
+  }),
+
+  // Access Management. The list route cannot project rules or targets, info
+  // re-sorts rules by effect, and both writes store tuples verbatim; the
+  // stateful mock owns all three so the tools face the real contract.
+  http.get(`${API}/am/settings`, () => ok(fixtures.amSettings)),
+  http.get(`${API}/am`, ({ request }) => {
+    // The SDK serializes with qs defaults, so arrays arrive indexed:
+    // `fields[0]=id`, `filter[tags][0][key]=purpose`.
+    const url = new URL(request.url);
+    const fields: string[] = [];
+    const filter: Record<string, unknown> = {};
+    const tags: Array<{ key?: string; value?: string }> = [];
+
+    for (const [key, value] of url.searchParams) {
+      const field = key.match(/^fields\[(\d+)\]$/);
+      if (field) {
+        fields[Number(field[1])] = value;
+        continue;
+      }
+      const tag = key.match(/^filter\[tags\]\[(\d+)\]\[(key|value)\]$/);
+      if (tag) {
+        tags[Number(tag[1])] = { ...tags[Number(tag[1])], [tag[2]]: value };
+        continue;
+      }
+      const scalar = key.match(/^filter\[(\w+)\]$/);
+      if (scalar) {
+        filter[scalar[1]] = value;
+      }
+    }
+    if (tags.length > 0) {
+      filter.tags = tags;
+    }
+
+    return ok(
+      listPolicies({
+        fields: fields.filter((field) => field !== undefined),
+        filter,
+        page: Number(url.searchParams.get("page") ?? 1),
+        amount: Number(url.searchParams.get("amount") ?? 20),
+      })
+    );
+  }),
+  http.post(`${API}/am`, async ({ request }) => {
+    try {
+      return ok(createPolicy((await request.json()) as Record<string, unknown>));
+    } catch (error) {
+      return HttpResponse.json({ status: false, message: (error as Error).message }, { status: 402 });
+    }
+  }),
+  http.get(`${API}/am/:amID`, ({ params }) => {
+    const policy = policyInfo(String(params.amID));
+    return policy ? ok(policy) : HttpResponse.json({ status: false, message: "Access Management Not Found" }, { status: 404 });
+  }),
+  http.put(`${API}/am/:amID`, async ({ params, request }) => {
+    try {
+      return ok(editPolicy(String(params.amID), (await request.json()) as Record<string, unknown>));
+    } catch (error) {
+      return HttpResponse.json({ status: false, message: (error as Error).message }, { status: 404 });
+    }
+  }),
+  http.delete(`${API}/am/:amID`, ({ params }) => {
+    try {
+      return ok(deletePolicy(String(params.amID)));
+    } catch (error) {
+      return HttpResponse.json({ status: false, message: (error as Error).message }, { status: 404 });
+    }
   }),
 
   // Profile + secrets

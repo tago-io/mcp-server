@@ -35,6 +35,9 @@ const WIDGET_ID = "61f0000000000000000db001";
 // placement preflight lets it through.
 const WIDGET_UNPLACED_ID = "61f0000000000000000db003";
 const WIDGET_CUSTOM_ID = "61f0000000000000000db004";
+const ACCESS_POLICY_ID = "61f00000000000000ab00001";
+// Deleted by the delete case, so it must not be the policy other cases read.
+const ACCESS_POLICY_INERT_ID = "61f00000000000000ab00003";
 
 // Minimal valid gauge per @tago-io/dashboard-schema.
 const VALID_GAUGE_CONFIGURATION = { label: "Contract Gauge", type: "gauge", display: { gauge_type: "solid", numberformat: "0", minimum: 0, maximum: 100 } };
@@ -128,6 +131,29 @@ const contractCases: Record<string, ContractCase> = {
   search_files: { happy: {}, invalid: { amount: 0 } },
   // The fixture storage holds this exact key as a file, so verification passes.
   delete_files: { happy: { paths: [`widgets/${WIDGET_CUSTOM_ID}.tsx`] }, invalid: { paths: [] } },
+  search_access_policies: { happy: {}, invalid: { amount: 0 } },
+  get_access_policy: { happy: { access_policy_id: ACCESS_POLICY_ID }, invalid: { access_policy_id: "too-short" } },
+  lookup_access_permissions: { happy: { target_type: "analysis", resource: "device" }, invalid: { target_type: "profile" } },
+  create_access_policy: {
+    happy: {
+      name: "Contract Policy",
+      targets: [{ type: "analysis", match: { by: "id", id: ANALYSIS_ID } }],
+      permissions: [{ effect: "allow", resource: "device", actions: ["send_data"] }],
+    },
+    // `device`/`create` accepts no `id` match form, so the rule could never
+    // fire; refused before any SDK traffic.
+    invalid: {
+      name: "Contract Policy",
+      targets: [{ type: "analysis" }],
+      permissions: [{ effect: "allow", resource: "device", actions: ["create"], match: { by: "id", id: DEVICE_ID } }],
+    },
+  },
+  update_access_policy: {
+    happy: { access_policy_id: ACCESS_POLICY_ID, active: false },
+    // No editable field alongside the ID; rejected before any SDK traffic.
+    invalid: { access_policy_id: ACCESS_POLICY_ID },
+  },
+  delete_access_policy: { happy: { access_policy_id: ACCESS_POLICY_INERT_ID }, invalid: {} },
   search_run_users: { happy: {}, invalid: { amount: 0 } },
   get_run_user: { happy: { run_user_id: USER_ID }, invalid: { run_user_id: "too-short" } },
   create_run_user: {

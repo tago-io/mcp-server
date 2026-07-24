@@ -437,6 +437,133 @@ const fileStorageObjects = [
 /** Allocation and usage the list route reports alongside every page, in MB. */
 const fileStorageAllocation = { total: 200, usage: 5.25 };
 
+/**
+ * A faithful subset of what `GET /am/settings` returns, copied verbatim from
+ * the live route rather than paraphrased. The full catalog spans 17 resources;
+ * these six carry every distinct shape the validators have to handle:
+ *
+ * - `analysis`/`device` accepts all four match forms, but `create` drops `id`
+ *   (there is no device yet to name), which is the mismatch a match-form check
+ *   has to catch.
+ * - `analysis`/`file` accepts only `path` and `any`.
+ * - `analysis`/`account` accepts only `any`, or `id` and `any`.
+ * - `run_user` can be granted on far less than `analysis`, and its one device
+ *   grant is a different action set, so a rule valid for one target kind can be
+ *   inert for the other.
+ */
+const amSettings = {
+  resources: {
+    device: { label: "Device" },
+    access_management: { label: "Access Management" },
+    file: { label: "File" },
+    account: { label: "Account" },
+    dashboard: { label: "Dashboard" },
+    run_user: { label: "Run User" },
+  },
+  settings: {
+    analysis: {
+      device: [
+        { label: "Access", value: "access", description: "Allows analyses to access a device", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Create", value: "create", description: "Allows analyses to create a device", match_by: ["tag", "tag_match", "any"] },
+        { label: "Delete", value: "delete", description: "Allows analyses to delete a device", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Edit", value: "edit", description: "Allows analyses to edit a device", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Token access", value: "token_access", description: "Allows analyses to manipulate a device's token", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Get data", value: "get_data", description: "Allows analyses to get data from a device", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Send data", value: "send_data", description: "Allows analyses to send data to a device", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Edit data", value: "edit_data", description: "Allows analyses to edit a device's data records", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Delete data", value: "delete_data", description: "Allows analyses to delete a device's data records", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Manage chunks", value: "manage_chunks", description: "Allows analyses to manage a device's chunks", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Export Data", value: "export_data", description: "Allows analyses to export data from a mutable device", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Import Data", value: "import_data", description: "Allows analyses to import data to a device", match_by: ["id", "tag", "tag_match", "any"] },
+      ],
+      access_management: [
+        { label: "Access", value: "access", description: "Allows analyses to access an access management", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Create", value: "create", description: "Allows analyses to create an access management", match_by: ["tag", "tag_match", "any"] },
+        { label: "Edit", value: "edit", description: "Allows analyses to edit an access management", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Delete", value: "delete", description: "Allows analyses to delete an access management", match_by: ["id", "tag", "tag_match", "any"] },
+      ],
+      file: [
+        { label: "Access", value: "access", description: "Allows analyses to access a file and permission", match_by: ["path", "any"] },
+        { label: "Upload", value: "upload", description: "Allows analyses to upload a file", match_by: ["path", "any"] },
+        { label: "Edit", value: "edit", description: "Allows analyses to edit and move a file", match_by: ["path", "any"] },
+        { label: "Delete", value: "delete", description: "Allows analyses to delete a file", match_by: ["path", "any"] },
+      ],
+      account: [
+        { label: "Access Account Information", value: "access", description: "Allows analyses to access information of account", match_by: ["any"] },
+        { label: "Access profile", value: "access_profile", description: "Allows analyses to access a profile from account", match_by: ["id", "any"] },
+        {
+          label: "Access profile statistics",
+          value: "access_profile_statistics",
+          description: "Allows analyses to access statistics information of a profile from account",
+          match_by: ["id", "any"],
+        },
+      ],
+    },
+    run_user: {
+      dashboard: [
+        { label: "Access", value: "access", description: "Allows users to receive this dashboard", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Arrangement", value: "arrangement", description: "Allows users to move/resize widgets", match_by: ["id", "tag", "tag_match", "any"] },
+      ],
+      device: [
+        { label: "Dashboard access", value: "access", description: "Allows TagoRun users to use this device in the dashboards", match_by: ["id", "tag", "tag_match", "any"] },
+      ],
+    },
+  },
+};
+
+/**
+ * Seed policies for the stateful Access Management mock.
+ *
+ * `accessPolicy` is written with its deny rule FIRST so the info route's
+ * `ORDER BY effect ASC` visibly reorders it; a tool that echoed submission
+ * order would render the wrong deciding rule. `accessPolicyInert` holds the
+ * three shapes the API stores and never honours: a resource tuple of an arity
+ * the parser cannot classify, an action the resource does not have, and a match
+ * form the grant does not accept.
+ */
+const accessPolicies = [
+  {
+    id: "61f00000000000000ab00001",
+    profile: IDS.profile,
+    name: "[Analysis] - Parser device access",
+    active: true,
+    tags: [{ key: "purpose", value: "parser" }],
+    created_at: "2026-01-01T00:00:00.000Z",
+    updated_at: "2026-01-02T00:00:00.000Z",
+    targets: [["analysis", "id", IDS.analysis]],
+    permissions: [
+      { effect: "deny", action: ["delete"], resource: ["device", "id", IDS.deviceImmutable] },
+      { effect: "allow", action: ["send_data", "get_data"], resource: ["device", "tag.key", "device_type", "tag.value", "sensor"] },
+    ],
+  },
+  {
+    id: "61f00000000000000ab00002",
+    profile: IDS.profile,
+    name: "[Run] - Dashboard access",
+    active: false,
+    tags: [],
+    created_at: "2026-01-03T00:00:00.000Z",
+    updated_at: "2026-01-03T00:00:00.000Z",
+    targets: [["run_user"]],
+    permissions: [{ effect: "allow", action: ["access"], resource: ["dashboard"] }],
+  },
+  {
+    id: "61f00000000000000ab00003",
+    profile: IDS.profile,
+    name: "[Analysis] - Inert rules",
+    active: true,
+    tags: [],
+    created_at: "2026-01-04T00:00:00.000Z",
+    updated_at: "2026-01-04T00:00:00.000Z",
+    targets: [["analysis"]],
+    permissions: [
+      { effect: "allow", action: ["access"], resource: ["device", "id"] },
+      { effect: "allow", action: ["login_as_user"], resource: ["device"] },
+      { effect: "allow", action: ["create"], resource: ["device", "id", IDS.device] },
+    ],
+  },
+];
+
 const fixtures = {
   IDS,
   FAKE_DEVICE_TOKEN,
@@ -494,6 +621,8 @@ const fixtures = {
   snippetSourceParser,
   fileStorageObjects,
   fileStorageAllocation,
+  amSettings,
+  accessPolicies,
 };
 
 export { fixtures };

@@ -1,3 +1,4 @@
+import { accessPolicyTools } from "./access-management/tools/index";
 import { actionTools } from "./actions/tools/index";
 import { analysisTools } from "./analysis/tools/index";
 import { dashboardTools } from "./dashboards/tools/index";
@@ -18,6 +19,7 @@ import { IToolConfig } from "./types";
  * and mutation classes all live here.
  */
 const toolCatalog: IToolConfig[] = [
+  ...accessPolicyTools,
   ...actionTools,
   ...analysisTools,
   ...dashboardTools,

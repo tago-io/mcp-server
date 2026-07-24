@@ -26,13 +26,14 @@ Connect your AI assistant to your TagoIO devices, data, and platform resources �
 - **Dashboards & Widgets**: Create and manage dashboards and their widgets with schema-validated configurations and explicit layout control
 - **Custom Widgets**: Read and upload the `.tsx` source code behind custom (iframe) widgets, with platform bundling and a fix-and-reupload development loop
 - **File Storage**: Browse the profile's stored files and delete leftovers, such as the custom-widget sources and bundled artifacts that outlive a deleted widget
+- **Access Management**: Inspect, create, and revise the policies that grant analyses and TagoRUN users access to resources they do not own, and look up which grant an operation needs when one fails with "Authorization Denied"
 - **Platform Teaching**: Built-in platform overview, search and retrieval over the official docs, and code examples from the public snippets catalog
 - **Account Insight**: Profile info, resource limits, usage statistics, and secrets metadata
 - **Dual Protocol Support**: STDIO (default) and HTTP Streamable transport protocols
 
 ## Tools
 
-Every tool is single-purpose with accurate read/write annotations. Resource-list search tools (devices, actions, analyses, dashboards, entities, run users, secrets) support filtering, pagination, field selection, and a `response_format` of `concise` (default) or `detailed` — selecting `fields` also controls the rendered columns (explicit fields render exactly those fields even in concise mode; without them, concise mode shows the default columns and detailed mode shows everything); connector and network searches take their `name`/`exclude_public_catalog` filters as top-level parameters. The docs search uses a specialized `query` input, and the code-example search takes `query` + `type` (plus an optional `runtime` for Analysis examples).
+Every tool is single-purpose with accurate read/write annotations. Resource-list search tools (devices, actions, analyses, dashboards, entities, run users, secrets, access policies) support filtering, pagination, field selection, and a `response_format` of `concise` (default) or `detailed` — selecting `fields` also controls the rendered columns (explicit fields render exactly those fields even in concise mode; without them, concise mode shows the default columns and detailed mode shows everything); connector and network searches take their `name`/`exclude_public_catalog` filters as top-level parameters. The docs search uses a specialized `query` input, and the code-example search takes `query` + `type` (plus an optional `runtime` for Analysis examples).
 
 | Domain | Tools |
 |---|---|
@@ -46,6 +47,7 @@ Every tool is single-purpose with accurate read/write annotations. Resource-list
 | Run users | `search_run_users`, `get_run_user`, `create_run_user`, `update_run_user`, `delete_run_user`, `login_as_run_user` |
 | Run-user notifications | `read_run_user_notifications`, `send_run_user_notification`, `update_run_user_notification`, `delete_run_user_notification` |
 | Files | `search_files`, `delete_files` |
+| Access management | `search_access_policies`, `get_access_policy`, `lookup_access_permissions`, `create_access_policy`, `update_access_policy`, `delete_access_policy` |
 | Profile | `get_profile`, `get_profile_limits`, `get_profile_statistics`, `search_secrets` |
 | Connectors & networks | `search_connectors`, `get_connector`, `search_networks`, `get_network` |
 | Docs & examples | `platform_overview`, `search_docs`, `read_doc`, `search_code_examples`, `get_code_example` |

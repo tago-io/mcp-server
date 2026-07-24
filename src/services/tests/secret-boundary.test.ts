@@ -26,6 +26,12 @@ const DASHBOARD_ID = fixtures.IDS.dashboard;
 const WIDGET_ID = fixtures.IDS.widget;
 const WIDGET_UNPLACED_ID = fixtures.IDS.widgetUnplaced;
 const FILE_PATH = `widgets/${fixtures.IDS.widgetCustom}.tsx`;
+const ACCESS_POLICY_ID = fixtures.accessPolicies[0].id;
+const ACCESS_POLICY_BODY = {
+  name: "Boundary Policy",
+  targets: [{ type: "analysis", match: { by: "id", id: ANALYSIS_ID } }],
+  permissions: [{ effect: "allow", resource: "device", actions: ["send_data"] }],
+};
 
 const ENV_STRING_SENTINEL = "sentinel-env-string-do-not-echo";
 const ENV_NUMBER_SENTINEL = 4242424242;
@@ -141,6 +147,41 @@ const reflectionCases: ReflectionCase[] = [
     tool: "delete_files",
     args: { paths: [FILE_PATH] },
     override: () => mockServer.use(http.get(`${API}/files`, () => reflect(`listing rejected for ${REQUEST_TOKEN}`))),
+  },
+  { tool: "search_access_policies", args: {}, override: () => mockServer.use(http.get(`${API}/am`, () => reflect(`bad request by ${REQUEST_TOKEN}`))) },
+  {
+    tool: "get_access_policy",
+    args: { access_policy_id: ACCESS_POLICY_ID },
+    override: () => mockServer.use(http.get(`${API}/am/:amID`, () => reflect(`bad request by ${REQUEST_TOKEN}`))),
+  },
+  {
+    // The catalog fetch is this domain's only non-SDK request, so it is a
+    // credential path of its own.
+    tool: "lookup_access_permissions",
+    args: { target_type: "analysis" },
+    override: () => mockServer.use(http.get(`${API}/am/settings`, () => reflect(`catalog rejected for ${REQUEST_TOKEN}`))),
+  },
+  {
+    tool: "create_access_policy",
+    args: ACCESS_POLICY_BODY,
+    override: () => mockServer.use(http.post(`${API}/am`, () => reflect(`bad request by ${REQUEST_TOKEN}`))),
+  },
+  {
+    tool: "update_access_policy",
+    args: { access_policy_id: ACCESS_POLICY_ID, name: "X" },
+    override: () => mockServer.use(http.put(`${API}/am/:amID`, () => reflect(`bad request by ${REQUEST_TOKEN}`))),
+  },
+  {
+    // The pre-read that supplies the before/after view is the other
+    // credential-reflecting path into update_access_policy.
+    tool: "update_access_policy",
+    args: { access_policy_id: ACCESS_POLICY_ID, permissions: ACCESS_POLICY_BODY.permissions },
+    override: () => mockServer.use(http.get(`${API}/am/:amID`, () => reflect(`policy read rejected for ${REQUEST_TOKEN}`))),
+  },
+  {
+    tool: "delete_access_policy",
+    args: { access_policy_id: ACCESS_POLICY_ID },
+    override: () => mockServer.use(http.delete(`${API}/am/:amID`, () => reflect(`bad request by ${REQUEST_TOKEN}`))),
   },
 ];
 
