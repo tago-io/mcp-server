@@ -48,7 +48,16 @@ const handlers = [
   http.post(`${API}/device/:deviceID/params`, () => ok("Params Successfully Updated")),
   http.get(`${API}/device/:deviceID/data_amount`, () => ok(42)),
   http.get(`${API}/device/:deviceID/data`, () => ok([fixtures.dataRecord])),
-  http.post(`${API}/device/:deviceID/data`, () => ok("1 Data Added")),
+  // The real /device/:id/data POST route has only an analysis-token branch
+  // (AM-gated by send_data); a profile token always gets AUTHDENIED. Mirror
+  // that so the profile send path cannot pass by hitting this route.
+  http.post(`${API}/device/:deviceID/data`, ({ request }) => {
+    const token = request.headers.get("token") ?? "";
+    if (token.startsWith("a-")) {
+      return ok("1 Data Added");
+    }
+    return HttpResponse.json({ status: false, message: "Authorization Denied" }, { status: 401 });
+  }),
   http.put(`${API}/device/:deviceID/data`, () => ok("1 Data Updated")),
   http.delete(`${API}/device/:deviceID/data`, () => ok("1 Data Removed")),
   http.get(`${API}/device/:deviceID`, () => ok(fixtures.deviceInfo)),

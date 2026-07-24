@@ -128,7 +128,7 @@ describe("get_device", () => {
   });
 });
 
-/** Full mock of the Resources device-data surface plus tokenList, to prove routing. */
+/** Full mock of the Resources device-data surface plus token routes, to prove routing. */
 function makeDataResources() {
   return {
     devices: {
@@ -137,6 +137,7 @@ function makeDataResources() {
       editDeviceData: vi.fn().mockResolvedValue("1 Data Updated"),
       deleteDeviceData: vi.fn().mockResolvedValue("1 Data Removed"),
       tokenList: vi.fn(),
+      tokenCreate: vi.fn(),
     },
   };
 }
@@ -156,21 +157,33 @@ describe("device data credential routing", () => {
     vi.unstubAllGlobals();
   });
 
-  for (const [kind, token] of [
-    ["profile", PROFILE_TOKEN],
-    ["analysis", ANALYSIS_TOKEN],
-  ] as const) {
-    it(`routes all four operations through Resources for ${kind} tokens, never tokenList`, async () => {
-      const resources = makeDataResources();
-      await runAllDataOperations(makeTestContext({ resources, token }));
+  it("routes all four operations through Resources for analysis tokens, never token routes", async () => {
+    const resources = makeDataResources();
+    await runAllDataOperations(makeTestContext({ resources, token: ANALYSIS_TOKEN }));
 
-      expect(resources.devices.getDeviceData).toHaveBeenCalledWith(DEVICE_ID, expect.anything());
-      expect(resources.devices.sendDeviceData).toHaveBeenCalledWith(DEVICE_ID, DATA_PARAMS);
-      expect(resources.devices.editDeviceData).toHaveBeenCalledWith(DEVICE_ID, EDIT_PARAMS);
-      expect(resources.devices.deleteDeviceData).toHaveBeenCalledWith(DEVICE_ID, expect.objectContaining({ variables: ["humidity"] }));
-      expect(resources.devices.tokenList).not.toHaveBeenCalled();
-    });
-  }
+    expect(resources.devices.getDeviceData).toHaveBeenCalledWith(DEVICE_ID, expect.anything());
+    expect(resources.devices.sendDeviceData).toHaveBeenCalledWith(DEVICE_ID, DATA_PARAMS);
+    expect(resources.devices.editDeviceData).toHaveBeenCalledWith(DEVICE_ID, EDIT_PARAMS);
+    expect(resources.devices.deleteDeviceData).toHaveBeenCalledWith(DEVICE_ID, expect.objectContaining({ variables: ["humidity"] }));
+    expect(resources.devices.tokenList).not.toHaveBeenCalled();
+    expect(resources.devices.tokenCreate).not.toHaveBeenCalled();
+  });
+
+  // Profile send forks to the device-token path (see send-device-data.test.ts);
+  // read/edit/remove stay on Resources exactly as for analysis tokens.
+  it("routes read/edit/remove through Resources for profile tokens, never token routes", async () => {
+    const resources = makeDataResources();
+    const context = makeTestContext({ resources, token: PROFILE_TOKEN });
+    await readDeviceDataConfigJSON.tool(context, { device_id: DEVICE_ID } as never);
+    await editDeviceDataConfigJSON.tool(context, { device_id: DEVICE_ID, data: EDIT_PARAMS } as never);
+    await deleteDeviceDataConfigJSON.tool(context, { device_id: DEVICE_ID, variables: ["humidity"] } as never);
+
+    expect(resources.devices.getDeviceData).toHaveBeenCalledWith(DEVICE_ID, expect.anything());
+    expect(resources.devices.editDeviceData).toHaveBeenCalledWith(DEVICE_ID, EDIT_PARAMS);
+    expect(resources.devices.deleteDeviceData).toHaveBeenCalledWith(DEVICE_ID, expect.objectContaining({ variables: ["humidity"] }));
+    expect(resources.devices.tokenList).not.toHaveBeenCalled();
+    expect(resources.devices.tokenCreate).not.toHaveBeenCalled();
+  });
 
   it("routes device tokens through a Device client built with the supplied token and request region", async () => {
     const resources = makeDataResources();

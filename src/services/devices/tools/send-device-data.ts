@@ -40,7 +40,7 @@ const sendDeviceDataConfigJSON: IToolConfig = {
   name: "send_device_data",
   description: `Stores new data records on a device (sensor readings, computed values, statuses).
 
-Use when writing measurements or events into a device's storage. Variable names must be snake_case alphanumeric. Works on mutable and immutable devices; each stored record counts against the profile's Data Input limit.
+Use when writing measurements or events into a device's storage. Variable names must be snake_case alphanumeric. Works on mutable and immutable devices; each stored record counts against the profile's Data Input limit. With a Profile token this reuses one of the device's tokens (creating one if none exists) to perform the write.
 
 <example>
 {"device_id": "61f0000000000000000d0001", "data": [{"variable": "temperature", "value": 25.5, "unit": "°C"}]}

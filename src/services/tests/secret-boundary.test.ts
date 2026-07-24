@@ -7,6 +7,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { buildServer } from "../../server/build-server";
 import { TEST_REGION } from "../../testing/context";
 import { fixtures } from "../../testing/mocks/fixtures";
+import { ok } from "../../testing/mocks/handlers";
 import { mockServer, strictListenOptions } from "../../testing/mocks/server";
 import { projectAnalysis, projectAnalysisConsole } from "../analysis/safe-projection";
 
@@ -329,6 +330,65 @@ describe("dashboard/widget capability fields never render", () => {
     const { isError, serialized } = await callTool("search_dashboards", { response_format: "detailed" });
     expect(isError).toBe(false);
     expect(serialized).not.toContain("dashboard-list-token-sentinel");
+  });
+});
+
+const PROFILE_TOKEN = "p-88888888-profile-credential-sentinel";
+const DEVICE_ID = fixtures.IDS.device;
+const REUSED_DEVICE_TOKEN = fixtures.FAKE_DEVICE_TOKEN;
+const MINTED_DEVICE_TOKEN = fixtures.deviceTokenCreateResponse.token;
+
+/** Profile-credential twin of callTool: send_device_data forks to the device-token path only for profile tokens. */
+async function callProfileTool(name: string, args: Record<string, unknown>) {
+  const resources = new Resources({ token: PROFILE_TOKEN, region: TEST_REGION });
+  const server = buildServer({ resources, token: PROFILE_TOKEN, region: TEST_REGION, credentialKind: "profile" });
+  const client = new Client({ name: "secret-boundary-profile-test", version: "0.0.0" });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({ name, arguments: args });
+    const text = (result.content as Array<{ text: string }>).map((entry) => entry.text).join("\n");
+    return { isError: result.isError === true, text, serialized: JSON.stringify(result) };
+  } finally {
+    await client.close();
+    await server.close();
+  }
+}
+
+describe("profile send_device_data never leaks the reused or minted device token", () => {
+  const SEND_DATA = [{ variable: "temperature", value: 25.5 }];
+
+  it("does not surface the reused device token on a successful send", async () => {
+    const { isError, serialized } = await callProfileTool("send_device_data", { device_id: DEVICE_ID, data: SEND_DATA });
+    expect(isError).toBe(false);
+    expect(serialized).not.toContain(REUSED_DEVICE_TOKEN);
+  });
+
+  it("redacts the reused device token when a SUCCESS ingest body echoes it", async () => {
+    mockServer.use(http.post(`${API}/data`, () => ok(`1 Data Added for token ${REUSED_DEVICE_TOKEN}`)));
+    const { isError, serialized } = await callProfileTool("send_device_data", { device_id: DEVICE_ID, data: SEND_DATA });
+    expect(isError).toBe(false);
+    expect(serialized).not.toContain(REUSED_DEVICE_TOKEN);
+    expect(serialized).toContain("[redacted-token]");
+  });
+
+  it("redacts the reused device token when the ingest failure reflects it", async () => {
+    mockServer.use(http.post(`${API}/data`, () => reflect(`ingest rejected for token ${REUSED_DEVICE_TOKEN}`)));
+    const { isError, serialized } = await callProfileTool("send_device_data", { device_id: DEVICE_ID, data: SEND_DATA });
+    expect(isError).toBe(true);
+    expect(serialized).not.toContain(REUSED_DEVICE_TOKEN);
+    expect(serialized).toContain("[redacted-token]");
+  });
+
+  it("redacts the minted device token when no usable token exists and the failure reflects it", async () => {
+    mockServer.use(
+      http.get(`${API}/device/token/:deviceID`, () => HttpResponse.json({ status: true, result: [] })),
+      http.post(`${API}/data`, () => reflect(`ingest rejected for token ${MINTED_DEVICE_TOKEN}`))
+    );
+    const { isError, serialized } = await callProfileTool("send_device_data", { device_id: DEVICE_ID, data: SEND_DATA });
+    expect(isError).toBe(true);
+    expect(serialized).not.toContain(MINTED_DEVICE_TOKEN);
+    expect(serialized).toContain("[redacted-token]");
   });
 });
 

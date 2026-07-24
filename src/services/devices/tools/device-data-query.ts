@@ -2,6 +2,7 @@ import { Device } from "@tago-io/sdk";
 import type { DataQuery } from "@tago-io/sdk";
 import { z } from "zod/v3";
 
+import { describeErrorSafely, redactSecrets } from "../../../utils/safe-error";
 import { invalidParamError } from "../../../utils/tool-errors";
 import { ServerContext } from "../../types";
 
@@ -148,6 +149,59 @@ interface DeviceDataHandler {
   remove(deviceID: string, query?: DataQuery): Promise<unknown>;
 }
 
+interface DeviceSendToken {
+  token: string;
+  name?: string;
+  permission?: string;
+  expire_time?: string | null;
+}
+
+const SEND_TOKEN_PERMISSIONS = new Set(["full", "write"]);
+const SEND_TOKEN_PAGE_SIZE = 100;
+
+/** A token can send data if it grants write access and has not expired. */
+function isUsableSendToken(token: DeviceSendToken): boolean {
+  if (!SEND_TOKEN_PERMISSIONS.has(token.permission ?? "")) {
+    return false;
+  }
+  const expire = token.expire_time;
+  if (expire === undefined || expire === null || expire === "never") {
+    return true;
+  }
+  return new Date(expire) > new Date();
+}
+
+/**
+ * Sends data on behalf of a Profile token by mirroring the Admin UI: the
+ * /device/:id/data POST route is analysis-only (a profile token gets
+ * AUTHDENIED), so reuse one of the device's own tokens, minting one (with the
+ * Admin-UI default full permission) when none is usable, and ingest through the
+ * SDK Device client (POST /data). The resolved or minted device token is a
+ * secret; the success result and any thrown failure redact it (and the request
+ * credential) so it never escapes.
+ */
+async function sendDataAsProfile(context: ServerContext, deviceID: string, data: unknown): Promise<unknown> {
+  let deviceToken = "";
+  try {
+    const tokens = (await context.resources.devices.tokenList(deviceID, {
+      page: 1,
+      amount: SEND_TOKEN_PAGE_SIZE,
+      fields: ["token", "name", "permission", "expire_time"],
+    } as never)) as unknown as DeviceSendToken[];
+
+    const usable = tokens.find(isUsableSendToken);
+    deviceToken = usable ? usable.token : (await context.resources.devices.tokenCreate(deviceID, { name: "mcp-send-data", permission: "full" })).token;
+
+    const device = new Device({ token: deviceToken, region: { api: context.region.api, sse: context.region.sse } });
+    const result = await device.sendData(data as never);
+    // The device token is not the request credential, so the outer boundary
+    // cannot redact it; redact here, symmetric with the catch below.
+    return redactSecrets(result, [context.token, deviceToken]);
+  } catch (error) {
+    throw new Error(describeErrorSafely(error, [context.token, deviceToken]));
+  }
+}
+
 /**
  * Routes device-data calls by the credential kind classified at context
  * construction: profile/analysis tokens go through the request-scoped
@@ -196,9 +250,17 @@ function createDeviceDataHandler(context: ServerContext): DeviceDataHandler {
   }
 
   const { resources } = context;
+  // A Profile token cannot POST /device/:id/data (analysis-only). Fork ONLY the
+  // send path to reuse or mint a device token; analysis keeps its AM-gated
+  // sendDeviceData, and read/edit/remove are unchanged for both kinds.
+  const send =
+    context.credentialKind === "profile"
+      ? (deviceID: string, data: unknown) => sendDataAsProfile(context, deviceID, data)
+      : (deviceID: string, data: unknown) => resources.devices.sendDeviceData(deviceID, data as never);
+
   return {
     read: (deviceID, query) => resources.devices.getDeviceData(deviceID, query),
-    send: (deviceID, data) => resources.devices.sendDeviceData(deviceID, data as never),
+    send,
     edit: (deviceID, data) => resources.devices.editDeviceData(deviceID, data as never),
     remove: (deviceID, query) => resources.devices.deleteDeviceData(deviceID, query),
   };
