@@ -71,7 +71,18 @@ const permissionMatchSchema = z
  * path target would be stored and then never resolve to a policy.
  */
 const targetMatchSchema = z
-  .discriminatedUnion("by", [matchVariants.any, matchVariants.id, matchVariants.tag, matchVariants.tag_match])
+  .discriminatedUnion("by", [
+    matchVariants.any,
+    matchVariants.id,
+    matchVariants.tag,
+    // Target selection only checks that the target CARRIES this key; it never
+    // compares values. That is a different meaning from the identically named
+    // form on a permission rule, so it needs its own wording.
+    z.object({
+      by: z.literal("tag_match"),
+      key: z.string().min(1).describe("Tag key the analysis or run user must carry. Any value counts; the value is compared only by a permission rule using the same form."),
+    }),
+  ])
   .describe('Which analyses or run users the policy applies to. Defaults to {"by": "any"}, which is every one of that kind.');
 
 /** Builds the wire tuple. Every branch produces an arity the API's parser reads. */

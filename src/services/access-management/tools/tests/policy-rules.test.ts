@@ -56,6 +56,9 @@ describe("the wire tuple grammar", () => {
   it.each([
     ["arity 2", ["device", "id"]],
     ["arity 4", ["device", "tag.key", "device_type", "tag.value"]],
+    // Arity 6 is what the API's own parser rejects. Note the provider truncates
+    // to positions 0 to 4 on the way in, so a stored tuple is never this long;
+    // this pins the parser, not the persistence.
     ["arity 6", ["device", "tag.key", "a", "tag.value", "b", "extra"]],
     ["empty", []],
     ["unknown separator", ["device", "name", "sensor"]],

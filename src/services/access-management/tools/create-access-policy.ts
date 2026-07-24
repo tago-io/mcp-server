@@ -3,9 +3,9 @@ import { z } from "zod/v3";
 
 import { tagsObjectModel } from "../../../utils/global-params.model";
 import { IToolConfig, ServerContext } from "../../types";
-import { CATALOG_UNAVAILABLE_NOTE, loadCatalogForValidation } from "../permission-catalog";
+import { fetchPermissionCatalog } from "../permission-catalog";
 import { permissionInputSchema, targetInputSchema, toPermissionWire, toTargetWire, validatePermissions } from "../policy-input";
-import { renderPolicyRules } from "../policy-render";
+import { orderLikeApi, renderPolicyRules } from "../policy-render";
 
 const createAccessPolicyBaseSchema = z.object({
   name: z.string().min(1).max(100).describe('Name for the policy. The Admin console convention is to name it after what it is for, e.g. "[Analysis] - Parser device access".'),
@@ -19,10 +19,11 @@ type CreateAccessPolicySchema = z.infer<typeof createAccessPolicyBaseSchema>;
 
 async function createAccessPolicyTool(context: ServerContext, params: CreateAccessPolicySchema): Promise<string> {
   const targetTypes = [...new Set(params.targets.map((target) => target.type))];
-  const catalog = await loadCatalogForValidation(context);
-  if (catalog) {
-    validatePermissions(catalog, targetTypes, params.permissions);
-  }
+  // Fetched, not optional: a policy written without this check is exactly the
+  // silently-inert policy this domain exists to prevent, and the usual fallback
+  // of "write anyway and verify afterwards" needs the same route that failed.
+  const catalog = await fetchPermissionCatalog(context);
+  validatePermissions(catalog, targetTypes, params.permissions);
 
   const targets = params.targets.map(toTargetWire);
   const permissions = params.permissions.map(toPermissionWire);
@@ -37,9 +38,11 @@ async function createAccessPolicyTool(context: ServerContext, params: CreateAcce
     targets: targets as unknown as AccessCreateInfo["targets"],
   });
 
-  const sections = [`Access policy \`${result.am_id}\` created.`, "", renderPolicyRules({ targets, permissions }, catalog)];
-  if (!catalog) {
-    sections.push("", CATALOG_UNAVAILABLE_NOTE);
+  // Rendered in the order the API will report and evaluate them, not the order
+  // they were submitted in, so the "last match wins" note above is truthful.
+  const sections = [`Access policy \`${result.am_id}\` created.`, "", renderPolicyRules({ targets, permissions: orderLikeApi(permissions) }, catalog)];
+  if (params.active === false) {
+    sections.push("", "This policy was created INACTIVE, so none of its rules apply until it is activated with update_access_policy.");
   }
 
   return sections.join("\n");

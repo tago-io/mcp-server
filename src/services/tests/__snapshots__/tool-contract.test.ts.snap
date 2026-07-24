@@ -116,7 +116,23 @@ exports[`tool listing snapshot > matches the committed catalog snapshot (names, 
                     "$ref": "#/properties/targets/items/properties/match/anyOf/2",
                   },
                   {
-                    "$ref": "#/properties/targets/items/properties/match/anyOf/3",
+                    "additionalProperties": false,
+                    "properties": {
+                      "by": {
+                        "const": "tag_match",
+                        "type": "string",
+                      },
+                      "key": {
+                        "description": "Tag key whose value must be the SAME on the target and on the resource. Use this to scope an analysis to only the devices sharing its own tag value for this key.",
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "by",
+                      "key",
+                    ],
+                    "type": "object",
                   },
                   {
                     "additionalProperties": false,
@@ -252,7 +268,7 @@ exports[`tool listing snapshot > matches the committed catalog snapshot (names, 
                         "type": "string",
                       },
                       "key": {
-                        "description": "Tag key whose value must be the SAME on the target and on the resource. Use this to scope an analysis to only the devices sharing its own tag value for this key.",
+                        "description": "Tag key the analysis or run user must carry. Any value counts; the value is compared only by a permission rule using the same form.",
                         "minLength": 1,
                         "type": "string",
                       },
@@ -4308,7 +4324,7 @@ The type parameter accepts one of seven values:
   },
   {
     "annotations": {
-      "destructiveHint": false,
+      "destructiveHint": true,
       "idempotentHint": true,
       "openWorldHint": false,
       "readOnlyHint": false,
@@ -4367,7 +4383,23 @@ The type parameter accepts one of seven values:
                     "$ref": "#/properties/targets/items/properties/match/anyOf/2",
                   },
                   {
-                    "$ref": "#/properties/targets/items/properties/match/anyOf/3",
+                    "additionalProperties": false,
+                    "properties": {
+                      "by": {
+                        "const": "tag_match",
+                        "type": "string",
+                      },
+                      "key": {
+                        "description": "Tag key whose value must be the SAME on the target and on the resource. Use this to scope an analysis to only the devices sharing its own tag value for this key.",
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "by",
+                      "key",
+                    ],
+                    "type": "object",
                   },
                   {
                     "additionalProperties": false,
@@ -4430,7 +4462,7 @@ The type parameter accepts one of seven values:
           "type": "array",
         },
         "targets": {
-          "description": "REPLACES every target on the policy. Pass the complete list you want, not just the ones being added; read the current list with get_access_policy first.",
+          "description": "REPLACES every target on the policy. Pass the complete list you want, not just the ones being added; read the current list with get_access_policy first. Changing the kind of token a policy applies to can invalidate rules you are keeping, so pass \`permissions\` in the same call when it does.",
           "items": {
             "additionalProperties": false,
             "properties": {
@@ -4503,7 +4535,7 @@ The type parameter accepts one of seven values:
                         "type": "string",
                       },
                       "key": {
-                        "description": "Tag key whose value must be the SAME on the target and on the resource. Use this to scope an analysis to only the devices sharing its own tag value for this key.",
+                        "description": "Tag key the analysis or run user must carry. Any value counts; the value is compared only by a permission rule using the same form.",
                         "minLength": 1,
                         "type": "string",
                       },

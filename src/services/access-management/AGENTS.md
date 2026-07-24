@@ -28,7 +28,11 @@ For the same reason no tool simulates a verdict. Answering "would this token be 
 
 ## The wire grammar, and why input does not mirror it
 
-A permission's `resource` and a policy's `targets` are bare string tuples on the wire, classified by arity and separator words: `[type]` is any, `[type, "id", <id>]` is one resource, `[type, "tag.key", k, "tag.value", v]` is a tag pair, `[type, "tag_match", k]` compares the target's own tag value, and `[type, "path", p]` is a storage prefix. The API validates them as `z.array(z.string())` and nothing more, so a tuple of any other arity is stored, classified as nothing, and silently grants nothing.
+A permission's `resource` and a policy's `targets` are bare string tuples on the wire, classified by arity and separator words: `[type]` is any, `[type, "id", <id>]` is one resource, `[type, "tag.key", k, "tag.value", v]` is a tag pair, `[type, "tag_match", k]` is a tag key, and `[type, "path", p]` is a storage prefix. A tuple of any other arity is stored, classified as nothing, and silently grants nothing.
+
+Be precise about what the API does and does not check, because it decides what a failure here means. It DOES refine `resource[0]` against its resource list, each target's first entry against `run_user`/`analysis`, and every action against a closed enum, so a misspelled resource or action name is rejected upstream. What it never checks is the tuple's arity, its separator words, and whether the resource and action belong together. Those three are the whole gap, and they are the ones that fail silently.
+
+`tag_match` means different things in the two positions, so the two schemas describe it differently. On a permission rule it compares values: the resource must carry the same value for that key as the target does. On a target it only requires that the analysis or run user CARRY the key; no value comparison happens (`getPolicyByTarget`).
 
 The tools therefore accept a tagged `match` object and build the tuple in `policy-rules.ts`, which makes the broken arities unrepresentable. Targets use a separate schema without `path`, because the target lookup has no path branch and a path target would resolve to no policy at all.
 
@@ -36,7 +40,7 @@ The tools therefore accept a tagged `match` object and build the tuple in `polic
 
 The API's action enum and resource enum are independent, so `{resource: ["device"], action: ["login_as_user"]}` is accepted, saved, and inert. So is a match form a grant does not accept, such as scoping device `create` to a single device id when no device exists yet to carry it. Both produce a policy that exists, reads correctly, and does nothing, which is the failure this domain was opened to make diagnosable. Creating one would reproduce the bug, so `create_access_policy` and `update_access_policy` refuse them.
 
-`get_access_policy` marks the same three shapes INERT on policies that already contain them, since a policy written in the Admin console can carry them too.
+`get_access_policy` marks the same shapes on policies that already contain them, since a policy written in the Admin console can carry them too. A rule is INERT only when nothing in it can fire; a rule whose actions are part live is PARTLY INERT, because calling it dead would hide a permission the policy really does grant. When a policy has no target the platform can resolve, the per-rule verdicts are suppressed entirely and the targets section carries the reason, rather than repeating a misleading cause on every rule.
 
 ## The permission catalog is fetched, never vendored
 
@@ -44,11 +48,21 @@ The resource, action, and match-form matrix comes from `GET /am/settings`, the o
 
 `permission-catalog.ts` is the only non-SDK request in this domain and is deliberately not a generic authenticated-request escape hatch: the path is a constant, no caller input reaches the URL, and the response describes the permission model rather than any profile's data. It is not cached; one small request per call is cheaper than a shared mutable cache keyed by region.
 
-When the route cannot be read, the write tools still write. The grammar checks come from the API's own parser and always run; only the catalog checks are skipped, and the result says so. Failing closed would send the caller back to the Admin console, which is the complaint that opened this domain.
+Reads degrade, writes do not. `get_access_policy` without the catalog still renders the policy, with raw wire values instead of console names, and says the pairing was not checked. A write without it fails and says to retry. Letting the write through with a warning reads like the friendlier option and is not: the warning can only tell the caller to verify with `get_access_policy`, which needs the same route that just failed, so it would store an unverifiable policy and offer no way to check it. Creating a policy is not urgent enough to be worth that.
 
 ## Update replaces, it does not merge
 
-`permissions` and `targets` are replaced wholesale when present and untouched when absent, because the provider deletes every row and reinserts what was sent. There is no partial edit. `update_access_policy` reads the policy first whenever either key is supplied, validates the new rules against the targets that will actually be in force (the new ones if supplied, otherwise the existing ones), and renders the policy before and after so the replacement is visible. A change that cannot drop rules makes no extra request.
+`permissions` and `targets` are replaced wholesale when present and untouched when absent, because the provider deletes every row and reinserts what was sent. There is no partial edit. `update_access_policy` reads the policy first whenever either key is supplied and renders it before and after, so the replacement is visible. A change that cannot drop rules makes no extra request.
+
+Targets are validated even when no rule is submitted. Because the API keeps the rule list when its key is absent, repointing a policy from an analysis to a run user leaves every rule in place while making most of them meaningless, producing exactly the inert policy this domain exists to prevent. So a target change is checked against the rules that will survive it.
+
+That check refuses only what the change NEWLY breaks, compared per action and by liveness rather than by the reason for deadness. A grant already dead grants nothing either way, and refusing it would make any policy that already contains one permanently uneditable, while comparing reasons is the wrong abstraction: the same action can be dead before because its match form is rejected and dead after because the action does not exist, which is not a regression. Liveness is per action rather than per rule because a repoint that leaves a rule with one working action out of three has still silently taken two away, which is the same partial loss the renderer reports as PARTLY INERT. Rules stored in a shape the platform cannot parse are left out of the comparison for the same reason as dead ones.
+
+The check sees only what the catalog can express. A rule scoped by `tag_match` can still stop matching after a repoint because the new targets do not carry the tag, which depends on the targets' own data rather than on the permission model, and detecting it would mean evaluating concrete tags on both the targets and the resources, which is the verdict simulation this domain declines to build. The tool description says what the check covers instead of implying more.
+
+An action is only called dead when every grant that could serve it can be judged. A grant the catalog ships with no match forms leaves the answer unknown, and unknown is not dead: refusing it would produce an error naming no acceptable form at all, in exactly the drift scenario that fetching rather than vendoring exists to survive.
+
+Locally built rule lists are rendered allow-first before being shown, because a read arrives already sorted that way and a rule list we assembled has not been. Rendering it as submitted would show an order the platform never evaluates in, under a note saying the last match decides.
 
 ## Search contract deviation
 
@@ -58,4 +72,4 @@ Rules are rendered as an ordered list, not a table. The order is load-bearing, a
 
 ## Mock fidelity
 
-`testing/mocks/am-policies.ts` is a stateful mock that reproduces the four behaviours a canned fixture would hide: the list projection that cannot return rules or targets, the info route's re-sort by effect, the wholesale replacement on edit, and the storing of malformed or unmatchable tuples without complaint. The seed policies include a deny written before an allow, so a tool that echoed submission order fails, and a policy holding all three inert shapes. Creation is capped at the free plan's limit of 5 policies.
+`testing/mocks/am-policies.ts` is a stateful mock that reproduces the behaviours a canned fixture would hide: the list projection that cannot return rules or targets, the info route's re-sort by effect, the wholesale replacement on edit, the storing of malformed or unmatchable tuples without complaint, and the provider's truncation of a tuple to positions 0 to 4. The seed policies include a deny written before an allow, so a tool that echoed submission order fails, and a policy holding all three inert shapes. Creation is capped at the free plan's limit of 5 policies.

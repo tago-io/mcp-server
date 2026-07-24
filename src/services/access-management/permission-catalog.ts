@@ -129,21 +129,22 @@ async function fetchPermissionCatalog(context: ServerContext): Promise<Permissio
 }
 
 /**
- * Catalog for the write tools, which degrade rather than block when it cannot
- * be read.
+ * Reads degrade, writes do not.
  *
- * The grammar checks in `policy-rules.ts` come from the API's own parser and
- * always run. The catalog checks are the ones that need this route, and failing
- * the write when it is unavailable would send the caller back to the Admin
- * console, which is the very complaint that opened this domain. So the write
- * proceeds with the catalog checks skipped and says so in its result.
+ * A read without the catalog is still useful: it shows raw wire values instead
+ * of console names and says the pairing was not checked. A WRITE without it
+ * cannot be checked at all, and the obvious fallback (write anyway, warn, tell
+ * the caller to verify with get_access_policy) is hollow, because that
+ * verification needs the same route that just failed. Storing an unverifiable
+ * policy is the exact outcome this domain exists to prevent, and creating one
+ * is not urgent, so the write fails and says to retry.
  */
-async function loadCatalogForValidation(context: ServerContext): Promise<PermissionCatalog | undefined> {
+async function catalogForRead(context: ServerContext): Promise<PermissionCatalog | undefined> {
   return await fetchPermissionCatalog(context).catch(() => undefined);
 }
 
-const CATALOG_UNAVAILABLE_NOTE =
-  "The permission catalog (`GET /am/settings`) could not be read, so the resource/action pairing was NOT verified. The policy may not grant anything: check it with get_access_policy.";
+const CATALOG_UNREADABLE_NOTE =
+  "The permission catalog (`GET /am/settings`) could not be read, so rules are shown with their raw wire values and were not checked for whether they can ever match.";
 
 /** Resources the given target kinds can grant on at all, deduplicated. */
 function grantableResources(catalog: PermissionCatalog, targetTypes: readonly TargetType[]): string[] {
@@ -167,5 +168,5 @@ function grantLabel(catalog: PermissionCatalog, targetType: TargetType, resource
   return `${resourceLabel} / ${grant?.label ?? action}`;
 }
 
-export { CATALOG_UNAVAILABLE_NOTE, TARGET_TYPES, fetchPermissionCatalog, findGrant, grantLabel, grantableResources, loadCatalogForValidation, parseCatalog };
+export { CATALOG_UNREADABLE_NOTE, TARGET_TYPES, catalogForRead, fetchPermissionCatalog, findGrant, grantLabel, grantableResources, parseCatalog };
 export type { PermissionCatalog, PermissionGrant, TargetType };

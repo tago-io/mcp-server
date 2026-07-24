@@ -18,11 +18,12 @@ import { fixtures } from "./fixtures";
  * - EDIT replaces the whole `permissions` and `targets` lists when the key is
  *   present and leaves them untouched when it is absent. A mock that merged
  *   would hide the tool's central hazard.
- * - CREATE and EDIT store rule tuples verbatim with no arity or pairing check,
- *   so a malformed or unmatchable rule is saved and silently grants nothing.
- *   The client-side guards are the only thing preventing that, and this mock is
- *   what proves it.
- * - CREATE is capped by the profile's plan limit (5 on the free plan).
+ * - CREATE and EDIT apply no arity or pairing check, so a malformed or
+ *   unmatchable rule is saved and silently grants nothing. The client-side
+ *   guards are the only thing preventing that, and this mock is what proves it.
+ *   Tuples longer than five entries are truncated rather than kept whole,
+ *   because the provider reads only positions 0 to 4.
+ * - CREATE is capped by the profile's plan limit.
  */
 
 interface StoredPermission {
@@ -43,20 +44,41 @@ interface StoredPolicy {
   permissions: StoredPermission[];
 }
 
-/** Free-plan `access_management` resource limit, straight from the platform defaults. */
-const POLICY_LIMIT = 5;
+/**
+ * Platform `access_management` limits: 5 on free, 30 on starter, 100 on scale.
+ * The mock defaults to the starter limit so seeded policies leave headroom, and
+ * the free-plan value is pinned by the test that exercises the cap.
+ */
+const FREE_PLAN_POLICY_LIMIT = 5;
+const STARTER_PLAN_POLICY_LIMIT = 30;
 
 let policies: StoredPolicy[] = [];
+let policyLimit = STARTER_PLAN_POLICY_LIMIT;
 let nextId = 0;
 
 function resetAccessPolicies() {
   policies = fixtures.accessPolicies.map((policy) => structuredClone(policy));
+  policyLimit = STARTER_PLAN_POLICY_LIMIT;
   nextId = 0;
+}
+
+/** Pins the profile's plan limit for a test that exercises the cap. */
+function setPolicyLimit(limit: number) {
+  policyLimit = limit;
 }
 
 /** Everything currently stored, for assertions about what a call actually wrote. */
 function storedPolicies(): StoredPolicy[] {
   return policies.map((policy) => structuredClone(policy));
+}
+
+/** `_buildPermission` and `_buildTargets` read positions 0 to 4 and drop the rest. */
+function truncateTuples(tuples: string[][]): string[][] {
+  return tuples.map((tuple) => tuple.slice(0, 5));
+}
+
+function truncatePermissions(permissions: StoredPermission[]): StoredPermission[] {
+  return permissions.map((permission) => ({ ...permission, resource: (permission.resource ?? []).slice(0, 5) }));
 }
 
 function findPolicy(id: string): StoredPolicy | undefined {
@@ -125,8 +147,8 @@ function policyInfo(id: string): StoredPolicy | undefined {
 }
 
 function createPolicy(body: Record<string, unknown>): { am_id: string } {
-  if (policies.length >= POLICY_LIMIT) {
-    throw new Error(`You have exceeded the maximum limit of Access management (${POLICY_LIMIT}). Please upgrade you plan or contact support.`);
+  if (policies.length >= policyLimit) {
+    throw new Error(`You have exceeded the maximum limit of Access management (${policyLimit}). Please upgrade you plan or contact support.`);
   }
 
   const now = new Date().toISOString();
@@ -138,9 +160,10 @@ function createPolicy(body: Record<string, unknown>): { am_id: string } {
     tags: Array.isArray(body.tags) ? (body.tags as StoredPolicy["tags"]) : [],
     created_at: now,
     updated_at: now,
-    // Stored exactly as sent: the route performs no arity or pairing check.
-    targets: (body.targets as string[][]) ?? [],
-    permissions: (body.permissions as StoredPermission[]) ?? [],
+    // No arity or pairing check, but the provider reads only tuple positions
+    // 0 to 4, so anything longer is truncated rather than stored whole.
+    targets: truncateTuples((body.targets as string[][]) ?? []),
+    permissions: truncatePermissions((body.permissions as StoredPermission[]) ?? []),
   };
 
   policies.push(policy);
@@ -165,10 +188,10 @@ function editPolicy(id: string, body: Record<string, unknown>): string {
   // Wholesale replacement, not a merge: the provider deletes every row and
   // reinserts what was sent.
   if (body.permissions !== undefined) {
-    policy.permissions = body.permissions as StoredPermission[];
+    policy.permissions = truncatePermissions(body.permissions as StoredPermission[]);
   }
   if (body.targets !== undefined) {
-    policy.targets = body.targets as string[][];
+    policy.targets = truncateTuples(body.targets as string[][]);
   }
   policy.updated_at = new Date().toISOString();
 
@@ -186,5 +209,5 @@ function deletePolicy(id: string): string {
 // Seeded on import so suites that never mutate policies need no setup hook.
 resetAccessPolicies();
 
-export { POLICY_LIMIT, createPolicy, deletePolicy, editPolicy, listPolicies, policyInfo, resetAccessPolicies, storedPolicies };
+export { FREE_PLAN_POLICY_LIMIT, STARTER_PLAN_POLICY_LIMIT, createPolicy, deletePolicy, editPolicy, listPolicies, policyInfo, resetAccessPolicies, setPolicyLimit, storedPolicies };
 export type { StoredPermission, StoredPolicy };

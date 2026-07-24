@@ -67,11 +67,15 @@ describe("search_access_policies renders what the list endpoint can actually ret
     expect(result).not.toContain("[Run] - Dashboard access");
   });
 
-  it("renders exactly the requested fields", async () => {
+  it("renders exactly the requested fields and drops the rest", async () => {
     const result = await searchPolicies({ fields: ["id", "name"] });
+    const [header] = result.split("\n");
 
-    expect(result).toContain("name");
-    expect(result).not.toContain("active");
+    expect(header).toContain("name");
+    expect(header).toContain("id");
+    expect(header).not.toContain("active");
+    // `tags` is force-added to the API query but must not be rendered.
+    expect(header).not.toContain("tags");
   });
 });
 

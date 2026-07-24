@@ -73,6 +73,47 @@ describe("get_access_policy flags rules that can never fire", () => {
     expect(result).toMatch(/INERT:.*`create` cannot be matched by `id`/);
   });
 
+  it("marks a half-live rule PARTLY INERT, not dead", async () => {
+    const result = await getPolicy({ access_policy_id: INERT_POLICY });
+
+    // The rule grants `access` and cannot grant `login_as_user`; calling the
+    // whole rule INERT would hide a permission the policy really does grant.
+    expect(result).toMatch(/PARTLY INERT:.*has no action `login_as_user`/);
+  });
+
+  it("marks a rule with no actions at all", async () => {
+    const result = await getPolicy({ access_policy_id: INERT_POLICY });
+
+    expect(result).toMatch(/INERT: the rule lists no actions/);
+  });
+
+  it("does not let a malformed target vouch for a rule", async () => {
+    // The analysis target is malformed, so it selects no policy. Counting its
+    // kind would let it declare an analysis-only rule meaningful.
+    mockServer.use(
+      http.get(`${API}/am/:amID`, () =>
+        HttpResponse.json({
+          status: true,
+          result: {
+            id: PARSER_POLICY,
+            name: "Malformed target",
+            active: true,
+            tags: [],
+            targets: [["analysis", "id"]],
+            permissions: [{ effect: "allow", action: ["upload"], resource: ["file", "path", "reports/"] }],
+          },
+        })
+      )
+    );
+
+    const result = await getPolicy({ access_policy_id: PARSER_POLICY });
+
+    expect(result).toContain("the stored target is malformed");
+    // No per-rule catalog verdict, because the targets section already carries
+    // the real cause and repeating it per rule would bury it.
+    expect(result).not.toContain("PARTLY INERT");
+  });
+
   it("does not mark a rule that can fire", async () => {
     const result = await getPolicy({ access_policy_id: PARSER_POLICY });
     expect(result).not.toContain("INERT");

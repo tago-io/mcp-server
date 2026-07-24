@@ -560,6 +560,57 @@ const accessPolicies = [
       { effect: "allow", action: ["access"], resource: ["device", "id"] },
       { effect: "allow", action: ["login_as_user"], resource: ["device"] },
       { effect: "allow", action: ["create"], resource: ["device", "id", IDS.device] },
+      // Half live: `access` fires, `login_as_user` cannot. Marking the whole
+      // rule dead would hide a permission the policy really does grant.
+      { effect: "allow", action: ["access", "login_as_user"], resource: ["device"] },
+      // Storable and meaningless: the action enum has no minimum length.
+      { effect: "allow", action: [], resource: ["device"] },
+    ],
+  },
+  {
+    // Targets run users, holding a rule that is dead for them (`file` is not
+    // grantable to a run user) and would still be dead as an analysis, for a
+    // different reason (`upload` does not accept an `id` match). Repointing it
+    // makes nothing worse, so it must not be blocked.
+    id: "61f00000000000000ab00004",
+    profile: IDS.profile,
+    name: "[Run] - Already dead rule",
+    active: true,
+    tags: [],
+    created_at: "2026-01-05T00:00:00.000Z",
+    updated_at: "2026-01-05T00:00:00.000Z",
+    targets: [["run_user"]],
+    permissions: [{ effect: "allow", action: ["upload"], resource: ["file", "id", IDS.device] }],
+  },
+  {
+    // Targets analyses, holding a rule with NO actions on a resource run users
+    // cannot be granted. The rule grants nothing under any targets, so
+    // repointing the policy strands nothing and must not be refused.
+    id: "61f00000000000000ab00005",
+    profile: IDS.profile,
+    name: "[Analysis] - Actionless rule",
+    active: true,
+    tags: [],
+    created_at: "2026-01-06T00:00:00.000Z",
+    updated_at: "2026-01-06T00:00:00.000Z",
+    targets: [["analysis"]],
+    permissions: [{ effect: "allow", action: [], resource: ["file"] }],
+  },
+  {
+    // First rule is unreadable and is skipped by the retained-rule check; the
+    // second is live today and would be stranded by a repoint. The reported
+    // position must be the stored one (1), not the filtered one (0).
+    id: "61f00000000000000ab00006",
+    profile: IDS.profile,
+    name: "[Analysis] - Unreadable then live",
+    active: true,
+    tags: [],
+    created_at: "2026-01-07T00:00:00.000Z",
+    updated_at: "2026-01-07T00:00:00.000Z",
+    targets: [["analysis"]],
+    permissions: [
+      { effect: "allow", action: ["access"], resource: ["device", "id"] },
+      { effect: "allow", action: ["send_data"], resource: ["device"] },
     ],
   },
 ];

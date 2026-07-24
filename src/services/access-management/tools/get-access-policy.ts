@@ -3,7 +3,7 @@ import { z } from "zod/v3";
 import { resourceIdSchema, responseFormatSchema } from "../../../utils/global-params.model";
 import { renderItem } from "../../../utils/tool-output";
 import { IToolConfig, ServerContext } from "../../types";
-import { fetchPermissionCatalog } from "../permission-catalog";
+import { CATALOG_UNREADABLE_NOTE, catalogForRead } from "../permission-catalog";
 import { PolicyWire, renderPolicyRules } from "../policy-render";
 
 const getAccessPolicyBaseSchema = z.object({
@@ -18,7 +18,7 @@ async function getAccessPolicyTool(context: ServerContext, params: GetAccessPoli
 
   // The catalog turns wire values into the names the Admin console shows and is
   // what makes an inert rule visible. Losing it costs labelling, not the read.
-  const catalog = await fetchPermissionCatalog(context).catch(() => undefined);
+  const catalog = await catalogForRead(context);
 
   const summary = renderItem(
     { id: policy.id, name: policy.name, active: policy.active, tags: policy.tags, created_at: policy.created_at, updated_at: policy.updated_at },
@@ -32,10 +32,7 @@ async function getAccessPolicyTool(context: ServerContext, params: GetAccessPoli
     sections.push("", "This policy is INACTIVE, so none of the rules above apply. Activate it with update_access_policy.");
   }
   if (!catalog) {
-    sections.push(
-      "",
-      "The permission catalog (`GET /am/settings`) could not be read, so rules are shown with their raw wire values and were not checked for whether they can ever match."
-    );
+    sections.push("", CATALOG_UNREADABLE_NOTE);
   }
 
   return sections.join("\n");
