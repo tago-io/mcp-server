@@ -47,13 +47,23 @@ async function verifyFiles(context: ServerContext, paths: string[]): Promise<{ v
   for (const path of paths) {
     const listing = await listFiles(context.resources, { path, quantity: VERIFY_PAGE_SIZE });
     const match = (listing.files ?? []).find((file) => file.filename === path);
-    if (match) {
+    const { name } = splitFilePath(path);
+    const sameNameFolder = (listing.folders ?? []).includes(name);
+
+    if (match && !sameNameFolder) {
       verified.push({ path, size: match.size });
       continue;
     }
 
-    const { name } = splitFilePath(path);
-    if ((listing.folders ?? []).includes(name)) {
+    // A key and a prefix may share a name. Deleting the key is only safe while
+    // it exists: if it goes first, the identical request becomes a recursive
+    // delete of the folder, so a coexisting pair is refused rather than raced.
+    if (match && sameNameFolder) {
+      problems.push(`\`${path}\` is both a file and a folder. Deleting it could remove everything inside the folder of the same name, so this API cannot target the file safely.`);
+      continue;
+    }
+
+    if (sameNameFolder) {
       problems.push(`\`${path}\` is a folder. Deleting a folder would remove everything inside it, so only file paths are accepted: list it with search_files and pass the files.`);
       continue;
     }
@@ -90,15 +100,15 @@ async function deleteFilesTool(context: ServerContext, params: DeleteFilesParams
 
 const deleteFilesConfigJSON: IToolConfig = {
   name: "delete_files",
-  description: `Permanently deletes files from the profile's TagoIO Files storage. This cannot be undone.
+  description: `Permanently deletes files from the profile's TagoIO Files storage. The files are removed and cannot be recovered.
 
-Every path must be the complete path of a single existing file, exactly as search_files reports it. Each one is verified to be a file before anything is deleted, and the whole call is refused if any path is a folder, does not exist, or is a pattern. Folders are never deleted: list one with search_files and pass the files it contains.
-
-Use it to remove leftover files, such as the custom-widget sources and bundled artifacts that outlive a deleted widget. Confirm with the user which files to remove before calling.
+Use this only when the user explicitly asks to remove files. Confirm the exact paths with search_files first: every path must be the complete path of a single existing file, exactly as search_files reports it, and each one is checked against the storage before anything is deleted. A folder is a common use for this tool's refusal, not its input: list the folder with search_files and pass the files it contains.
 
 <example>
 {"paths": ["widgets/61f0000000000000000db004.tsx"]}
-</example>`,
+</example>
+
+Key limitations: deletion cannot be undone; the whole call is refused if any path is a folder, is a pattern, does not exist, or names something that is both a file and a folder; at most ${MAX_PATHS} paths per call.`,
   parameters: deleteFilesSchema,
   title: "Delete Files",
   annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },

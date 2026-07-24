@@ -3449,11 +3449,11 @@ The type parameter accepts one of seven values:
           "type": "string",
         },
         "path": {
-          "description": "Folder to list, relative to the profile's storage root. Defaults to the root. Listing is one level deep: subfolders come back in their own list and are read by calling again with the folder path. Custom-widget sources live under \`widgets/\`, their bundled artifacts under \`widgets/.bundled/{widget_id}/\`.",
+          "description": "Folder to list, relative to the profile's storage root, ending in \`/\`. Defaults to the root. Without the trailing slash the value is matched as a name prefix instead, so \`widgets\` also matches a sibling folder named \`widgets-old\`. Listing is one level deep: subfolders come back in their own list and are read by calling again with the folder path. Custom-widget sources live under \`widgets/\`, their bundled artifacts under \`widgets/.bundled/{widget_id}/\`.",
           "type": "string",
         },
         "response_format": {
-          "description": "Response verbosity. 'concise' (default) lists path, size, and last modified; 'detailed' adds public visibility.",
+          "description": "Response verbosity. 'concise' (default) lists filename, size, and last modified; 'detailed' adds public visibility.",
           "enum": [
             "concise",
             "detailed",

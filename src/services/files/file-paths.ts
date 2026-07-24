@@ -61,12 +61,20 @@ function normalizeFilePath(raw: string): string {
     throw constraint(`"${raw}" is a folder path; only file paths can be deleted`);
   }
 
+  // Rejected ANYWHERE, not just as a whole segment. The delete route strips
+  // every ".." before resolving a key, so a path like `archive..bak/report.csv`
+  // would be verified as itself and then deleted as `archivebak/report.csv`,
+  // which is a different key and, when absent, a recursive prefix delete.
+  if (path.includes("..")) {
+    throw constraint(`"${raw}" contains "..", which the API strips before resolving the file, so it cannot be deleted by this exact path`);
+  }
+
   const segments = path.split("/");
   for (const segment of segments) {
     if (segment.length === 0) {
       throw constraint(`"${raw}" has an empty path segment`);
     }
-    if (segment === "." || segment === "..") {
+    if (segment === ".") {
       throw constraint(`"${raw}" contains a relative segment`);
     }
     // The API trims every segment, so an untrimmed one resolves to a DIFFERENT

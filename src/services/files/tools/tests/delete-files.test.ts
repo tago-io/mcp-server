@@ -51,13 +51,26 @@ describe("delete_files deletes exactly the files it was given", () => {
     expect(storedFilenames()).not.toContain(SOURCE_PATH);
     expect(result).toContain(SOURCE_PATH);
     expect(result).toContain("1 file");
+    // The fixture file is 2048 bytes; the confirmation reports what was freed.
+    expect(result).toContain("2048 bytes");
   });
 
   it("deletes a whole orphaned widget in one capped batch", async () => {
     const result = await deletePaths([SOURCE_PATH, ARTIFACT_PATH]);
 
     expect(recordedDeleteRequests()).toEqual([[SOURCE_PATH, ARTIFACT_PATH]]);
-    expect(storedFilenames()).toEqual([`widgets/.bundled/${WIDGET_ID}/old987654321.html`, "reports.csv/january.csv", "uploads/nested/deep.txt", "uploads/report.csv"].sort());
+    expect(storedFilenames()).toEqual(
+      [
+        `widgets/.bundled/${WIDGET_ID}/old987654321.html`,
+        "reports.csv/january.csv",
+        "uploads/nested/deep.txt",
+        "uploads/report.csv",
+        "ledger.csv",
+        "ledger.csv/january.csv",
+        "archive..bak/report.csv",
+        "archivebak/report.csv/2025.csv",
+      ].sort()
+    );
     expect(result).toContain("2 files");
   });
 
@@ -92,6 +105,38 @@ describe("delete_files refuses anything that is not a verified file", () => {
 
     expect(recordedDeleteRequests()).toEqual([]);
     expect(storedFilenames()).toContain(SOURCE_PATH);
+  });
+
+  it("refuses a path whose `..` the delete route would rewrite into a different key", async () => {
+    // The delete route strips `..` from anywhere in a path before resolving it,
+    // so `archive..bak/report.csv` resolves to `archivebak/report.csv`. The
+    // verification listing does NOT apply that rewrite, so it would confirm the
+    // wrong key and the delete would recursively erase `archivebak/report.csv/`.
+    await expect(deletePaths(["archive..bak/report.csv"])).rejects.toThrow(/Invalid `paths`/);
+
+    expect(recordedDeleteRequests()).toEqual([]);
+    expect(storedFilenames()).toContain("archive..bak/report.csv");
+    expect(storedFilenames()).toContain("archivebak/report.csv/2025.csv");
+  });
+
+  it("refuses a file that shares its name with a folder, which the delete could not target safely", async () => {
+    // `ledger.csv` exists as both an object and a folder prefix. Deleting the
+    // object is only safe while it exists: if it goes first, the same request
+    // becomes a recursive delete of `ledger.csv/`.
+    await expect(deletePaths(["ledger.csv"])).rejects.toThrow(/folder/i);
+
+    expect(recordedDeleteRequests()).toEqual([]);
+    expect(storedFilenames()).toContain("ledger.csv");
+    expect(storedFilenames()).toContain("ledger.csv/january.csv");
+  });
+
+  it("reports every failing path in one message, not just the first", async () => {
+    const attempt = deletePaths([FOLDER_NAMED_LIKE_A_FILE, `widgets/${WIDGET_ID}`]);
+
+    await expect(attempt).rejects.toThrow(/2 of 2/);
+    await expect(attempt).rejects.toThrow(/is a folder/);
+    await expect(attempt).rejects.toThrow(/was not found/);
+    expect(recordedDeleteRequests()).toEqual([]);
   });
 
   it("refuses the whole batch when any single path fails verification", async () => {

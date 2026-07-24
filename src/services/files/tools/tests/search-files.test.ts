@@ -59,6 +59,16 @@ describe("search_files listing contract", () => {
     expect(result).toContain(`widgets/.bundled/${WIDGET_ID}/old987654321.html`);
   });
 
+  it("renders a usable folder path when the caller omits the trailing slash", async () => {
+    // The API matches `path` as a prefix and reports folders as bare last
+    // segments, so a rendered folder path must be built from the parent of the
+    // prefix, not the prefix itself, or `widgets` renders as `widgetswidgets/`.
+    const result = await search({ path: "widgets" });
+
+    expect(result).toContain("widgets/");
+    expect(result).not.toContain("widgetswidgets");
+  });
+
   it("reports storage usage so orphaned files can be weighed", async () => {
     const result = await search({});
 

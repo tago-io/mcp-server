@@ -415,8 +415,11 @@ const snippetSourceParser = 'const decoded = Buffer.from(payload[0].value, "base
  * files and folders from these keys the way S3 does (prefix + "/" delimiter),
  * so folder-vs-file discrimination in the tests is the real one.
  *
- * `reports.csv` is deliberately a FOLDER whose name looks like a file: no path
- * syntax can tell it from a file, which is why deletion pre-flights a listing.
+ * Three entries exist only to pin deletion hazards that path syntax cannot see:
+ * `reports.csv` is a FOLDER whose name looks like a file; `ledger.csv` is a file
+ * that coexists with a folder of the same name (S3 allows an object key and a
+ * prefix to share a name); and `archive..bak/` holds a key the delete route's
+ * own rewrite would turn into a different, colliding key.
  */
 const fileStorageObjects = [
   { filename: `widgets/${IDS.widgetCustom}.tsx`, size: 2048, last_modified: "2026-01-02T00:00:00.000Z", public: false },
@@ -425,6 +428,10 @@ const fileStorageObjects = [
   { filename: "uploads/report.csv", size: 512, last_modified: "2026-01-03T00:00:00.000Z", public: false },
   { filename: "uploads/nested/deep.txt", size: 16, last_modified: "2026-01-03T00:00:00.000Z", public: false },
   { filename: "reports.csv/january.csv", size: 256, last_modified: "2026-01-04T00:00:00.000Z", public: false },
+  { filename: "ledger.csv", size: 64, last_modified: "2026-01-05T00:00:00.000Z", public: false },
+  { filename: "ledger.csv/january.csv", size: 32, last_modified: "2026-01-05T00:00:00.000Z", public: false },
+  { filename: "archive..bak/report.csv", size: 8, last_modified: "2026-01-06T00:00:00.000Z", public: false },
+  { filename: "archivebak/report.csv/2025.csv", size: 4096, last_modified: "2026-01-06T00:00:00.000Z", public: false },
 ];
 
 /** Allocation and usage the list route reports alongside every page, in MB. */

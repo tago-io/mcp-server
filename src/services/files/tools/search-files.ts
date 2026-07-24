@@ -19,7 +19,7 @@ const searchFilesSchema = {
   path: z
     .string()
     .describe(
-      "Folder to list, relative to the profile's storage root. Defaults to the root. Listing is one level deep: subfolders come back in their own list and are read by calling again with the folder path. Custom-widget sources live under `widgets/`, their bundled artifacts under `widgets/.bundled/{widget_id}/`."
+      "Folder to list, relative to the profile's storage root, ending in `/`. Defaults to the root. Without the trailing slash the value is matched as a name prefix instead, so `widgets` also matches a sibling folder named `widgets-old`. Listing is one level deep: subfolders come back in their own list and are read by calling again with the folder path. Custom-widget sources live under `widgets/`, their bundled artifacts under `widgets/.bundled/{widget_id}/`."
     )
     .optional(),
   amount: z
@@ -39,15 +39,23 @@ const searchFilesSchema = {
   // rather than every returned field, so its description must not promise one.
   response_format: z
     .enum(["concise", "detailed"])
-    .describe("Response verbosity. 'concise' (default) lists path, size, and last modified; 'detailed' adds public visibility.")
+    .describe("Response verbosity. 'concise' (default) lists filename, size, and last modified; 'detailed' adds public visibility.")
     .optional(),
 };
 
 type SearchFilesParams = z.infer<z.ZodObject<typeof searchFilesSchema>>;
 
-/** Presents a folder path the way the caller passes it back in `path`. */
+/**
+ * Presents a folder path the way the caller passes it back in `path`.
+ *
+ * `path` matches by prefix and the API reports each folder as a bare last
+ * segment, so a prefix that stops mid-name ("widgets") yields the folder
+ * "widgets". Rebuilding from the prefix would render "widgetswidgets/", so the
+ * path is rebuilt from the prefix's parent folder instead.
+ */
 function renderFolderPaths(prefix: string, folders: string[]): string[] {
-  return folders.map((folder) => `${prefix}${folder}/`);
+  const parent = prefix.slice(0, prefix.lastIndexOf("/") + 1);
+  return folders.map((folder) => `${parent}${folder}/`);
 }
 
 function shapeFile(file: FileListEntry, responseFormat?: string): Record<string, unknown> {
