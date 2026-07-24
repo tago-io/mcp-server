@@ -312,9 +312,9 @@ const TOOL_PREDICTION_CASES: EvalCase[] = [
   ...createTestCases("networks", [
     {
       id: "networks-search-01",
-      prompt: "Search the public networks named 'MQTT' that my devices could use.",
+      prompt: "Find the networks named 'MQTT' available to my profile, not the ones from TagoIO's public catalog.",
       expectedTool: "search_networks",
-      expectedArguments: { name: "MQTT", public: true },
+      expectedArguments: { name: "MQTT", exclude_public_catalog: true },
     },
     {
       id: "networks-get-01",

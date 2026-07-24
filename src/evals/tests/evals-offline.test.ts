@@ -217,7 +217,7 @@ describe("pinned prompt-fixed arguments", () => {
       ["analyses-search-01", { filter: { name: "invoice" } }],
       ["run-users-search-01", { filter: { email: "gmail" } }],
       ["connectors-search-01", { name: "LoRaWAN" }],
-      ["networks-search-01", { name: "MQTT", public: true }],
+      ["networks-search-01", { name: "MQTT", exclude_public_catalog: true }],
       ["docs-search-01", { query: "device tokens" }],
       ["code-examples-search-01", { query: "how to create a device", type: "analysis" }],
       ["actions-search-01", { response_format: "detailed" }],

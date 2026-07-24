@@ -103,6 +103,16 @@ describe("search_analyses", () => {
     expect(output).toContain("1 analyses");
     expect(output).not.toContain("internal");
   });
+
+  // Regression (#850): safe-projection renames `variables` to
+  // `environment_variable_keys`, so `fields: ["variables"]` can never render
+  // that column. Drop `variables` from the selectable fields enum instead of
+  // exposing a name the projection will never emit.
+  it("rejects variables in the fields selection (projection never emits that key)", () => {
+    const schema = z.object(searchAnalysesConfigJSON.parameters);
+    expect(schema.safeParse({ fields: ["variables"] }).success).toBe(false);
+    expect(schema.safeParse({ fields: ["id", "name", "runtime"] }).success).toBe(true);
+  });
 });
 
 describe("get_analysis", () => {

@@ -2851,7 +2851,7 @@ The type parameter accepts one of seven values:
           "type": "integer",
         },
         "fields": {
-          "description": "Fields to include per analysis. Defaults to all key fields. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
+          "description": "Fields to include per analysis. Defaults to all key fields. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode. Environment variables are not selectable here; environment_variable_keys appears in detailed responses when no explicit fields are given.",
           "items": {
             "enum": [
               "id",
@@ -2862,7 +2862,6 @@ The type parameter accepts one of seven values:
               "last_run",
               "tags",
               "runtime",
-              "variables",
               "run_on",
             ],
             "type": "string",
@@ -3008,6 +3007,10 @@ The type parameter accepts one of seven values:
           "minimum": 1,
           "type": "integer",
         },
+        "exclude_public_catalog": {
+          "description": "Set true to omit TagoIO's public catalog and return only what the profile can access directly (its own connectors and connectors shared with it). Omit or set false to include the catalog. Searching the catalog alone is not supported; each row carries a \`public\` column marking catalog entries, so filter the returned results yourself when you need only those.",
+          "type": "boolean",
+        },
         "fields": {
           "description": "Fields to include per connector. Defaults to: id, name, networks, public, device_parameters. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
           "items": {
@@ -3019,8 +3022,6 @@ The type parameter accepts one of seven values:
               "public",
               "networks",
               "device_parameters",
-              "payload_encoder",
-              "payload_decoder",
               "install_text",
               "install_end_text",
               "device_annotation",
@@ -3040,10 +3041,6 @@ The type parameter accepts one of seven values:
           "description": "Page of results, starting from 1.",
           "minimum": 1,
           "type": "integer",
-        },
-        "public": {
-          "description": "Filter by visibility: true for public marketplace connectors, false for the profile's private connectors.",
-          "type": "boolean",
         },
         "response_format": {
           "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
@@ -3416,6 +3413,10 @@ The type parameter accepts one of seven values:
           "minimum": 1,
           "type": "integer",
         },
+        "exclude_public_catalog": {
+          "description": "Set true to omit TagoIO's public catalog and return only what the profile can access directly (its own networks and networks shared with it). Omit or set false to include the catalog. Searching the catalog alone is not supported; each row carries a \`public\` column marking catalog entries, so filter the returned results yourself when you need only those.",
+          "type": "boolean",
+        },
         "fields": {
           "description": "Fields to include per network. Defaults to: id, name, public. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
           "items": {
@@ -3429,8 +3430,6 @@ The type parameter accepts one of seven values:
               "public",
               "device_parameters",
               "middleware_endpoint",
-              "payload_encoder",
-              "payload_decoder",
               "documentation_url",
               "serial_number",
               "require_devices_access",
@@ -3448,10 +3447,6 @@ The type parameter accepts one of seven values:
           "description": "Page of results, starting from 1.",
           "minimum": 1,
           "type": "integer",
-        },
-        "public": {
-          "description": "Filter by visibility: true for public networks, false for the profile's private networks.",
-          "type": "boolean",
         },
         "response_format": {
           "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",

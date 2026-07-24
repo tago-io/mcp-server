@@ -123,6 +123,18 @@ describe("search_secrets", () => {
     expect(query.fields).toEqual(["id", "key", "value_length"]);
   });
 
+  // Regression (#850): the secrets fixture/API often omits `tags`. Explicit
+  // fields must still render that column as an empty cell.
+  it("keeps an explicitly requested tags column when the secret row omits tags", async () => {
+    const list = vi.fn().mockResolvedValue([{ id: SECRET_ID, key: "MY_API_KEY", value_length: 11 }]);
+    const context = makeTestContext({ resources: { secrets: { list } } });
+
+    const output = await searchSecretsConfigJSON.tool(context, { fields: ["id", "key", "tags"] });
+
+    expect(output).toMatch(/\|\s*tags\s*\|/);
+    expect(output).toContain("MY_API_KEY");
+  });
+
   it("steers to the next page when the page is full", async () => {
     const list = vi.fn().mockResolvedValue([{ id: SECRET_ID, key: "MY_API_KEY" }]);
     const context = makeTestContext({ resources: { secrets: { list } } });

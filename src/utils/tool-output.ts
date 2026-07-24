@@ -6,7 +6,7 @@ interface RenderListOptions {
   items: Record<string, unknown>[];
   /** Keys kept in concise mode (missing keys are skipped per item). */
   conciseFields: string[];
-  /** When present, concise mode renders exactly these fields instead of the concise defaults: fields shapes the output, not just the API query. Detailed mode is unaffected. */
+  /** When present, concise mode renders exactly these fields instead of the concise defaults: fields shapes the output, not just the API query. Missing keys become empty cells. Detailed mode is unaffected. */
   selectedFields?: string[];
   responseFormat?: ResponseFormat;
   /** Requested amount, used to detect a possibly truncated (full) page. */
@@ -17,10 +17,10 @@ interface RenderListOptions {
   emptyHint?: string;
 }
 
-function pickFields(item: Record<string, unknown>, fields: string[]): Record<string, unknown> {
+function pickFields(item: Record<string, unknown>, fields: string[], alwaysEmit = false): Record<string, unknown> {
   const picked: Record<string, unknown> = {};
   for (const field of fields) {
-    if (field in item) {
+    if (alwaysEmit || field in item) {
       picked[field] = item[field];
     }
   }
@@ -36,8 +36,9 @@ function renderList(options: RenderListOptions): string {
     return `No ${resourceLabel} found. ${hint}`;
   }
 
-  const conciseKeys = selectedFields && selectedFields.length > 0 ? selectedFields : conciseFields;
-  const shaped = responseFormat === "detailed" ? items : items.map((item) => pickFields(item, conciseKeys));
+  const explicitSelection = selectedFields !== undefined && selectedFields.length > 0;
+  const conciseKeys = explicitSelection ? selectedFields : conciseFields;
+  const shaped = responseFormat === "detailed" ? items : items.map((item) => pickFields(item, conciseKeys, explicitSelection));
   const lines = [convertJSONToMarkdown(shaped), "", `${items.length} ${resourceLabel}${page ? ` (page ${page})` : ""}.`];
 
   if (items.length >= requestedAmount) {

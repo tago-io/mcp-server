@@ -8,7 +8,12 @@ import { IToolConfig, ServerContext } from "../../types";
 import { ANALYSIS_RUNTIME_VALUES } from "../runtime-policy";
 import { projectAnalysis } from "../safe-projection";
 
-const DEFAULT_FIELDS = ["id", "active", "name", "created_at", "updated_at", "last_run", "tags", "runtime", "variables", "run_on"] as const;
+// `variables` is requested from the API by default so safe-projection can emit
+// `environment_variable_keys`, but it is not selectable: the projection never
+// keeps a `variables` key (values are stripped), so `fields: ["variables"]`
+// could never render that column.
+const DEFAULT_QUERY_FIELDS = ["id", "active", "name", "created_at", "updated_at", "last_run", "tags", "runtime", "variables", "run_on"] as const;
+const SELECTABLE_FIELDS = ["id", "active", "name", "created_at", "updated_at", "last_run", "tags", "runtime", "run_on"] as const;
 const ORDER_FIELDS = ["name", "active", "run_on", "last_run", "created_at", "updated_at"] as const;
 const DEFAULT_AMOUNT = 20;
 
@@ -31,9 +36,9 @@ const searchAnalysesSchema = {
   page: pageSchema,
   amount: amountSchema(200, DEFAULT_AMOUNT),
   fields: z
-    .array(z.enum(DEFAULT_FIELDS))
+    .array(z.enum(SELECTABLE_FIELDS))
     .describe(
-      "Fields to include per analysis. Defaults to all key fields. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode."
+      "Fields to include per analysis. Defaults to all key fields. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode. Environment variables are not selectable here; environment_variable_keys appears in detailed responses when no explicit fields are given."
     )
     .optional(),
   response_format: responseFormatSchema,
@@ -43,7 +48,7 @@ type SearchAnalysesParams = z.infer<z.ZodObject<typeof searchAnalysesSchema>>;
 
 async function searchAnalysesTool(context: ServerContext, params: SearchAnalysesParams): Promise<string> {
   const amount = params.amount ?? DEFAULT_AMOUNT;
-  const fields = params.fields ?? [...DEFAULT_FIELDS];
+  const fields = params.fields ?? [...DEFAULT_QUERY_FIELDS];
   const query: AnalysisQuery = {
     amount,
     page: params.page,

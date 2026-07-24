@@ -23,6 +23,35 @@ describe("renderList", () => {
     expect(output).not.toContain("Sensor A");
   });
 
+  // Regression (#850): explicit fields must keep their columns even when the
+  // API omits the key from every row. pickFields used to drop absent keys, so
+  // arrayToMarkdownTable never saw the column.
+  it("keeps an explicitly selected column when the API omits that key from every row", () => {
+    const sparse = [
+      { id: "1", name: "Sensor A" },
+      { id: "2", name: "Sensor B" },
+    ];
+    const output = renderList({
+      items: sparse,
+      conciseFields: ["id", "name"],
+      selectedFields: ["id", "name", "tags"],
+      requestedAmount: 20,
+      resourceLabel: "devices",
+    });
+    expect(output).toMatch(/\|\s*tags\s*\|/);
+  });
+
+  it("still skips missing keys for concise defaults when fields is not explicit", () => {
+    const sparse = [{ id: "1", name: "Sensor A" }];
+    const output = renderList({
+      items: sparse,
+      conciseFields: ["id", "name", "tags"],
+      requestedAmount: 20,
+      resourceLabel: "devices",
+    });
+    expect(output).not.toMatch(/\|\s*tags\s*\|/);
+  });
+
   it("ignores an empty selection and falls back to the concise defaults", () => {
     const output = renderList({ items, conciseFields: ["id", "name"], selectedFields: [], requestedAmount: 20, resourceLabel: "devices" });
     expect(output).toContain("Sensor A");

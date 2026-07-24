@@ -31,7 +31,7 @@ Connect your AI assistant to your TagoIO devices, data, and platform resources �
 
 ## Tools
 
-Every tool is single-purpose with accurate read/write annotations. Resource-list search tools (devices, actions, analyses, dashboards, entities, run users, secrets) support filtering, pagination, field selection, and a `response_format` of `concise` (default) or `detailed` — selecting `fields` also controls the rendered columns (explicit fields render exactly those fields even in concise mode; without them, concise mode shows the default columns and detailed mode shows everything); connector and network searches take their `name`/`public` filters as top-level parameters. The docs search uses a specialized `query` input, and the code-example search takes `query` + `type` (plus an optional `runtime` for Analysis examples).
+Every tool is single-purpose with accurate read/write annotations. Resource-list search tools (devices, actions, analyses, dashboards, entities, run users, secrets) support filtering, pagination, field selection, and a `response_format` of `concise` (default) or `detailed` — selecting `fields` also controls the rendered columns (explicit fields render exactly those fields even in concise mode; without them, concise mode shows the default columns and detailed mode shows everything); connector and network searches take their `name`/`exclude_public_catalog` filters as top-level parameters. The docs search uses a specialized `query` input, and the code-example search takes `query` + `type` (plus an optional `runtime` for Analysis examples).
 
 | Domain | Tools |
 |---|---|

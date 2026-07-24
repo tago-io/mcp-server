@@ -1,11 +1,14 @@
-import { describe, expect, it, vi } from "vitest";
+import { Resources } from "@tago-io/sdk";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { z } from "zod/v3";
 
-import { makeTestContext } from "../../../../testing/context";
+import { makeTestContext, TEST_REGION } from "../../../../testing/context";
+import { mockServer, strictListenOptions } from "../../../../testing/mocks/server";
 import { getEntityConfigJSON } from "../get-entity";
 import { searchEntitiesConfigJSON } from "../search-entities";
 
 const ENTITY_ID = "61f0000000000000000e0001";
+const REQUEST_TOKEN = "a-0000000000000000000000000000000000";
 
 function extractExample(description: string): unknown {
   const match = description.match(/<example>([\s\S]*?)<\/example>/);
@@ -83,6 +86,37 @@ describe("search_entities", () => {
     expect(output).toContain("Temperature Sensor");
     expect(output).toContain("1 entities");
     expect(output).not.toContain("float");
+  });
+
+  // Regression (#850): the API may omit `index` (and other projected fields)
+  // from a list row even when the client requested them. Explicit fields must
+  // still render those columns.
+  it("keeps an explicitly requested index column when the list row omits index", async () => {
+    const list = vi.fn().mockResolvedValue([{ id: ENTITY_ID, name: "Temperature Sensor" }]);
+    const context = makeTestContext({ resources: { entities: { list } } });
+
+    const output = await searchEntitiesConfigJSON.tool(context, { fields: ["id", "name", "index"] });
+
+    expect(output).toMatch(/\|\s*index\s*\|/);
+    expect(output).toContain("Temperature Sensor");
+  });
+});
+
+describe("search_entities against the MSW list mock", () => {
+  beforeAll(() => mockServer.listen(strictListenOptions));
+  afterEach(() => mockServer.resetHandlers());
+  afterAll(() => mockServer.close());
+
+  // The entity list mock deliberately omits `index` even when requested, so
+  // this is the in-repo proof that #850 cannot silently regress again.
+  it("still renders an index column when the MSW list row omits index", async () => {
+    const resources = new Resources({ token: REQUEST_TOKEN, region: TEST_REGION });
+    const output = await searchEntitiesConfigJSON.tool(makeTestContext({ resources, token: REQUEST_TOKEN }), {
+      fields: ["id", "name", "index"],
+    });
+
+    expect(output).toMatch(/\|\s*index\s*\|/);
+    expect(output).toContain("Sensor Registry");
   });
 });
 

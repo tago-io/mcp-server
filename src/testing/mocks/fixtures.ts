@@ -294,10 +294,30 @@ const connectorInfo = {
   updated_at: "2026-01-02T00:00:00.000Z",
 };
 
+// Profile-private twin used by the integration list mocks' presence-only
+// `filter.public` semantics (key present => omit marketplace-public rows).
+const connectorPrivateInfo = {
+  id: "61f0000000000000000c0002",
+  name: "Private HTTP Connector",
+  public: false,
+  networks: [IDS.network],
+  device_parameters: [],
+  created_at: "2026-01-01T00:00:00.000Z",
+  updated_at: "2026-01-02T00:00:00.000Z",
+};
+
 const networkInfo = {
   id: IDS.network,
   name: "HTTP Network",
   public: true,
+  created_at: "2026-01-01T00:00:00.000Z",
+  updated_at: "2026-01-02T00:00:00.000Z",
+};
+
+const networkPrivateInfo = {
+  id: "61f0000000000000000e0002",
+  name: "Private HTTP Network",
+  public: false,
   created_at: "2026-01-01T00:00:00.000Z",
   updated_at: "2026-01-02T00:00:00.000Z",
 };
@@ -433,7 +453,9 @@ const fixtures = {
   profileStatistics,
   secretInfo,
   connectorInfo,
+  connectorPrivateInfo,
   networkInfo,
+  networkPrivateInfo,
   snippetsAnalysisIndex,
   snippetsAnalysisLegacyIndex,
   snippetsAnalysisPythonLegacyIndex,

@@ -97,7 +97,12 @@ const handlers = [
   http.get("https://storage.tago.example/scripts/abc", () => HttpResponse.text(fixtures.analysisScript)),
 
   // Entities
-  http.get(`${API}/entity`, () => ok([fixtures.entityInfo])),
+  // List rows may omit projected keys the client requested (e.g. `index`).
+  // Dropping `index` here encodes that contract so #850 cannot silently regress.
+  http.get(`${API}/entity`, () => {
+    const { index: _index, ...entityWithoutIndex } = fixtures.entityInfo;
+    return ok([entityWithoutIndex]);
+  }),
   http.post(`${API}/entity`, () => ok(fixtures.entityCreateResponse)),
   http.put(`${API}/entity/:entityID/schema`, () => ok({ message: "Entity Successfully Updated" })),
   http.get(`${API}/entity/:entityID/data`, () => ok([fixtures.entityDataRow])),
@@ -130,10 +135,23 @@ const handlers = [
   http.get(`${API}/profile/:profileID`, () => ok(fixtures.profileInfo)),
   http.get(`${API}/secrets`, () => ok([fixtures.secretInfo])),
 
-  // Integration (connectors trailing-slash quirk is real SDK behavior)
-  http.get(`${API}/integration/connector/`, () => ok([fixtures.connectorInfo])),
+  // Integration (connectors trailing-slash quirk is real SDK behavior).
+  // The real list route treats `filter.public` as a PRESENCE check only: when
+  // the key is present with any value, marketplace-public rows are omitted;
+  // when the key is absent, they are included. Value is never read.
+  http.get(`${API}/integration/connector/`, ({ request }) => {
+    const url = new URL(request.url);
+    const excludePublic = url.searchParams.has("filter[public]");
+    const connectors = excludePublic ? [fixtures.connectorPrivateInfo] : [fixtures.connectorInfo, fixtures.connectorPrivateInfo];
+    return ok(connectors);
+  }),
   http.get(`${API}/integration/connector/:connectorID`, () => ok(fixtures.connectorInfo)),
-  http.get(`${API}/integration/network/`, () => ok([fixtures.networkInfo])),
+  http.get(`${API}/integration/network/`, ({ request }) => {
+    const url = new URL(request.url);
+    const excludePublic = url.searchParams.has("filter[public]");
+    const networks = excludePublic ? [fixtures.networkPrivateInfo] : [fixtures.networkInfo, fixtures.networkPrivateInfo];
+    return ok(networks);
+  }),
   http.get(`${API}/integration/network/:networkID`, () => ok(fixtures.networkInfo)),
 
   // snippets.tago.io (search_code_examples indexes + get_code_example sources)
