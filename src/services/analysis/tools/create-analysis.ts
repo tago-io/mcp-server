@@ -11,7 +11,9 @@ const createAnalysisBaseSchema = z.object({
   description: z.string().describe("The description for the analysis.").optional(),
   runtime: z
     .enum(ANALYSIS_CREATE_RUNTIMES)
-    .describe(`Runtime for the new analysis. Defaults to ${DEFAULT_ANALYSIS_RUNTIME}. New analyses are created hosted on TagoIO.`)
+    .describe(
+      "Runtime for the new analysis; it cannot be changed later. Defaults to `deno-rt2025`, which resolves imports automatically. Choose `node-rt2025` only if you will upload an already-bundled single file: it installs nothing at run time, so any bare import fails."
+    )
     .optional(),
   interval: z.string().describe("Schedule interval for automatic runs, e.g. '5 minutes' or '1 hour'. Omit for trigger-only analyses.").optional(),
   active: z.boolean().describe("Whether the analysis starts enabled. Defaults to true.").optional(),
@@ -53,12 +55,12 @@ const createAnalysisConfigJSON: IToolConfig = {
   name: "create_analysis",
   description: `Creates a new analysis (serverless script) in the TagoIO profile, hosted on TagoIO.
 
-Use this when the user wants a new analysis to run custom logic: data processing, integrations, or scheduled jobs. The analysis is created without a script; upload one afterwards with upload_analysis_script to make it runnable. Runtimes for new analyses are ${ANALYSIS_CREATE_RUNTIMES.join(", ")} (default ${DEFAULT_ANALYSIS_RUNTIME}). Environment variable values are sensitive and are never echoed back.
+Use this when the user wants a new analysis to run custom logic: data processing, integrations, or scheduled jobs. The analysis is created without a script; upload one afterwards with upload_analysis_script to make it runnable. Pick the runtime before writing any code: it decides the module system and the entry point. \`deno-rt2025\` (default, TypeScript) and \`python-rt2025\` resolve dependencies automatically; \`node-rt2025\` runs only a pre-bundled single file; the legacy runtimes are deprecated and not offered for new analyses. Runtimes for new analyses are ${ANALYSIS_CREATE_RUNTIMES.join(", ")} (default ${DEFAULT_ANALYSIS_RUNTIME}). Environment variable values are sensitive and are never echoed back.
 
 <example>
 {
   "name": "Fleet Report",
-  "runtime": "node-rt2025",
+  "runtime": "deno-rt2025",
   "interval": "1 hour",
   "environment_variables": [{ "key": "REPORT_EMAIL", "value": "ops@example.com" }],
   "tags": [{ "key": "analysis_type", "value": "report" }]

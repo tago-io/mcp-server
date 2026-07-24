@@ -854,7 +854,7 @@ The type parameter accepts one of seven values:
           "type": "string",
         },
         "runtime": {
-          "description": "Runtime for the new analysis. Defaults to node-rt2025. New analyses are created hosted on TagoIO.",
+          "description": "Runtime for the new analysis; it cannot be changed later. Defaults to \`deno-rt2025\`, which resolves imports automatically. Choose \`node-rt2025\` only if you will upload an already-bundled single file: it installs nothing at run time, so any bare import fails.",
           "enum": [
             "node-rt2025",
             "python-rt2025",

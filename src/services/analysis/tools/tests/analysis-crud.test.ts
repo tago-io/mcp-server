@@ -44,7 +44,7 @@ describe("create_analysis wire bodies", () => {
     await invokeTool(createAnalysisConfigJSON, makeContext(), { name: "Paused Analysis", active: false });
 
     expect(bodies).toHaveLength(1);
-    expect(bodies[0]).toEqual({ name: "Paused Analysis", runtime: "node-rt2025", run_on: "tago", active: false });
+    expect(bodies[0]).toEqual({ name: "Paused Analysis", runtime: "deno-rt2025", run_on: "tago", active: false });
   });
 
   it("sends multiple environment variables as an exact array", async () => {
@@ -57,17 +57,17 @@ describe("create_analysis wire bodies", () => {
 
     await invokeTool(createAnalysisConfigJSON, makeContext(), { name: "Env Analysis", environment_variables: variables });
 
-    expect(bodies[0]).toEqual({ name: "Env Analysis", runtime: "node-rt2025", run_on: "tago", variables });
+    expect(bodies[0]).toEqual({ name: "Env Analysis", runtime: "deno-rt2025", run_on: "tago", variables });
   });
 
   it("injects the default runtime and run_on when runtime is omitted, and honors an explicit runtime", async () => {
     const bodies = captureBodies("post", `${API}/analysis`, fixtures.analysisCreateResponse);
 
     await invokeTool(createAnalysisConfigJSON, makeContext(), { name: "Default Runtime" });
-    await invokeTool(createAnalysisConfigJSON, makeContext(), { name: "Deno Analysis", runtime: "deno-rt2025" });
+    await invokeTool(createAnalysisConfigJSON, makeContext(), { name: "Node Analysis", runtime: "node-rt2025" });
 
-    expect(bodies[0]).toEqual({ name: "Default Runtime", runtime: "node-rt2025", run_on: "tago" });
-    expect(bodies[1]).toEqual({ name: "Deno Analysis", runtime: "deno-rt2025", run_on: "tago" });
+    expect(bodies[0]).toEqual({ name: "Default Runtime", runtime: "deno-rt2025", run_on: "tago" });
+    expect(bodies[1]).toEqual({ name: "Node Analysis", runtime: "node-rt2025", run_on: "tago" });
   });
 
   it("accepts 20 environment variables and rejects 21 before any request", async () => {
