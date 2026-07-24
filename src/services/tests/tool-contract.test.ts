@@ -125,6 +125,9 @@ const contractCases: Record<string, ContractCase> = {
   },
   delete_entity_data: { happy: { entity_id: ENTITY_ID, ids: ["61f0000000000000000fd001"] }, invalid: { entity_id: ENTITY_ID, ids: [] } },
   empty_entity_data: { happy: { entity_id: ENTITY_ID }, invalid: {} },
+  search_files: { happy: {}, invalid: { amount: 0 } },
+  // The fixture storage holds this exact key as a file, so verification passes.
+  delete_files: { happy: { paths: [`widgets/${WIDGET_CUSTOM_ID}.tsx`] }, invalid: { paths: [] } },
   search_run_users: { happy: {}, invalid: { amount: 0 } },
   get_run_user: { happy: { run_user_id: USER_ID }, invalid: { run_user_id: "too-short" } },
   create_run_user: {

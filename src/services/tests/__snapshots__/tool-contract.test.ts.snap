@@ -1624,6 +1624,35 @@ The type parameter accepts one of seven values:
   {
     "annotations": {
       "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "paths": {
+          "description": "File paths to delete, relative to the profile's storage root (max 20 per call). Each must be a complete path to a single existing file, as reported by search_files. Folders, prefixes, and wildcard patterns are rejected.",
+          "items": {
+            "type": "string",
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "type": "array",
+        },
+      },
+      "required": [
+        "paths",
+      ],
+      "type": "object",
+    },
+    "name": "delete_files",
+    "title": "Delete Files",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
       "idempotentHint": true,
       "openWorldHint": false,
       "readOnlyHint": false,
@@ -3397,6 +3426,45 @@ The type parameter accepts one of seven values:
     },
     "name": "search_entities",
     "title": "Search Entities",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Number of entries to return (min 1, max 1000, default 100). Files and folders share this budget.",
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "pagination_token": {
+          "description": "Cursor from a previous call's output, to fetch the next page. This API paginates by cursor, so there is no page number: omit on the first call, then pass back the token the previous call returned.",
+          "type": "string",
+        },
+        "path": {
+          "description": "Folder to list, relative to the profile's storage root. Defaults to the root. Listing is one level deep: subfolders come back in their own list and are read by calling again with the folder path. Custom-widget sources live under \`widgets/\`, their bundled artifacts under \`widgets/.bundled/{widget_id}/\`.",
+          "type": "string",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) lists path, size, and last modified; 'detailed' adds public visibility.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "search_files",
+    "title": "Search Files",
   },
   {
     "annotations": {

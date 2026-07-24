@@ -7,6 +7,7 @@ Path-specific rules live in nested `AGENTS.md` files; read the one under the dir
 - `src/services/dashboards/AGENTS.md` - dashboard/widget mutation-merge contract, custom-widget code tools, schema lookup/validation, layout ownership, dashboard-schema dependency.
 - `src/services/analysis/AGENTS.md` - safe projection, SSRF-guarded source fetch, run/console semantics, update/delete constraints.
 - `src/services/entities/AGENTS.md` - stricter-than-SDK entity contract and index-coupled entity-data rules.
+- `src/services/files/AGENTS.md` - signed-URL exclusion, the listing-verified delete contract, and the prefix-listing search deviation.
 - `src/services/run-users/AGENTS.md` - write-only passwords and the `login_as_run_user` expiry clamp.
 - `src/services/docs/AGENTS.md` - official-docs teaching tools and the credential-specific device-data routes.
 - `src/services/documentation/AGENTS.md` - code-example tool bounds, coverage matching, and public-content caching.
@@ -86,6 +87,7 @@ Each service module follows a consistent pattern:
 8. **Docs** - Official-docs teaching tools. See `services/docs/AGENTS.md`.
 9. **Documentation** - Code example search and retrieval over the public snippets catalog. See `services/documentation/AGENTS.md`.
 10. **Dashboards** - Dashboard/widget CRUD, schema lookup and validation, and custom-widget code tools. See `services/dashboards/AGENTS.md`.
+11. **Files** - Storage listing and listing-verified file deletion, the way to find and clean files that outlive what created them. See `services/files/AGENTS.md`.
 
 ### Tool Design
 

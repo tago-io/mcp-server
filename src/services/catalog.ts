@@ -5,6 +5,7 @@ import { deviceTools } from "./devices/tools/index";
 import { docsTools } from "./docs/tools/index";
 import { documentationTools } from "./documentation/tools/index";
 import { entityTools } from "./entities/tools/index";
+import { fileTools } from "./files/tools/index";
 import { integrationTools } from "./integration/tools/index";
 import { profileMetricsTools } from "./profile/tools/index";
 import { userTools } from "./run-users/tools/index";
@@ -24,6 +25,7 @@ const toolCatalog: IToolConfig[] = [
   ...docsTools,
   ...documentationTools,
   ...entityTools,
+  ...fileTools,
   ...integrationTools,
   ...profileMetricsTools,
   ...userTools,

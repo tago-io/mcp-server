@@ -25,6 +25,7 @@ const ANALYSIS_ID = fixtures.IDS.analysis;
 const DASHBOARD_ID = fixtures.IDS.dashboard;
 const WIDGET_ID = fixtures.IDS.widget;
 const WIDGET_UNPLACED_ID = fixtures.IDS.widgetUnplaced;
+const FILE_PATH = `widgets/${fixtures.IDS.widgetCustom}.tsx`;
 
 const ENV_STRING_SENTINEL = "sentinel-env-string-do-not-echo";
 const ENV_NUMBER_SENTINEL = 4242424242;
@@ -127,6 +128,19 @@ const reflectionCases: ReflectionCase[] = [
     tool: "delete_widget",
     args: { dashboard_id: DASHBOARD_ID, widget_id: WIDGET_UNPLACED_ID },
     override: () => mockServer.use(http.delete(`${API}/dashboard/:id/widget/:wid`, () => reflect(`bad request by ${REQUEST_TOKEN}`))),
+  },
+  { tool: "search_files", args: {}, override: () => mockServer.use(http.get(`${API}/files`, () => reflect(`bad request by ${REQUEST_TOKEN}`))) },
+  {
+    tool: "delete_files",
+    args: { paths: [FILE_PATH] },
+    override: () => mockServer.use(http.delete(`${API}/files`, () => reflect(`bad request by ${REQUEST_TOKEN}`))),
+  },
+  {
+    // The verification listing runs before the delete, so its failure is the
+    // other credential-reflecting path into delete_files.
+    tool: "delete_files",
+    args: { paths: [FILE_PATH] },
+    override: () => mockServer.use(http.get(`${API}/files`, () => reflect(`listing rejected for ${REQUEST_TOKEN}`))),
   },
 ];
 
@@ -389,6 +403,64 @@ describe("profile send_device_data never leaks the reused or minted device token
     expect(isError).toBe(true);
     expect(serialized).not.toContain(MINTED_DEVICE_TOKEN);
     expect(serialized).toContain("[redacted-token]");
+  });
+});
+
+describe("search_files never surfaces a signed URL", () => {
+  const SIGNED_URL_SENTINEL = fixtures.widgetSourceSignedUrl;
+
+  it("does not resolve a signed URL for any listed file", async () => {
+    const requests: string[] = [];
+    mockServer.events.on("request:start", ({ request }) => {
+      requests.push(`${request.method} ${new URL(request.url).pathname}`);
+    });
+
+    const { isError, serialized } = await callTool("search_files", { path: "widgets/" });
+
+    expect(isError).toBe(false);
+    // The one signed-URL route in the Files surface (getFileURLSigned) is
+    // never called, so the credential it returns cannot reach the output.
+    expect(requests).toEqual(["GET /files"]);
+    expect(serialized).not.toContain("X-Amz-Signature");
+    expect(serialized).not.toContain(SIGNED_URL_SENTINEL);
+    mockServer.events.removeAllListeners();
+  });
+
+  it("does not render a signed URL the API smuggles into a listing entry", async () => {
+    mockServer.use(
+      http.get(`${API}/files`, () =>
+        ok({
+          total: 200,
+          usage: 1,
+          folders: [],
+          files: [{ filename: "widgets/leaked.tsx", size: 1, last_modified: "2026-01-01T00:00:00.000Z", url: SIGNED_URL_SENTINEL }],
+        })
+      )
+    );
+
+    const { isError, serialized } = await callTool("search_files", { path: "widgets/" });
+
+    expect(isError).toBe(false);
+    expect(serialized).toContain("widgets/leaked.tsx");
+    expect(serialized).not.toContain(SIGNED_URL_SENTINEL);
+  });
+
+  it("does not render a smuggled signed URL in detailed mode either", async () => {
+    mockServer.use(
+      http.get(`${API}/files`, () =>
+        ok({
+          total: 200,
+          usage: 1,
+          folders: [],
+          files: [{ filename: "widgets/leaked.tsx", size: 1, last_modified: "2026-01-01T00:00:00.000Z", url: SIGNED_URL_SENTINEL }],
+        })
+      )
+    );
+
+    const { isError, serialized } = await callTool("search_files", { path: "widgets/", response_format: "detailed" });
+
+    expect(isError).toBe(false);
+    expect(serialized).not.toContain(SIGNED_URL_SENTINEL);
   });
 });
 

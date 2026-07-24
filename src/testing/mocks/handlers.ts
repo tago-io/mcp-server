@@ -1,6 +1,7 @@
 import { HttpResponse, http } from "msw";
 
 import { docsDeviceTokenPage, docsLlmsTxt } from "./docs-fixtures";
+import { deleteFiles, listFiles } from "./file-storage";
 import { fixtures } from "./fixtures";
 
 const API = "https://api.us-e1.tago.io";
@@ -136,6 +137,26 @@ const handlers = [
   http.post(`${API}/run/notification/`, () => ok({ id: fixtures.IDS.notification })),
   http.put(`${API}/run/notification/:notificationID`, () => ok("Successfully Updated")),
   http.delete(`${API}/run/notification/:notificationID`, () => ok("Successfully Removed")),
+
+  // Files. The list route is an S3 prefix listing and the delete route
+  // silently recursive-deletes any path that is not an exact object key;
+  // both behaviours live in the stateful mock so the tools face the real API.
+  http.get(`${API}/files`, ({ request }) => {
+    const url = new URL(request.url);
+    const qty = Number(url.searchParams.get("qty") ?? 300);
+    return ok(
+      listFiles({
+        path: url.searchParams.get("path") ?? "/",
+        qty: qty > 1000 ? 1000 : qty,
+        paginationToken: url.searchParams.get("pagination_token") ?? undefined,
+        search: url.searchParams.get("search") ?? "",
+      })
+    );
+  }),
+  http.delete(`${API}/files`, async ({ request }) => {
+    const body = (await request.json()) as string[];
+    return ok(deleteFiles(body));
+  }),
 
   // Profile + secrets
   http.get(`${API}/profile/current`, () => ok(fixtures.profileInfo)),

@@ -409,6 +409,27 @@ const snippetSourceConsole = "async function startAnalysis(context, scope) {\n  
 
 const snippetSourceParser = 'const decoded = Buffer.from(payload[0].value, "base64").toString("utf-8");\npayload.push({ variable: "decoded", value: decoded });\n';
 
+/**
+ * Profile Files storage, keyed exactly as the API stores it: the object key
+ * minus the server-side `users/{profile}/storage/` prefix. The handler derives
+ * files and folders from these keys the way S3 does (prefix + "/" delimiter),
+ * so folder-vs-file discrimination in the tests is the real one.
+ *
+ * `reports.csv` is deliberately a FOLDER whose name looks like a file: no path
+ * syntax can tell it from a file, which is why deletion pre-flights a listing.
+ */
+const fileStorageObjects = [
+  { filename: `widgets/${IDS.widgetCustom}.tsx`, size: 2048, last_modified: "2026-01-02T00:00:00.000Z", public: false },
+  { filename: `widgets/.bundled/${IDS.widgetCustom}/abc123def456.html`, size: 131072, last_modified: "2026-01-02T00:00:00.000Z", public: true },
+  { filename: `widgets/.bundled/${IDS.widgetCustom}/old987654321.html`, size: 65536, last_modified: "2026-01-01T00:00:00.000Z", public: true },
+  { filename: "uploads/report.csv", size: 512, last_modified: "2026-01-03T00:00:00.000Z", public: false },
+  { filename: "uploads/nested/deep.txt", size: 16, last_modified: "2026-01-03T00:00:00.000Z", public: false },
+  { filename: "reports.csv/january.csv", size: 256, last_modified: "2026-01-04T00:00:00.000Z", public: false },
+];
+
+/** Allocation and usage the list route reports alongside every page, in MB. */
+const fileStorageAllocation = { total: 200, usage: 5.25 };
+
 const fixtures = {
   IDS,
   FAKE_DEVICE_TOKEN,
@@ -464,6 +485,8 @@ const fixtures = {
   snippetsParserIndex,
   snippetSourceConsole,
   snippetSourceParser,
+  fileStorageObjects,
+  fileStorageAllocation,
 };
 
 export { fixtures };
