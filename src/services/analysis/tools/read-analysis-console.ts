@@ -39,7 +39,9 @@ async function readAnalysisConsoleTool(context: ServerContext, params: ReadAnaly
   // sole exemption that can expose it from the otherwise secret-bearing payload.
   const info = await context.resources.analysis.info(params.analysis_id).catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
-    if (/not found/i.test(message)) {
+    // The live API returns "Analysis can't be found" (HTTP 400) for a missing
+    // analysis, so match that wording alongside the generic "not found".
+    if (/can'?t be found|cannot be found|not found/i.test(message)) {
       throw new Error(`Analysis \`${params.analysis_id}\` was not found. Check the ID with search_analyses.`);
     }
     throw error;

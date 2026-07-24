@@ -854,7 +854,7 @@ The type parameter accepts one of seven values:
           "type": "string",
         },
         "runtime": {
-          "description": "Runtime for the new analysis; it cannot be changed later. Defaults to \`deno-rt2025\`, which resolves imports automatically. Choose \`node-rt2025\` only if you will upload an already-bundled single file: it installs nothing at run time, so any bare import fails.",
+          "description": "Runtime for the new analysis; it cannot be changed later. Defaults to \`deno-rt2025\`, which resolves imports automatically. \`node-rt2025\` installs no third-party dependencies: package imports must be pre-bundled into one file, but import-free JavaScript using runtime globals (\`process.env\`, \`fetch\`) works without bundling.",
           "enum": [
             "node-rt2025",
             "python-rt2025",

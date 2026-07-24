@@ -59,11 +59,11 @@ const uploadAnalysisScriptConfigJSON: IToolConfig = {
 
 Send the script source as plain UTF-8 text in \`source\`, never base64; the encoding for the API happens internally. The source must be at most 1 MiB. The analysis must be hosted on TagoIO with a known runtime (external analyses and runtime "other" are rejected); the upload language is derived from the analysis's runtime automatically. The uploaded source may not be echoed back in the result.
 
-Write the source for the analysis's runtime; a mismatch uploads cleanly and then fails at import, and that failure is not reported here.
+Write the source for the analysis's runtime; a mismatch uploads cleanly and may fail only when the analysis runs, and that failure is not reported here.
 
 - \`deno-rt2025\` — TypeScript. \`import { Analysis } from "npm:@tago-io/sdk";\`, end with \`Analysis.use(handler)\`; the handler receives \`(context, scope)\`. Any \`npm:\` or \`https:\` import resolves automatically.
 - \`python-rt2025\` — \`from tagoio_sdk import Analysis\`, end with \`Analysis.use(handler)\`; declare extra packages in a \`# /// script\` dependencies block.
-- \`node-rt2025\` — nothing is installed at run time, so only a pre-bundled single file works. Without a bundle, use no imports at all: read \`process.env.T_ANALYSIS_TOKEN\`, \`T_ANALYSIS_ENV\` and \`T_ANALYSIS_DATA\` (the last two are JSON strings) and call the TagoIO API with \`fetch\`.
+- \`node-rt2025\` — installs no third-party dependencies, so package imports must be pre-bundled into a single file; import-free JavaScript using runtime globals works unbundled: read \`process.env.T_ANALYSIS_TOKEN\`, \`T_ANALYSIS_ENV\` and \`T_ANALYSIS_DATA\` (the last two are JSON strings) and call the TagoIO API with \`fetch\`.
 - \`node-legacy\` — \`require("@tago-io/sdk")\` plus \`Analysis.use(handler)\`. Deprecated.
 
 Name the file for the runtime (\`.ts\` deno, \`.js\` node, \`.py\` python). For a working template, call \`search_code_examples\` with the target runtime.

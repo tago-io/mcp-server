@@ -211,6 +211,73 @@ describe("request credential embedded in explicit user-content bodies", () => {
     expect(text).toContain("benign console line");
   });
 
+  it("read_analysis_console scrubs the analysis's own token and long env-var values embedded in console entries", async () => {
+    const OWN_TOKEN = fixtures.FAKE_ANALYSIS_TOKEN;
+    const OWN_ENV_VALUE = "sentinel-env-value-do-not-print";
+    const OTHER_RUN_TOKEN = "a-11111111-run-token-printed-by-script";
+    mockServer.use(
+      http.get(`${API}/analysis/:analysisID`, () =>
+        HttpResponse.json({
+          status: true,
+          result: {
+            ...fixtures.analysisInfo,
+            console: [`dumped T_ANALYSIS_TOKEN=${OWN_TOKEN}`, `env SENTINEL_KEY=${OWN_ENV_VALUE}`, `spawned run token ${OTHER_RUN_TOKEN}`, "benign console line survives"],
+          },
+        })
+      )
+    );
+    const { isError, text, serialized } = await callTool("read_analysis_console", { analysis_id: ANALYSIS_ID });
+    expect(isError).toBe(false);
+    expect(serialized).not.toContain(OWN_TOKEN);
+    expect(serialized).not.toContain(OWN_ENV_VALUE);
+    expect(serialized).not.toContain(OTHER_RUN_TOKEN);
+    expect(text).toContain("benign console line survives");
+    expect(text).toContain("[redacted-token]");
+  });
+
+  it("projectAnalysisConsole scrubs the analysis's own token and long env values while keeping short values and benign text", () => {
+    const projection = projectAnalysisConsole({
+      token: fixtures.FAKE_ANALYSIS_TOKEN,
+      variables: [
+        { key: "SENTINEL_KEY", value: "sentinel-env-value-do-not-print" },
+        { key: "STAGE", value: "prod" },
+      ],
+      console: [`own token ${fixtures.FAKE_ANALYSIS_TOKEN}`, "env sentinel-env-value-do-not-print here", "stage is prod and fine"],
+    });
+    const serialized = JSON.stringify(projection);
+    expect(serialized).not.toContain(fixtures.FAKE_ANALYSIS_TOKEN);
+    expect(serialized).not.toContain("sentinel-env-value-do-not-print");
+    // Short env values are intentionally not literal-redacted, so benign console text stays intact.
+    expect(projection[2]).toBe("stage is prod and fine");
+  });
+
+  it("projectAnalysisConsole redacts a numeric env value whose string form is long enough, keeping short numerics", () => {
+    const NUMERIC_ENV = 4242424242; // String form "4242424242" is 10 chars, at/over the threshold.
+    const projection = projectAnalysisConsole({
+      variables: [
+        { key: "ACCOUNT", value: NUMERIC_ENV },
+        { key: "PORT", value: 8080 },
+      ],
+      console: [`numeric env ACCOUNT=${NUMERIC_ENV}`, "listening on 8080"],
+    });
+    const serialized = JSON.stringify(projection);
+    expect(serialized).not.toContain(String(NUMERIC_ENV));
+    // Short numeric values fall under the same threshold and stay intact.
+    expect(projection[1]).toBe("listening on 8080");
+  });
+
+  it("projectAnalysisConsole redacts a token-shaped value even when a word char precedes it", () => {
+    const SPACE_PRECEDED = "a-abcdef01-2345-6789-abcd-ef0123456789";
+    const WORD_ADJACENT = `token_${SPACE_PRECEDED}`;
+    const projection = projectAnalysisConsole({
+      console: [`space ${SPACE_PRECEDED} here`, `adjacent ${WORD_ADJACENT} here`],
+    });
+    const serialized = JSON.stringify(projection);
+    expect(serialized).not.toContain(SPACE_PRECEDED);
+    // Only the a- token is redacted; the "token_" prefix survives.
+    expect(projection[1]).toContain("token_[redacted-token]");
+  });
+
   it("download_analysis_script redacts the credential and preserves the surrounding source", async () => {
     mockServer.use(http.get("https://storage.tago.example/scripts/abc", () => HttpResponse.text(`// key: ${REQUEST_TOKEN}\nconsole.log("benign source line");\n`)));
     const { isError, text, serialized } = await callTool("download_analysis_script", { analysis_id: ANALYSIS_ID });

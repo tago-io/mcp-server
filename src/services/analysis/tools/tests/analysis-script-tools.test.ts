@@ -244,7 +244,7 @@ describe("read_analysis_console", () => {
   });
 
   it("raises an actionable not-found error when the analysis does not exist", async () => {
-    mockServer.use(http.get(`${API}/analysis/:analysisID`, () => HttpResponse.json({ status: false, message: "Analysis Not Found" }, { status: 404 })));
+    mockServer.use(http.get(`${API}/analysis/:analysisID`, () => HttpResponse.json({ status: false, message: "Analysis can't be found" }, { status: 400 })));
     await expect(readAnalysisConsoleConfigJSON.tool(makeContext(), { analysis_id: ANALYSIS_ID })).rejects.toThrow("was not found. Check the ID with search_analyses.");
   });
 });
