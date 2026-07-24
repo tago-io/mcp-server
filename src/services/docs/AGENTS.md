@@ -21,4 +21,3 @@ It also teaches that Analysis access to device data comes from Access Management
 ## Caching
 
 The docs llms.txt index and `read_doc` page bodies are cached in-process for 15 minutes after validation (pages LRU-capped at 20 entries). These fetches are credential-free and tenant-independent, so the cache is safe. Failures are never cached.
-</content>

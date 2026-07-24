@@ -20,4 +20,3 @@ A credential-minting mutation with destructive-annotation posture. It returns th
 - Only relative minute/hour durations parse.
 - The ceiling is 2 hours, the default is 1 hour.
 - Unparseable input fails closed before any request.
-</content>

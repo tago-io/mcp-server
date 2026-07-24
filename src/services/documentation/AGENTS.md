@@ -31,5 +31,3 @@ Snippet indexes are cached in-process for 10 minutes, keyed by canonical index U
 # from regular CI.
 pnpm run test:snippets:live
 ```
-
-</content>

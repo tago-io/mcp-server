@@ -19,4 +19,3 @@ See the repo-root `AGENTS.md` for the cross-cutting tool-design and credential-s
 - Amount is 1 to 10,000 (default 20).
 - send/edit accept up to 100 rows with per-type value caps; `send_entity_data` upserts on `id`.
 - `delete_entity_data` requires explicit row IDs and the server caps deletion at 10 IDs per request, which is why the destructive truncate `empty_entity_data` is part of the surface.
-</content>

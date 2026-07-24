@@ -26,4 +26,3 @@ Analysis script downloads go through a bounded SSRF-guarded fetch (`source-fetch
 
 - `update_analysis` cannot change the runtime or run location.
 - `delete_analysis` has no confirmation flag by design; the MCP client/operator owns destructive-call approval (the tool is annotated destructive).
-</content>

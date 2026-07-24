@@ -55,5 +55,3 @@ The authoring contract these tools support is taught by `skills/custom-widget-de
 # current one when touching the adapter or the build chain.
 pnpm run test:validator:node
 ```
-
-</content>

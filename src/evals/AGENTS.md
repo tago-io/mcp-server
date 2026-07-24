@@ -30,5 +30,3 @@ pnpm run test:evals:offline
 # Owner-gated provider run (never from regular development).
 pnpm run test:evals
 ```
-
-</content>

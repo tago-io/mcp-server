@@ -176,6 +176,3 @@ All tools use Zod for input validation and type safety. Schemas are defined alon
 - Avoid explicit `any` types (generates info-level warnings)
 - Use modules instead of namespaces
 - No extra non-null assertions or unsafe optional chaining
-</content>
-
-</invoke>
