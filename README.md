@@ -26,7 +26,7 @@ Connect your AI assistant to your TagoIO devices, data, and platform resources â
 - **Dashboards & Widgets**: Create and manage dashboards and their widgets with schema-validated configurations and explicit layout control
 - **Custom Widgets**: Read and upload the `.tsx` source code behind custom (iframe) widgets, with platform bundling and a fix-and-reupload development loop
 - **File Storage**: Browse the profile's stored files and delete leftovers, such as the custom-widget sources and bundled artifacts that outlive a deleted widget
-- **Access Management**: Inspect, create, and revise the policies that grant analyses and TagoRUN users access to resources they do not own, and look up which grant an operation needs when one fails with "Authorization Denied"
+- **Access Management**: Inspect, create, and revise the policies that grant analyses and TagoRUN users access to resources they do not own, and look up which grant an operation needs when one is denied: an analysis fails with "Authorization Denied", while a TagoRUN user gets no error at all and simply sees an empty list
 - **Platform Teaching**: Built-in platform overview, search and retrieval over the official docs, and code examples from the public snippets catalog
 - **Account Insight**: Profile info, resource limits, usage statistics, and secrets metadata
 - **Dual Protocol Support**: STDIO (default) and HTTP Streamable transport protocols

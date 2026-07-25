@@ -70,7 +70,7 @@ async function searchAccessPoliciesTool(context: ServerContext, params: SearchAc
     page,
     resourceLabel: "access policies",
     emptyHint:
-      'With no policies, every analysis and run_user token is denied everything beyond its own resource, which is what an unexplained "Authorization Denied" at runtime usually means. Use lookup_access_permissions to find the grant an operation needs, then create_access_policy.',
+      'With no policies, every analysis and run_user token is denied everything beyond its own resource. An analysis sees that as "Authorization Denied" at runtime; a run_user sees no error at all, because list routes return only what the token may see, so an empty dashboard or device list IS the denial. Use lookup_access_permissions to find the grant an operation needs, then create_access_policy.',
   });
 
   return `${rendered}\n\nThis endpoint does not return a policy's rules or targets. Read them with get_access_policy.`;
@@ -80,7 +80,7 @@ const searchAccessPoliciesConfigJSON: IToolConfig = {
   name: "search_access_policies",
   description: `Searches the Access Management policies in the TagoIO profile, filtered by name, active status, or tags, and returns a paginated list.
 
-Access Management policies are what grant an analysis or a TagoRUN user permission to touch resources they do not own. An analysis that fails at runtime with "Authorization Denied" is almost always missing one, so start here: if no policy targets the analysis, that is the answer.
+Access Management policies are what grant an analysis or a TagoRUN user permission to touch resources they do not own. An analysis that fails at runtime with "Authorization Denied" is almost always missing one, and so is a TagoRUN user whose dashboard or device list comes back empty instead of erroring, so start here: if no policy targets the analysis or run user, that is the answer.
 
 Use lookup_access_permissions to find which grant an operation needs, and get_access_policy to read a policy's actual rules.
 

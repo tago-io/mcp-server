@@ -89,7 +89,7 @@ Each service module follows a consistent pattern:
 9. **Documentation** - Code example search and retrieval over the public snippets catalog. See `services/documentation/AGENTS.md`.
 10. **Dashboards** - Dashboard/widget CRUD, schema lookup and validation, and custom-widget code tools. See `services/dashboards/AGENTS.md`.
 11. **Files** - Storage listing and listing-verified file deletion, the way to find and clean files that outlive what created them. See `services/files/AGENTS.md`.
-12. **Access Management** - Policy CRUD plus the permission-catalog lookup that turns a runtime "Authorization Denied" into the grant to add. See `services/access-management/AGENTS.md`.
+12. **Access Management** - Policy CRUD plus the permission-catalog lookup that turns a denial into the grant to add. An analysis is denied with "Authorization Denied"; a run user is denied silently, by an empty list. See `services/access-management/AGENTS.md`.
 
 ### Tool Design
 

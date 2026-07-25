@@ -80,6 +80,21 @@ describe("create_access_policy refuses policies the API would store and never ho
     expect(storedPolicies()).toHaveLength(fixtures.accessPolicies.length);
   });
 
+  it("offers an example naming a resource these targets can be granted on", async () => {
+    // `device` is grantable to a run user, but only for `access`, so the example
+    // has to come from the catalog rather than from a fixed literal. `device` is
+    // the preferred exemplar, so this does not depend on catalog sort order.
+    const failure = await createPolicy({
+      name: "Bad",
+      targets: [{ type: "run_user" }],
+      permissions: [{ effect: "allow", resource: "file", actions: ["upload"] }],
+    }).catch((error: Error) => error.message);
+
+    const example = failure.slice(failure.indexOf("Valid example:"));
+    expect(example).toContain('{ "effect": "allow", "resource": "device", "actions": ["access"] }');
+    expect(example).not.toContain("send_data");
+  });
+
   it("rejects an action the resource does not offer, and names the ones it does", async () => {
     const writes = trackWrites();
 

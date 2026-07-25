@@ -6,6 +6,8 @@ See the repo-root `AGENTS.md` for the cross-cutting tool-design and credential-s
 
 The domain exists because an analysis built entirely through this server fails at runtime with "Authorization Denied" and the reason is invisible from inside the tool surface. An analysis using the SDK's `Resources` class holds no permissions of its own, so every resource it touches needs a policy granting it, and until this domain existed a policy could only be written by hand in the Admin console.
 
+The two target kinds fail differently, and the tool text names both. An analysis gets the error; a `run_user` does not. List routes filter to what the token may see rather than refusing, so an ungranted run user calling `GET /dashboard` gets `200` with an empty result. Verified live: zero policies, 0 dashboards; one policy granting `dashboard`/`access` by id, exactly 1; a second run user with no grant, still 0; deleting the policy, back to 0. The empty list IS the denial, and it is the diagnostic dead end this domain exists to remove, since nothing about it points at Access Management.
+
 ## Who Access Management applies to
 
 Policies govern `analysis` and `run_user` tokens, and nothing else.
@@ -47,6 +49,8 @@ The API's action enum and resource enum are independent, so `{resource: ["device
 The resource, action, and match-form matrix comes from `GET /am/settings`, the one Access Management route the SDK does not wrap. It is fetched rather than snapshotted because the write tools validate against it: a stale copy would reject a newly valid grant and accept a retired one, which is the one thing a rejection check cannot be built on. It also carries the labels and descriptions the Admin console shows, which is what turns a denial into the name of the grant to add.
 
 `permission-catalog.ts` is the only non-SDK request in this domain and is deliberately not a generic authenticated-request escape hatch: the path is a constant, no caller input reaches the URL, and the response describes the permission model rather than any profile's data. It is not cached; one small request per call is cheaper than a shared mutable cache keyed by region.
+
+The "valid example" a refusal offers is built from the catalog, not hardcoded, because a fixed example can name the very pairing the message just refused: `device` / `send_data` is valid for an analysis and meaningless for a run user, so offering it to a run user sends the caller back into the same rejection. The example names no `match`, which the tools read as `any`, and that is sound only while every grant accepts `any`. Every grant in the catalog does today. If one ever ships without it, an example naming that grant becomes refusable in turn, and fixing it means emitting a `match` too, which requires inventing a plausible id, tag pair, or path. That is deliberately not built while no such grant exists.
 
 Reads degrade, writes do not. `get_access_policy` without the catalog still renders the policy, with raw wire values instead of console names, and says the pairing was not checked. A write without it fails and says to retry. Letting the write through with a warning reads like the friendlier option and is not: the warning can only tell the caller to verify with `get_access_policy`, which needs the same route that just failed, so it would store an unverifiable policy and offer no way to check it. Creating a policy is not urgent enough to be worth that.
 

@@ -52,7 +52,7 @@ const createAccessPolicyConfigJSON: IToolConfig = {
   name: "create_access_policy",
   description: `Creates an Access Management policy: the grant that lets an analysis or a TagoRUN user act on resources it does not own.
 
-Use this when an analysis fails at runtime with "Authorization Denied". An analysis using the SDK's Resources class has no permissions of its own, so every device, entity, or dashboard it touches needs a rule here. Call lookup_access_permissions first to get the exact \`resource\` and \`actions\` values, and prefer targeting and scoping by tag over listing IDs, so the policy keeps working as resources are added.
+Use this when an analysis fails at runtime with "Authorization Denied", or when a TagoRUN user's lists come back empty: a run_user is denied by filtering rather than by an error, so an empty list is what a missing policy looks like. An analysis using the SDK's Resources class has no permissions of its own, so every device, entity, or dashboard it touches needs a rule here. Call lookup_access_permissions first to get the exact \`resource\` and \`actions\` values, and prefer targeting and scoping by tag over listing IDs, so the policy keeps working as resources are added.
 
 Rules that the API would store but could never match are refused before anything is created, since such a policy looks correct and grants nothing.
 

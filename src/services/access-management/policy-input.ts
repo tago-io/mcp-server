@@ -50,6 +50,36 @@ interface PermissionWire {
 
 const DEFAULT_MATCH: MatchSpec = { by: "any" };
 
+function exampleRule(resource: string, action: string): string {
+  return `{ "effect": "allow", "resource": "${resource}", "actions": ["${action}"] }`;
+}
+
+/** Used only when the catalog offers nothing to derive an example from. */
+const FALLBACK_EXAMPLE_RULE = exampleRule("device", "send_data");
+
+/**
+ * An example rule naming a resource and action the given target kinds really
+ * offer. A hardcoded example can name a pairing the same message just refused,
+ * which sends the caller round the same rejection again.
+ *
+ * `device` is preferred when it is grantable, because it is the canonical case
+ * and safe to suggest. Taking the first resource in sorted order instead would
+ * offer `access_management` to an analysis, telling a confused caller to grant
+ * the policy engine itself away.
+ */
+function deriveExampleRule(catalog: PermissionCatalog, targetTypes: readonly TargetType[], grantable: readonly string[]): string {
+  const preferred = grantable.includes("device") ? ["device", ...grantable] : grantable;
+  for (const resource of preferred) {
+    for (const targetType of targetTypes) {
+      const [grant] = catalog.grants[targetType][resource] ?? [];
+      if (grant !== undefined) {
+        return exampleRule(resource, grant.action);
+      }
+    }
+  }
+  return FALLBACK_EXAMPLE_RULE;
+}
+
 function toPermissionWire(input: PermissionInput): PermissionWire {
   return {
     effect: input.effect,
@@ -98,8 +128,8 @@ function collectPermissionProblems(catalog: PermissionCatalog, targetTypes: read
         reportedRule,
         message: invalidParamMessage(
           param,
-          `a ${kinds} policy cannot grant on resource \`${permission.resource}\`; a rule naming it would never match. Grantable resources: ${grantable.join(", ")}`,
-          '{ "effect": "allow", "resource": "device", "actions": ["send_data"] }'
+          `${kinds} policies cannot grant on resource \`${permission.resource}\`; a rule naming it would never match. Grantable resources: ${grantable.join(", ")}`,
+          deriveExampleRule(catalog, targetTypes, grantable)
         ),
       });
       continue;
@@ -115,8 +145,10 @@ function collectPermissionProblems(catalog: PermissionCatalog, targetTypes: read
           action,
           message: invalidParamMessage(
             param,
-            `resource \`${permission.resource}\` has no action \`${action}\` for a ${kinds} target, so a rule naming it would never match. Available: ${offered.join(", ")}`,
-            '{ "effect": "allow", "resource": "device", "actions": ["send_data"] }'
+            `resource \`${permission.resource}\` has no action \`${action}\` for ${kinds} targets, so a rule naming it would never match. Available: ${offered.join(", ")}`,
+            // Non-empty by construction: the resource is in the catalog for at
+            // least one of these kinds, and only resources with a grant are stored.
+            exampleRule(permission.resource, offered[0])
           ),
         });
         continue;
@@ -250,7 +282,7 @@ function validateRetainedPermissions(
   const fallback = invalidParamMessage(
     `permissions[${permissions[rule]?.sourceIndex ?? rule}]`,
     `\`${action}\` could not fire under the new targets`,
-    '{ "effect": "allow", "resource": "device", "actions": ["send_data"] }'
+    deriveExampleRule(catalog, nextTargetTypes, grantableResources(catalog, nextTargetTypes))
   );
   throw new Error(
     `${problem?.message ?? fallback} That grant works under the policy's current targets and would not under the new ones, so it would be kept but stranded. Pass \`permissions\` in the same call to replace it.`

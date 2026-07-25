@@ -148,6 +148,16 @@ describe("update_access_policy checks rules it is KEEPING against new targets", 
     expect(policyById(PARSER_POLICY)?.permissions).toHaveLength(2);
   });
 
+  it("offers an example the new targets can actually accept, not the rule it just refused", async () => {
+    // The refusal names a device action a run user has no grant for. Offering
+    // that same pairing back sends the caller straight into the same rejection.
+    const failure = await updatePolicy({ access_policy_id: PARSER_POLICY, targets: [{ type: "run_user" }] }).catch((error: Error) => error.message);
+
+    const example = failure.slice(failure.indexOf("Valid example:"));
+    expect(example).toContain('{ "effect": "allow", "resource": "device", "actions": ["access"] }');
+    expect(example).not.toContain("send_data");
+  });
+
   it("allows the same repoint when the rules are replaced in the same call", async () => {
     await updatePolicy({
       access_policy_id: PARSER_POLICY,
