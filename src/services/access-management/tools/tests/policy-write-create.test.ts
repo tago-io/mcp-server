@@ -168,7 +168,7 @@ describe("each create tool validates against its own kind's catalog", () => {
     // `dashboard` exists in both catalogs with different actions: only a run
     // user can be granted `arrangement`.
     const failure = await createAnalysisPolicy({ name: "Bad", targets: [ANY_TARGET], permissions: [rule] }).catch((error: Error) => error.message);
-    expect(failure).toMatch(/resource `dashboard` has no action `arrangement` for a `analysis` policy/);
+    expect(failure).toMatch(/resource `dashboard` has no action `arrangement` for an `analysis` policy/);
     expect(failure).toContain("Available: access, create, delete, duplicate, edit");
     const example = failure.slice(failure.indexOf("Valid example:"));
     expect(example).toContain('{ "effect": "allow", "resource": "dashboard", "actions": ["access"] }');
@@ -252,5 +252,18 @@ describe("the create tools surface the plan limit", () => {
     setPolicyLimit(FREE_PLAN_POLICY_LIMIT);
 
     await expect(createAnalysisPolicy({ name: "One too many", targets: [ID_TARGET], permissions: [SEND_DATA_RULE] })).rejects.toThrow(/maximum limit of Access management \(5\)/);
+  });
+});
+
+describe("the create tools choose the article per target kind", () => {
+  // "for a `analysis` policy" was hardcoded and read wrong for one of the two
+  // kinds. The same class of defect the previous live round found.
+  it("says an analysis and a run_user, not a analysis", async () => {
+    await expect(
+      createAnalysisPolicy({ name: "x", targets: [{ by: "any" }], permissions: [{ effect: "allow", resource: "dashboard", actions: ["arrangement"] }] })
+    ).rejects.toThrow(/for an `analysis` policy/);
+    await expect(createRunUserPolicy({ name: "x", targets: [{ by: "any" }], permissions: [{ effect: "allow", resource: "device", actions: ["send_data"] }] })).rejects.toThrow(
+      /for a `run_user` policy/
+    );
   });
 });

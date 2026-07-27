@@ -6,7 +6,7 @@ import { resourceIdSchema, tagsObjectModel } from "../../../utils/global-params.
 import { IToolConfig, ServerContext } from "../../types";
 import { CATALOG_UNREADABLE_NOTE, PermissionCatalog, TargetType, catalogForRead, fetchPermissionCatalog } from "../permission-catalog";
 import { assertResolvableTargets, permissionInputSchema, toPermissionWire, toTargetWire, validatePermissions } from "../policy-input";
-import { MIXED_TARGET_CONSEQUENCE, PolicyWire, orderLikeApi, renderPolicyRules, targetKindsOf } from "../policy-render";
+import { EVALUATION_NOTE, MIXED_TARGET_CONSEQUENCE, PolicyWire, orderLikeApi, renderPolicyRules, targetKindsOf } from "../policy-render";
 import { targetMatchSchema } from "../policy-rules";
 
 /**
@@ -275,7 +275,10 @@ function buildUpdateTool(kind: KindCopy): IToolConfig {
 
     if (showsDiff) {
       const after = { targets: targets ?? existing.targets, permissions: orderLikeApi(permissions ?? existing.permissions ?? []) };
-      sections.push("", "**Before**", renderPolicyRules(existing, catalog), "", "**After**", renderPolicyRules(after, catalog));
+      // The note describes the platform, not either version of the policy, so it
+      // is printed once below both rather than duplicated under each.
+      const diffOptions = { omitEvaluationNote: true };
+      sections.push("", "**Before**", renderPolicyRules(existing, catalog, diffOptions), "", "**After**", renderPolicyRules(after, catalog, diffOptions), "", EVALUATION_NOTE);
       sections.push(
         "",
         "Each list you sent replaced its previous contents whole, so anything missing from it is gone. A list you did NOT send is untouched: the API replaces `permissions` and `targets` independently, by key."

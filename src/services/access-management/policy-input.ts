@@ -43,6 +43,11 @@ interface PermissionWire {
   resource: string[];
 }
 
+/** "an analysis" but "a run_user". The article was hardcoded and read wrong for one of the two kinds. */
+function aPolicyOf(targetType: TargetType): string {
+  return `${/^[aeiou]/i.test(targetType) ? "an" : "a"} \`${targetType}\` policy`;
+}
+
 const DEFAULT_MATCH: MatchSpec = { by: "any" };
 
 function exampleRule(resource: string, action: string): string {
@@ -108,7 +113,7 @@ function collectPermissionProblems(catalog: PermissionCatalog, targetType: Targe
         rule: index,
         message: invalidParamMessage(
           param,
-          `a \`${targetType}\` policy cannot grant on resource \`${permission.resource}\`; a rule naming it would never match. Grantable resources: ${grantable.join(", ")}`,
+          `${aPolicyOf(targetType)} cannot grant on resource \`${permission.resource}\`; a rule naming it would never match. Grantable resources: ${grantable.join(", ")}`,
           deriveExampleRule(catalog, targetType, grantable)
         ),
       });
@@ -124,7 +129,7 @@ function collectPermissionProblems(catalog: PermissionCatalog, targetType: Targe
           action,
           message: invalidParamMessage(
             param,
-            `resource \`${permission.resource}\` has no action \`${action}\` for a \`${targetType}\` policy, so a rule naming it would never match. Available: ${offered.join(", ")}`,
+            `resource \`${permission.resource}\` has no action \`${action}\` for ${aPolicyOf(targetType)}, so a rule naming it would never match. Available: ${offered.join(", ")}`,
             // Non-empty by construction: the resource is only stored in the
             // catalog when it offers at least one grant.
             exampleRule(permission.resource, offered[0])

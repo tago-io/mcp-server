@@ -100,6 +100,18 @@ describe("the update tools replace rule lists rather than merging", () => {
     expect(policyById(ANALYSIS_POLICY)?.active).toBe(false);
   });
 
+  // The note explains the platform, not the policy, and a diff renders two
+  // policies. Printed under each half it was five sentences of duplication in
+  // the output an agent reads most often.
+  it("prints the evaluation note once for a diff, not once per half", async () => {
+    const result = await updateAnalysisPolicy({ access_policy_id: ANALYSIS_POLICY, permissions: [{ effect: "allow", resource: "device", actions: ["get_data"] }] });
+
+    const marker = "How these are evaluated:";
+    expect(result.split(marker)).toHaveLength(2);
+    // Still present, and after both halves rather than inside one.
+    expect(result.indexOf(marker)).toBeGreaterThan(result.indexOf("**After**"));
+  });
+
   it("reports what it changed", async () => {
     const result = await updateAnalysisPolicy({ access_policy_id: ANALYSIS_POLICY, name: "Renamed", active: false });
 

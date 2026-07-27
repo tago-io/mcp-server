@@ -263,8 +263,16 @@ function renderRules(permissions: readonly PolicyRule[], targetTypes: readonly T
   });
 }
 
-/** Full decoded view of one policy, used by get_access_policy and by the write confirmations. */
-function renderPolicyRules(policy: PolicyWire, catalog?: PermissionCatalog): string {
+/**
+ * Full decoded view of one policy, used by get_access_policy and by the write
+ * confirmations.
+ *
+ * `omitEvaluationNote` exists for the before/after diff, which renders two
+ * policies in one message. The note explains the platform, not the policy, so
+ * printing it under each half is several sentences of duplication in the
+ * highest-traffic write output; the update tool prints it once underneath both.
+ */
+function renderPolicyRules(policy: PolicyWire, catalog?: PermissionCatalog, options?: { omitEvaluationNote?: boolean }): string {
   const { lines: targetLines, types, subsumed, resolved } = renderTargets(policy.targets ?? []);
   const sections: string[] = [];
 
@@ -296,8 +304,10 @@ function renderPolicyRules(policy: PolicyWire, catalog?: PermissionCatalog): str
     sections.push("");
     sections.push(DENY_ONLY_NOTE);
   }
-  sections.push("");
-  sections.push(EVALUATION_NOTE);
+  if (!options?.omitEvaluationNote) {
+    sections.push("");
+    sections.push(EVALUATION_NOTE);
+  }
 
   return sections.join("\n");
 }
