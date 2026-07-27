@@ -103,9 +103,11 @@ function isTokenError(result: TokenValidationResult): result is TokenValidationE
 }
 
 /**
- * How the request-scoped context resolves its region: HTTP/Lambda pass an
- * allowlisted short code (`regionCode`); stdio passes the trusted operator
- * `apiUrl` (a dedicated TagoDeploy instance or a public endpoint).
+ * How the request-scoped context resolves its region: an allowlisted short code
+ * (`regionCode`) from the request, or the trusted operator `apiUrl` (a dedicated
+ * TagoDeploy instance or a public endpoint). stdio always passes `apiUrl`;
+ * HTTP/Lambda pass it too when the deployment is pinned by TAGOIO_API, and the
+ * short code otherwise.
  */
 type BuildContextInput = { token: string; regionCode: string } | { token: string; apiUrl: string };
 
@@ -119,8 +121,8 @@ function isApiUrlInput(input: BuildContextInput): input is { token: string; apiU
  * The single parse-once credential/region boundary for every transport:
  * classifies the credential, resolves the region (strictly from the
  * VALID_REGIONS allowlist for request-supplied codes, or from the trusted
- * operator API URL for stdio), and introspects the token against the TagoIO
- * API. Classification and region failures return 4xx before any outbound
+ * operator API URL when one is configured), and introspects the token against
+ * the TagoIO API. Classification and region failures return 4xx before any outbound
  * request is made.
  *
  * A Device token authenticates exactly one device, so its `/info` response
@@ -165,11 +167,14 @@ async function buildServerContext(input: BuildContextInput): Promise<BuildContex
       }
       credential = { credentialKind, authenticatedDeviceId: info.id };
     } else if (isApiUrlInput(input)) {
-      // stdio dedicated instance: the account route is the contractual check.
+      // Any dedicated instance, in any transport: the account route is the
+      // contractual check. Networks are a public-catalog concept, so a pinned
+      // deployment is introspected the same way stdio always was.
       await new Resources({ token, region }).account.info();
       credential = { credentialKind };
     } else {
-      // HTTP/Lambda: Network.info is the contractual non-device check.
+      // A public region reached by short code: Network.info is the contractual
+      // non-device check.
       await new Network({ token, region }).info();
       credential = { credentialKind };
     }
@@ -199,8 +204,15 @@ async function buildServerContext(input: BuildContextInput): Promise<BuildContex
  * HTTP/Lambda adapter over buildServerContext: resolves the region from the
  * request's short code and returns the transport's flat success/error shape.
  */
-async function validateTagoToken(token: string, tagoioRegion: string): Promise<TokenValidationResult> {
-  const result = await buildServerContext({ token, regionCode: tagoioRegion });
+/**
+ * `apiUrl` is operator startup configuration (the `TAGOIO_API` env var), set
+ * when this server runs beside a dedicated TagoDeploy instance. When present it
+ * pins every request to that endpoint and the request-supplied region code is
+ * not consulted at all, so no request input can name an outbound host either
+ * way. When absent, the region code is resolved strictly from VALID_REGIONS.
+ */
+async function validateTagoToken(token: string, tagoioRegion: string, apiUrl?: string): Promise<TokenValidationResult> {
+  const result = await buildServerContext(apiUrl ? { token, apiUrl } : { token, regionCode: tagoioRegion });
   if (!result.ok) {
     return { error: result.error, statusCode: result.statusCode };
   }

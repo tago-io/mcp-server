@@ -193,6 +193,49 @@ describe("validateTagoToken", () => {
     }
   });
 
+  describe("operator-configured dedicated endpoint", () => {
+    const DEDICATED = "https://api.6722812c934c3c3370e0b87d.tagoio.net";
+
+    // The stub declares no parameters, so its recorded calls are typed as empty
+    // tuples; the arguments are still there at runtime.
+    function requestedHosts(fetchMock: ReturnType<typeof stubInfoResponse>): string[] {
+      return (fetchMock.mock.calls as unknown as unknown[][]).map(([target]) => new URL(target instanceof Request ? target.url : String(target)).origin);
+    }
+
+    it("sends the token to the configured instance, not to a public region", async () => {
+      const fetchMock = stubInfoResponse({ name: "Test Profile Token", type: "profile" });
+
+      const result = await validateTagoToken("p-0000000000000000000000000000000000", DEFAULT_TAGOIO_REGION, DEDICATED);
+
+      expect(isTokenError(result)).toBe(false);
+      expect((result as { region: { api: string } }).region.api).toBe(DEDICATED);
+      expect(requestedHosts(fetchMock).every((origin) => origin === DEDICATED)).toBe(true);
+    });
+
+    // The header is not the client's decision on a pinned deployment, so a
+    // stale or defaulted region code must not redirect the credential.
+    it("ignores the region header entirely, including one naming another region", async () => {
+      const fetchMock = stubInfoResponse({ name: "Test Profile Token", type: "profile" });
+
+      const result = await validateTagoToken("p-0000000000000000000000000000000000", "eu-w1", DEDICATED);
+
+      expect(isTokenError(result)).toBe(false);
+      expect((result as { region: { api: string } }).region.api).toBe(DEDICATED);
+      expect(requestedHosts(fetchMock)).not.toContain("https://api.eu-w1.tago.io");
+    });
+
+    // A region code the allowlist rejects still cannot reach the wire, but on a
+    // pinned deployment it is simply irrelevant rather than an error.
+    it("does not consult the allowlist at all when pinned", async () => {
+      const fetchMock = stubInfoResponse({ name: "Test Profile Token", type: "profile" });
+
+      const result = await validateTagoToken("p-0000000000000000000000000000000000", "http://evil.example.com", DEDICATED);
+
+      expect(isTokenError(result)).toBe(false);
+      expect(requestedHosts(fetchMock).every((origin) => origin === DEDICATED)).toBe(true);
+    });
+  });
+
   it("carries no device identity for profile and analysis tokens", async () => {
     stubInfoResponse({ name: "Test Profile Token", type: "profile" });
 

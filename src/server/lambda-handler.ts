@@ -1,10 +1,32 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 
+import { serverEnvSchema } from "../utils/config.model";
 import { logger } from "../utils/logger";
 import { describeErrorSafely } from "../utils/safe-error";
 import { buildServer } from "./build-server";
 import { CORS_HEADERS, DEFAULT_TAGOIO_REGION, extractToken, isTokenError, validateTagoToken } from "./shared";
+
+/**
+ * The operator-configured dedicated TagoDeploy endpoint, read once per cold
+ * start. Absent on the multi-region deployment, where each request picks a
+ * region from the `x-tagoio-region` allowlist instead. When set it pins every
+ * request to that endpoint and the region header is not consulted, so request
+ * input never names an outbound host on either path. An invalid value fails the
+ * cold start rather than silently falling back to the public API.
+ */
+function resolveConfiguredApiUrl(): string | undefined {
+  // Passed through as-is: an empty string is a misconfigured pin, and treating
+  // it as "unset" would silently serve the public regions with the operator's
+  // dedicated-instance credentials.
+  const parsed = serverEnvSchema.safeParse({ TAGOIO_API: process.env.TAGOIO_API });
+  if (!parsed.success) {
+    throw new Error(`Invalid TAGOIO_API: ${parsed.error.issues[0]?.message ?? "must be an https:// URL"}`);
+  }
+  return parsed.data.TAGOIO_API;
+}
+
+const CONFIGURED_API_URL = resolveConfiguredApiUrl();
 
 function jsonResult(statusCode: number, body: unknown, extraHeaders?: Record<string, string>): APIGatewayProxyResultV2 {
   return {
@@ -67,7 +89,7 @@ async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyRe
 
   const tagoioRegion = findHeader(event.headers, "x-tagoio-region") ?? DEFAULT_TAGOIO_REGION;
 
-  const result = await validateTagoToken(token, tagoioRegion);
+  const result = await validateTagoToken(token, tagoioRegion, CONFIGURED_API_URL);
 
   if (isTokenError(result)) {
     return jsonResult(result.statusCode, {

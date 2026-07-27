@@ -43,6 +43,31 @@ describe("serverEnvSchema", () => {
     expect(serverEnvSchema.parse({ MCP_PORT: "8080" }).MCP_PORT).toBe(8080);
   });
 
+  // Absence is meaningful here, unlike in stdio: it selects the multi-region
+  // deployment, where each request picks a region from the allowlist. Defaulting
+  // it to the US API would silently pin every hosted deployment to one region.
+  it("leaves TAGOIO_API undefined when omitted, rather than defaulting it", () => {
+    expect(serverEnvSchema.parse({}).TAGOIO_API).toBeUndefined();
+  });
+
+  it("accepts an https dedicated-instance endpoint", () => {
+    expect(serverEnvSchema.parse({ TAGOIO_API: "https://api.acme.tagoio.net" }).TAGOIO_API).toBe("https://api.acme.tagoio.net");
+  });
+
+  it("rejects a plaintext or malformed TAGOIO_API, so a bad value fails startup instead of downgrading the transport", () => {
+    expect(() => serverEnvSchema.parse({ TAGOIO_API: "http://api.acme.tagoio.net" })).toThrow(/https/);
+    expect(() => serverEnvSchema.parse({ TAGOIO_API: "api.acme.tagoio.net" })).toThrow();
+  });
+
+  // An empty value is a misconfigured pin, not an absent one. Normalizing it to
+  // undefined would silently start an unpinned server that resolves the region
+  // from request headers, sending a dedicated instance's credential to the
+  // public API. The transports pass process.env through without a `|| undefined`
+  // for exactly this reason.
+  it("rejects an empty TAGOIO_API rather than treating it as unset", () => {
+    expect(() => serverEnvSchema.parse({ TAGOIO_API: "" })).toThrow();
+  });
+
   it("rejects ports outside 0-65535 and non-numeric values", () => {
     expect(() => serverEnvSchema.parse({ MCP_PORT: "70000" })).toThrow();
     expect(() => serverEnvSchema.parse({ MCP_PORT: "-1" })).toThrow();

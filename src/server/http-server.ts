@@ -1,7 +1,7 @@
 import { IncomingMessage, ServerResponse, createServer } from "node:http";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
-import { serverEnvSchema } from "../utils/config.model";
+import { ServerEnv, serverEnvSchema } from "../utils/config.model";
 import { logger } from "../utils/logger";
 import { describeErrorSafely } from "../utils/safe-error";
 import { SERVER_NAME, SERVER_VERSION } from "../utils/server-config";
@@ -12,14 +12,22 @@ const MAX_BODY_SIZE = 1_048_576; // 1 MB
 const MCP_ENDPOINT = "/";
 const HEALTH_ENDPOINT = "/health";
 
-function parseMcpPort(): number {
-  // Empty string means "unset" (fall back to the default), matching prior behavior.
-  const parsed = serverEnvSchema.safeParse({ MCP_PORT: process.env.MCP_PORT || undefined });
+// An empty MCP_PORT means "unset" (fall back to the default), matching prior
+// behavior. TAGOIO_API is passed through as-is: an empty string there is a
+// misconfigured pin, and normalizing it to "unset" would silently start an
+// unpinned server that resolves the region from request headers instead.
+function parseServerEnv(): ServerEnv {
+  const parsed = serverEnvSchema.safeParse({ MCP_PORT: process.env.MCP_PORT || undefined, TAGOIO_API: process.env.TAGOIO_API });
   if (!parsed.success) {
-    logger.error(`Invalid MCP_PORT "${process.env.MCP_PORT}". Must be a number between 0 and 65535.`);
+    const issue = parsed.error.issues[0];
+    if (issue?.path[0] === "TAGOIO_API") {
+      logger.error(`Invalid TAGOIO_API: ${issue.message}`);
+    } else {
+      logger.error(`Invalid MCP_PORT "${process.env.MCP_PORT}". Must be a number between 0 and 65535.`);
+    }
     process.exit(1);
   }
-  return parsed.data.MCP_PORT;
+  return parsed.data;
 }
 
 /**
@@ -81,7 +89,7 @@ function handleCorsPreflightRequest(res: ServerResponse): void {
  * an ephemeral McpServer and transport are created, the request is handled,
  * and the response is returned -- no session state is retained.
  */
-async function handlePostRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+async function handlePostRequest(req: IncomingMessage, res: ServerResponse, apiUrl?: string): Promise<void> {
   const token = extractToken(req.headers.authorization);
 
   if (!token) {
@@ -98,7 +106,7 @@ async function handlePostRequest(req: IncomingMessage, res: ServerResponse): Pro
 
   const tagoioRegion = (req.headers["x-tagoio-region"] as string) || DEFAULT_TAGOIO_REGION;
 
-  const result = await validateTagoToken(token, tagoioRegion);
+  const result = await validateTagoToken(token, tagoioRegion, apiUrl);
 
   if (isTokenError(result)) {
     sendJsonResponse(res, result.statusCode, {
@@ -158,8 +166,12 @@ function handleHealthRequest(res: ServerResponse): void {
 
 /**
  * Routes HTTP requests to appropriate handlers based on method.
+ *
+ * `apiUrl` is the operator-configured TAGOIO_API endpoint, threaded from
+ * startup rather than read here so the request path never reaches process env.
+ * Absent on the multi-region deployment.
  */
-async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+async function handleRequest(req: IncomingMessage, res: ServerResponse, apiUrl?: string): Promise<void> {
   const { method, url } = req;
 
   if (url === HEALTH_ENDPOINT && method === "GET") {
@@ -188,7 +200,7 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
     }
 
     if (method === "POST") {
-      await handlePostRequest(req, res);
+      await handlePostRequest(req, res, apiUrl);
     } else if (method === "GET" || method === "DELETE") {
       // Let the SDK transport handle GET (SSE) and DELETE (session termination).
       // In stateless mode it returns 405 with proper MCP-compliant headers.
@@ -224,8 +236,8 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
  * Starts the MCP HTTP server in stateless mode.
  */
 async function startHttpServer(): Promise<void> {
-  const port = parseMcpPort();
-  const server = createServer((req, res) => handleRequest(req, res));
+  const { MCP_PORT: port, TAGOIO_API: apiUrl } = parseServerEnv();
+  const server = createServer((req, res) => handleRequest(req, res, apiUrl));
 
   server.on("error", (error: NodeJS.ErrnoException) => {
     if (error.code === "EADDRINUSE") {
@@ -238,6 +250,9 @@ async function startHttpServer(): Promise<void> {
 
   server.listen(port, () => {
     logger.info(`MCP Streamable HTTP Server listening on port ${port}`);
+    if (apiUrl) {
+      logger.info(`Pinned to the dedicated TagoIO endpoint ${apiUrl}; the x-tagoio-region header is ignored.`);
+    }
   });
 
   const connections = new Set<import("node:net").Socket>();

@@ -124,7 +124,9 @@ Authentication is done via the `Authorization` header with your Profile Token.
 | `x-tagoio-region` | `us-e1` (US East, default) |
 | `x-tagoio-region` | `eu-w1` (EU West) |
 
-Only these region codes are accepted — arbitrary URLs or hosts are rejected. For dedicated TagoDeploy instances, run the server yourself (stdio mode) and point it at your instance with the `TAGOIO_API` environment variable (`https://` only); the endpoint is operator configuration, never request input.
+Only these region codes are accepted. A URL or hostname in this header is rejected, because a request must never be able to name the host the server sends your token to.
+
+**Dedicated TagoDeploy instances** are supported by running the server yourself and configuring the endpoint at startup, in any of the three modes. Set `TAGOIO_API` to your instance (`https://` only): in stdio mode it is the endpoint the server uses, and in HTTP or Lambda mode it pins every request to that instance, with the `x-tagoio-region` header ignored. The hosted `mcp.ai.tago.io` endpoint serves the public regions only.
 
 ---
 
@@ -467,11 +469,11 @@ The server connects to these TagoIO regions:
 
 | Setup | Method |
 |---|---|
-| Remote Server | `x-tagoio-region` header — `us-e1` or `eu-w1` only |
+| Remote Server | `x-tagoio-region` header, `us-e1` or `eu-w1` only |
 | Local STDIO | `TAGOIO_API` environment variable (e.g., `https://api.eu-w1.tago.io`) |
-| Local HTTP | `x-tagoio-region` header (same as Remote Server: short codes only) |
+| Local HTTP / Lambda | `x-tagoio-region` header (short codes only), or `TAGOIO_API` to pin the server to one instance |
 
-The HTTP header accepts only the short region codes above — full URLs or hosts are rejected with HTTP 400. For dedicated TagoDeploy instances, run the server locally in STDIO mode and set `TAGOIO_API` to your instance's API URL (`https://` only); the endpoint is operator configuration, never request input.
+The HTTP header accepts only the short region codes above; full URLs or hosts are rejected with HTTP 400, so a request can never name the host the server sends a token to. For dedicated TagoDeploy instances, run the server yourself and set `TAGOIO_API` to your instance's API URL (`https://` only). That works in all three modes: in STDIO it is the endpoint, and in HTTP or Lambda it pins every request to that instance and the region header is ignored. The endpoint is always operator configuration, never request input.
 
 ## Troubleshooting
 

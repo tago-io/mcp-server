@@ -65,7 +65,7 @@ Every other prefix, including `at` Service Authorization tokens, is rejected at 
 ### Regions and Endpoints
 
 - HTTP/Lambda accept only allowlisted `x-tagoio-region` short codes: `us-e1` or `eu-w1`. Arbitrary URLs or hosts in the header are rejected before any outbound request (SSRF guard).
-- Dedicated (TagoDeploy) endpoints are trusted operator startup configuration only: stdio mode with the `TAGOIO_API` environment variable (`https://` only), never request input.
+- Dedicated (TagoDeploy) endpoints are trusted operator startup configuration, never request input: the `TAGOIO_API` environment variable (`https://` only), available in all three modes. In stdio it is the endpoint; in HTTP/Lambda it pins every request to that instance and the region header is not consulted. Threaded from startup into the request path rather than read there, so the request path never touches process env.
 
 ### Service Architecture
 
@@ -110,11 +110,11 @@ Deliberately excluded from the catalog: TagoRUN environment administration (`run
 Environment variables (stdio mode):
 
 - `TAGOIO_TOKEN` - TagoIO Profile, Analysis, or Device token (required). Device tokens enable only the device-data tools, scoped to the device they authenticate.
-- `TAGOIO_API` - API endpoint (defaults to US: https://api.us-e1.tago.io); set it to a dedicated instance URL when applicable (https only)
+- `TAGOIO_API` - API endpoint (defaults to US: https://api.us-e1.tago.io); set it to a dedicated instance URL when applicable (https only). Also honoured in HTTP/Lambda mode, where it has no default and pins the deployment to one instance.
 - `LOG_LEVEL` - Set to "DEBUG" for verbose logging
 - `NODE_ENV` - Set to "dev" for development logging
 
-Env config is parsed through `utils/config.model.ts`, split into `stdioEnvSchema` (stdio startup) and `serverEnvSchema` (HTTP/Lambda). HTTP/Lambda modes take the token per request from the `Authorization` header and the region from `x-tagoio-region`.
+Env config is parsed through `utils/config.model.ts`, split into `stdioEnvSchema` (stdio startup) and `serverEnvSchema` (HTTP/Lambda). HTTP/Lambda modes take the token per request from the `Authorization` header and the region from `x-tagoio-region`, unless `TAGOIO_API` pins the deployment to one endpoint. `TAGOIO_API` defaults to the US region in stdio and has no default in `serverEnvSchema`, where absence is what selects the multi-region deployment.
 
 ### Schema Validation
 
