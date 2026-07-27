@@ -9,11 +9,11 @@ import { CORS_HEADERS, DEFAULT_TAGOIO_REGION, extractToken, isTokenError, valida
 
 /**
  * The operator-configured dedicated TagoDeploy endpoint, read once per cold
- * start. Absent on the multi-region deployment, where each request picks a
- * region from the `x-tagoio-region` allowlist instead. When set it pins every
- * request to that endpoint and the region header is not consulted, so request
- * input never names an outbound host on either path. An invalid value fails the
- * cold start rather than silently falling back to the public API.
+ * start. When set it pins every request to that endpoint and the
+ * `x-tagoio-region` header is not consulted at all. Absent on the shared
+ * deployment, where each request names its own destination through that header:
+ * a public region code, or the caller's own TagoDeploy instance. An invalid
+ * value fails the cold start rather than silently falling back to the public API.
  */
 function resolveConfiguredApiUrl(): string | undefined {
   // Passed through as-is: an empty string is a misconfigured pin, and treating

@@ -64,8 +64,10 @@ Every other prefix, including `at` Service Authorization tokens, is rejected at 
 
 ### Regions and Endpoints
 
-- HTTP/Lambda accept only allowlisted `x-tagoio-region` short codes: `us-e1` or `eu-w1`. Arbitrary URLs or hosts in the header are rejected before any outbound request (SSRF guard).
-- Dedicated (TagoDeploy) endpoints are trusted operator startup configuration, never request input: the `TAGOIO_API` environment variable (`https://` only), available in all three modes. In stdio it is the endpoint; in HTTP/Lambda it pins every request to that instance and the region header is not consulted. Threaded from startup into the request path rather than read there, so the request path never touches process env.
+- HTTP/Lambda resolve `x-tagoio-region` through `resolveRequestRegion`: either an allowlisted short code (`us-e1`, `eu-w1`) or a dedicated TagoDeploy API endpoint. A value that is neither is rejected with 400 before any outbound request.
+- A request-supplied endpoint is deliberate: TagoDeploy customers custom-domain their API, so no host allowlist or DNS shape could recognize one, and the caller supplies both the endpoint and the token that goes there. What the structural gate in `regionFromInstanceEndpoint` still refuses is a caller aiming the server at its own surroundings and reading the answer back through tool output: https only, no IP-literal host, no single-label or `.local`/`.internal`-style name, default port only, no URL userinfo. Bare hosts are normalized to https; explicit `http://` is rejected rather than upgraded.
+- A dedicated instance has no public network catalog, so token introspection uses the account route; a public region uses `Network.info`.
+- `TAGOIO_API` remains operator startup configuration (`https://` only), available in all three modes. In stdio it is the endpoint; in HTTP/Lambda it pins every request to that instance and the region header is not consulted at all. Threaded from startup into the request path rather than read there, so the request path never touches process env.
 
 ### Service Architecture
 

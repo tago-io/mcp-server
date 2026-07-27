@@ -1,3 +1,4 @@
+import { isIP } from "node:net";
 import { Device, Network, Resources } from "@tago-io/sdk";
 
 import { CredentialContext, CredentialKind, RegionConfig, ServerContext } from "../services/types";
@@ -72,8 +73,8 @@ function regionFromCode(code: string): RegionConfig | null {
 
 /**
  * Builds a region from an explicitly configured HTTPS API endpoint (dedicated
- * TagoDeploy instances). Trusted operator startup config only (TAGOIO_API env),
- * never request input. The SSE endpoint is derived by swapping "api." for "sse.".
+ * TagoDeploy instances). Trusted operator startup config only (TAGOIO_API env).
+ * The SSE endpoint is derived by swapping "api." for "sse.".
  */
 function regionFromApiUrl(apiUrl: string): RegionConfig {
   const url = new URL(apiUrl);
@@ -82,6 +83,102 @@ function regionFromApiUrl(apiUrl: string): RegionConfig {
   }
   const api = url.origin;
   return { api, sse: api.replace(/:\/\/api\./i, "://sse.") };
+}
+
+/**
+ * Suffixes that only ever name something on the server's own network, never a
+ * TagoDeploy instance. Checked as labels, so "my.local.example.com" passes and
+ * "db.local" does not.
+ */
+const NON_ROUTABLE_SUFFIXES = ["localhost", "local", "internal", "intranet", "lan", "home", "corp", "arpa"] as const;
+
+/**
+ * Builds a region from a request-supplied dedicated-instance endpoint. A
+ * TagoDeploy customer can custom-domain their API, so there is no host
+ * allowlist and no DNS shape that could recognize a legitimate instance: the
+ * caller names the endpoint, and the token they also supplied is what goes
+ * there. That is the caller using this server to reach their own deployment,
+ * not a crossed trust boundary.
+ *
+ * What this still refuses is the caller aiming the server at the server's own
+ * surroundings and reading the answer back through tool output: the scheme must
+ * be https (which alone rules out the http-only metadata endpoints), the host
+ * must be a real multi-label domain rather than an IP literal or a
+ * single-label/internal-suffix name, the port must be the default, and URL
+ * userinfo is refused so the endpoint can never smuggle a second credential.
+ * A bare host is accepted and normalized to https; an explicit http:// URL is
+ * not, since silently upgrading it would misreport what was requested.
+ */
+function regionFromInstanceEndpoint(value: string): RegionConfig | null {
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(value) ? value : `https://${value}`;
+
+  let url: URL;
+  try {
+    url = new URL(withScheme);
+  } catch {
+    return null;
+  }
+
+  if (url.protocol !== "https:") {
+    return null;
+  }
+  if (url.username.length > 0 || url.password.length > 0) {
+    return null;
+  }
+  // url.port is empty when the default port is used, including an explicit ":443".
+  if (url.port.length > 0) {
+    return null;
+  }
+
+  // URL keeps IPv6 literals bracketed; strip them so isIP sees the address.
+  const host = url.hostname.replace(/^\[|\]$/g, "");
+  if (isIP(host) !== 0) {
+    return null;
+  }
+
+  const labels = host.split(".");
+  if (labels.length < 2 || labels.some((label) => label.length === 0)) {
+    return null;
+  }
+  if ((NON_ROUTABLE_SUFFIXES as readonly string[]).includes(labels[labels.length - 1])) {
+    return null;
+  }
+
+  // origin drops any path, query, and fragment the caller sent along.
+  const api = url.origin;
+  return { api, sse: api.replace(/:\/\/api\./i, "://sse.") };
+}
+
+interface ResolvedRegion {
+  region: RegionConfig;
+  /**
+   * A dedicated (TagoDeploy) instance rather than a public region. It has no
+   * public network catalog, so token introspection uses the account route.
+   */
+  dedicated: boolean;
+}
+
+/**
+ * Resolves the request-supplied region value (`x-tagoio-region`): an
+ * allowlisted short code, or a dedicated TagoDeploy endpoint. Returns null for
+ * anything that is neither, so the caller can answer 400 before any outbound
+ * request. A short code carries no host or path separators; anything else is
+ * read as an endpoint and passed through regionFromInstanceEndpoint, which is
+ * where a typo like "us-e2.tago.io" or a hostile "https://127.0.0.1" dies.
+ */
+function resolveRequestRegion(value: string): ResolvedRegion | null {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return null;
+  }
+
+  if (!/[.:/]/.test(trimmed)) {
+    const region = regionFromCode(trimmed);
+    return region ? { region, dedicated: false } : null;
+  }
+
+  const region = regionFromInstanceEndpoint(trimmed);
+  return region ? { region, dedicated: true } : null;
 }
 
 interface TokenValidationSuccess {
@@ -103,13 +200,13 @@ function isTokenError(result: TokenValidationResult): result is TokenValidationE
 }
 
 /**
- * How the request-scoped context resolves its region: an allowlisted short code
- * (`regionCode`) from the request, or the trusted operator `apiUrl` (a dedicated
- * TagoDeploy instance or a public endpoint). stdio always passes `apiUrl`;
- * HTTP/Lambda pass it too when the deployment is pinned by TAGOIO_API, and the
- * short code otherwise.
+ * How the request-scoped context resolves its region: the request-supplied
+ * `requestRegion` (an allowlisted short code or a dedicated TagoDeploy
+ * endpoint), or the operator-configured `apiUrl`. stdio always passes `apiUrl`;
+ * HTTP/Lambda pass it too when the deployment is pinned by TAGOIO_API, and
+ * `requestRegion` otherwise.
  */
-type BuildContextInput = { token: string; regionCode: string } | { token: string; apiUrl: string };
+type BuildContextInput = { token: string; requestRegion: string } | { token: string; apiUrl: string };
 
 type BuildContextResult = { ok: true; context: ServerContext } | { ok: false; error: string; statusCode: number };
 
@@ -119,11 +216,11 @@ function isApiUrlInput(input: BuildContextInput): input is { token: string; apiU
 
 /**
  * The single parse-once credential/region boundary for every transport:
- * classifies the credential, resolves the region (strictly from the
- * VALID_REGIONS allowlist for request-supplied codes, or from the trusted
- * operator API URL when one is configured), and introspects the token against
- * the TagoIO API. Classification and region failures return 4xx before any outbound
- * request is made.
+ * classifies the credential, resolves the region (from the operator API URL
+ * when one is configured, otherwise from the request value: the VALID_REGIONS
+ * allowlist or a dedicated TagoDeploy endpoint), and introspects the token
+ * against the TagoIO API. Classification and region failures return 4xx before
+ * any outbound request is made.
  *
  * A Device token authenticates exactly one device, so its `/info` response
  * yields the device identity the context must carry: device-data tools
@@ -144,18 +241,25 @@ async function buildServerContext(input: BuildContextInput): Promise<BuildContex
   }
 
   let region: RegionConfig;
+  let dedicated: boolean;
   if (isApiUrlInput(input)) {
     try {
       region = regionFromApiUrl(input.apiUrl);
     } catch (error) {
       return { ok: false, error: error instanceof Error ? error.message : String(error), statusCode: 400 };
     }
+    dedicated = true;
   } else {
-    const resolved = regionFromCode(input.regionCode.trim());
+    const resolved = resolveRequestRegion(input.requestRegion);
     if (!resolved) {
-      return { ok: false, error: `Invalid x-tagoio-region "${input.regionCode}". Supported regions: ${VALID_REGIONS.join(", ")}.`, statusCode: 400 };
+      return {
+        ok: false,
+        error: `Invalid x-tagoio-region "${input.requestRegion}". Use a public region (${VALID_REGIONS.join(", ")}) or a dedicated TagoDeploy API endpoint (for example "https://api.acme.tagoio.net").`,
+        statusCode: 400,
+      };
     }
-    region = resolved;
+    region = resolved.region;
+    dedicated = resolved.dedicated;
   }
 
   try {
@@ -166,10 +270,11 @@ async function buildServerContext(input: BuildContextInput): Promise<BuildContex
         return { ok: false, error: "Unauthorized: Device token introspection returned no device identity", statusCode: 401 };
       }
       credential = { credentialKind, authenticatedDeviceId: info.id };
-    } else if (isApiUrlInput(input)) {
-      // Any dedicated instance, in any transport: the account route is the
-      // contractual check. Networks are a public-catalog concept, so a pinned
-      // deployment is introspected the same way stdio always was.
+    } else if (dedicated) {
+      // Any dedicated instance, however it was named (operator TAGOIO_API or
+      // the region header): the account route is the contractual check.
+      // Networks are a public-catalog concept, so a dedicated deployment is
+      // introspected the same way stdio always was.
       await new Resources({ token, region }).account.info();
       credential = { credentialKind };
     } else {
@@ -202,17 +307,17 @@ async function buildServerContext(input: BuildContextInput): Promise<BuildContex
 
 /**
  * HTTP/Lambda adapter over buildServerContext: resolves the region from the
- * request's short code and returns the transport's flat success/error shape.
- */
-/**
+ * request and returns the transport's flat success/error shape.
+ *
  * `apiUrl` is operator startup configuration (the `TAGOIO_API` env var), set
- * when this server runs beside a dedicated TagoDeploy instance. When present it
- * pins every request to that endpoint and the request-supplied region code is
- * not consulted at all, so no request input can name an outbound host either
- * way. When absent, the region code is resolved strictly from VALID_REGIONS.
+ * when this server runs beside one dedicated TagoDeploy instance. When present
+ * it pins every request to that endpoint and the region header is not consulted
+ * at all. When absent, `tagoioRegion` is resolved by resolveRequestRegion: a
+ * VALID_REGIONS short code, or the caller's own dedicated instance endpoint,
+ * which is how one unpinned deployment serves many TagoDeploy customers.
  */
 async function validateTagoToken(token: string, tagoioRegion: string, apiUrl?: string): Promise<TokenValidationResult> {
-  const result = await buildServerContext(apiUrl ? { token, apiUrl } : { token, regionCode: tagoioRegion });
+  const result = await buildServerContext(apiUrl ? { token, apiUrl } : { token, requestRegion: tagoioRegion });
   if (!result.ok) {
     return { error: result.error, statusCode: result.statusCode };
   }
@@ -233,8 +338,10 @@ export {
   extractToken,
   regionFromApiUrl,
   regionFromCode,
+  regionFromInstanceEndpoint,
+  resolveRequestRegion,
   validateTagoToken,
   isTokenError,
 };
 
-export type { BuildContextInput, BuildContextResult, TokenValidationResult, TokenValidationSuccess, TokenValidationError };
+export type { BuildContextInput, BuildContextResult, ResolvedRegion, TokenValidationResult, TokenValidationSuccess, TokenValidationError };

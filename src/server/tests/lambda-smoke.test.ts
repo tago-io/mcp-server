@@ -1,4 +1,5 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import { HttpResponse, http } from "msw";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { mockServer, strictListenOptions } from "../../testing/mocks/server";
@@ -107,6 +108,25 @@ describe("Lambda transport smoke", () => {
       expect(json.error.message).toContain("Invalid x-tagoio-region");
     }
   );
+
+  // The reason the header accepts an endpoint at all: one deployment serving
+  // TagoDeploy customers, whose instances live on domains no allowlist knows.
+  it("routes a dedicated TagoDeploy endpoint in the region header to that instance", async () => {
+    const instance = "https://api.iot.acme-industrial.com";
+    const reachedPaths: string[] = [];
+    mockServer.use(
+      http.get(`${instance}/*`, ({ request }) => {
+        reachedPaths.push(new URL(request.url).pathname);
+        return HttpResponse.json({ status: true, result: { id: "60000000000000000000000a", name: "Dedicated Profile" } });
+      })
+    );
+
+    const result = (await handler(makeEvent(initializeBody, { "x-tagoio-region": instance }))) as APIGatewayProxyStructuredResultV2;
+
+    expect(result.statusCode).toBe(200);
+    // A dedicated instance is introspected through the account route.
+    expect(reachedPaths).toContain("/account");
+  });
 
   it("executes a profile metrics call end to end", async () => {
     const result = (await handler(

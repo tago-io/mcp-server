@@ -26,12 +26,12 @@ const stdioEnvSchema = z.object({
  * MCP_PORT defaults to 3000 and must be a valid TCP port; http-server turns a
  * parse failure into a friendly log + exit.
  *
- * TAGOIO_API has no default here, unlike in stdio mode: absent means the
- * multi-region deployment where each request picks a region from the
- * `x-tagoio-region` allowlist. Set, it pins every request to that one endpoint
- * and the region header is ignored. It is startup configuration and is subject
- * to the same https-only rule as stdio, so it is never a path by which request
- * input can name an outbound host.
+ * TAGOIO_API has no default here, unlike in stdio mode: absent means the shared
+ * deployment where each request names its destination through the
+ * `x-tagoio-region` header (a public region code or the caller's own TagoDeploy
+ * endpoint). Set, it pins every request to that one endpoint and the region
+ * header is ignored, which is what an operator running this server beside a
+ * single dedicated instance wants. Either way the endpoint is https only.
  */
 const serverEnvSchema = z.object({
   MCP_PORT: z.coerce.number().int().min(0).max(65535).optional().default(3000),

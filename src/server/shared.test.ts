@@ -2,7 +2,17 @@ import { inspect } from "node:util";
 
 import type { Resources } from "@tago-io/sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_TAGOIO_REGION, VALID_REGIONS, classifyCredential, extractToken, isTokenError, regionFromApiUrl, regionFromCode, validateTagoToken } from "./shared";
+import {
+  DEFAULT_TAGOIO_REGION,
+  VALID_REGIONS,
+  classifyCredential,
+  extractToken,
+  isTokenError,
+  regionFromApiUrl,
+  regionFromCode,
+  resolveRequestRegion,
+  validateTagoToken,
+} from "./shared";
 
 describe("extractToken", () => {
   it("extracts a valid Bearer token", () => {
@@ -112,6 +122,66 @@ describe("regionFromApiUrl", () => {
 
   it("rejects bare hosts without a scheme", () => {
     expect(() => regionFromApiUrl("api.acme.tagoio.net")).toThrow();
+  });
+});
+
+describe("resolveRequestRegion", () => {
+  it.each(["us-e1", " eu-w1 "])("resolves the short code %j to a public region", (value) => {
+    const resolved = resolveRequestRegion(value);
+    expect(resolved?.dedicated).toBe(false);
+    expect(resolved?.region.api).toBe(`https://api.${value.trim()}.tago.io`);
+  });
+
+  it.each([
+    ["https://api.6722812c934c3c3370e0b87d.tagoio.net", "https://api.6722812c934c3c3370e0b87d.tagoio.net", "https://sse.6722812c934c3c3370e0b87d.tagoio.net"],
+    // A TagoDeploy customer on their own domain: no allowlist could name it.
+    ["https://api.iot.acme-industrial.com", "https://api.iot.acme-industrial.com", "https://sse.iot.acme-industrial.com"],
+    // A bare host is normalized to https; paths and queries are dropped.
+    ["api.acme.tagoio.net", "https://api.acme.tagoio.net", "https://sse.acme.tagoio.net"],
+    ["https://api.acme.tagoio.net/some/path/?x=1#frag", "https://api.acme.tagoio.net", "https://sse.acme.tagoio.net"],
+    // The explicit default port is the default port, not a custom one.
+    ["https://api.acme.tagoio.net:443", "https://api.acme.tagoio.net", "https://sse.acme.tagoio.net"],
+    // Only a leading "api." subdomain is swapped for SSE; anything else is left alone.
+    ["https://tago.acme.com", "https://tago.acme.com", "https://tago.acme.com"],
+  ])("resolves the dedicated endpoint %j", (value, api, sse) => {
+    const resolved = resolveRequestRegion(value);
+    expect(resolved?.dedicated).toBe(true);
+    expect(resolved?.region).toEqual({ api, sse });
+  });
+
+  it.each([
+    // Not a short code, and not a host either.
+    "custom-region",
+    "us-e1/../eu-w1",
+    "",
+    "   ",
+    // Scheme: https only, so the http-only metadata endpoints are unreachable.
+    "http://api.acme.tagoio.net",
+    "http://169.254.169.254",
+    "ftp://api.acme.tagoio.net",
+    "file:///etc/passwd",
+    // IP literals name a machine, never a TagoDeploy instance.
+    "https://127.0.0.1",
+    "https://10.0.0.1",
+    "169.254.169.254",
+    "https://[::1]",
+    "https://[fd00::1]",
+    // Single-label and internal-suffix names only ever resolve on the server's network.
+    "localhost",
+    "https://localhost",
+    "https://metadata",
+    "https://db.internal",
+    "https://ec2.internal",
+    "https://printer.local",
+    // A non-default port is how an internal service is usually reached.
+    "https://api.acme.tagoio.net:8080",
+    "api.internal:8080",
+    "https://10.0.0.1:9200",
+    // Userinfo would smuggle a second credential into the endpoint.
+    "https://user:pass@api.us-e1.tago.io",
+    "https://user@api.acme.tagoio.net",
+  ])("rejects %j", (value) => {
+    expect(resolveRequestRegion(value), value).toBeNull();
   });
 });
 
@@ -233,6 +303,49 @@ describe("validateTagoToken", () => {
 
       expect(isTokenError(result)).toBe(false);
       expect(requestedHosts(fetchMock).every((origin) => origin === DEDICATED)).toBe(true);
+    });
+  });
+
+  describe("request-supplied dedicated endpoint", () => {
+    const DEDICATED = "https://api.iot.acme-industrial.com";
+
+    function requestedTargets(fetchMock: ReturnType<typeof stubInfoResponse>): string[] {
+      return (fetchMock.mock.calls as unknown as unknown[][]).map(([target]) => (target instanceof Request ? target.url : String(target)));
+    }
+
+    // One unpinned deployment (the Lambda) serving many TagoDeploy customers:
+    // the caller names their own instance and supplies the token that goes there.
+    it("sends the token to the instance named by the region header", async () => {
+      const fetchMock = stubInfoResponse({ name: "Test Profile Token", type: "profile" });
+
+      const result = await validateTagoToken("p-0000000000000000000000000000000000", DEDICATED);
+
+      expect(isTokenError(result)).toBe(false);
+      expect((result as { region: { api: string } }).region.api).toBe(DEDICATED);
+      expect(requestedTargets(fetchMock).every((target) => target.startsWith(DEDICATED))).toBe(true);
+    });
+
+    // A dedicated instance has no public network catalog, so introspection goes
+    // through the account route, exactly as a pinned TAGOIO_API deployment does.
+    it("introspects through the account route, not the network catalog", async () => {
+      const fetchMock = stubInfoResponse({ name: "Test Profile Token", type: "profile" });
+
+      await validateTagoToken("p-0000000000000000000000000000000000", DEDICATED);
+
+      const targets = requestedTargets(fetchMock);
+      expect(targets.some((target) => target.includes("/account"))).toBe(true);
+      expect(targets.some((target) => target.includes("/integration/network"))).toBe(false);
+    });
+
+    // The device-token guard is region-independent: identity still comes from
+    // the instance the caller named.
+    it("still resolves the authenticated device identity for device tokens", async () => {
+      stubInfoResponse({ id: "61f0000000000000000d0001", name: "Sensor", type: "mutable" });
+
+      const result = await validateTagoToken("00000000-0000-4000-8000-000000000001", DEDICATED);
+
+      expect(isTokenError(result)).toBe(false);
+      expect((result as { credential: unknown }).credential).toEqual({ credentialKind: "device", authenticatedDeviceId: "61f0000000000000000d0001" });
     });
   });
 

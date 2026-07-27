@@ -6,145 +6,82 @@
 
 # TagoIO | MCP Server
 
-Connect your AI assistant to your TagoIO devices, data, and platform resources, from your IDE or AI tool.
+Work on your TagoIO account by asking. Your AI assistant reads your devices, data, dashboards, and analyses, and makes the changes you ask for, from your IDE or chat tool.
 
-[![Install in VS Code](https://img.shields.io/badge/Install_in-VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=%40tago-io%2Fmcp&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.ai.tago.io%22%2C%22headers%22%3A%7B%22Authorization%22%3A%22%24%7Binput%3Atagoio-token%7D%22%2C%22x-tagoio-region%22%3A%22us-e1%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22tagoio-token%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Enter%20your%20TagoIO%20Profile%20Token%20(Bearer%20format)%22%2C%22password%22%3Atrue%7D%5D%7D)
-[![Install in VS Code Insiders](https://img.shields.io/badge/Install_in-VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=%40tago-io%2Fmcp&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.ai.tago.io%22%2C%22headers%22%3A%7B%22Authorization%22%3A%22%24%7Binput%3Atagoio-token%7D%22%2C%22x-tagoio-region%22%3A%22us-e1%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22tagoio-token%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Enter%20your%20TagoIO%20Profile%20Token%20(Bearer%20format)%22%2C%22password%22%3Atrue%7D%5D%7D&quality=insiders)
-[![Install in Visual Studio](https://img.shields.io/badge/Install_in-Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://vs-open.link/mcp-install?%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.ai.tago.io%22%2C%22headers%22%3A%7B%22Authorization%22%3A%22%24%7Binput%3Atagoio-token%7D%22%2C%22x-tagoio-region%22%3A%22us-e1%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22tagoio-token%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Enter%20your%20TagoIO%20Profile%20Token%20(Bearer%20format)%22%2C%22password%22%3Atrue%7D%5D%7D)
+[![Install in VS Code](https://img.shields.io/badge/Install_in-VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](<https://vscode.dev/redirect/mcp/install?name=%40tago-io%2Fmcp&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.ai.tago.io%22%2C%22headers%22%3A%7B%22Authorization%22%3A%22%24%7Binput%3Atagoio-token%7D%22%2C%22x-tagoio-region%22%3A%22us-e1%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22tagoio-token%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Enter%20your%20TagoIO%20Profile%20Token%20(Bearer%20format)%22%2C%22password%22%3Atrue%7D%5D%7D>)
+[![Install in VS Code Insiders](https://img.shields.io/badge/Install_in-VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](<https://insiders.vscode.dev/redirect/mcp/install?name=%40tago-io%2Fmcp&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.ai.tago.io%22%2C%22headers%22%3A%7B%22Authorization%22%3A%22%24%7Binput%3Atagoio-token%7D%22%2C%22x-tagoio-region%22%3A%22us-e1%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22tagoio-token%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Enter%20your%20TagoIO%20Profile%20Token%20(Bearer%20format)%22%2C%22password%22%3Atrue%7D%5D%7D&quality=insiders>)
+[![Install in Visual Studio](https://img.shields.io/badge/Install_in-Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](<https://vs-open.link/mcp-install?%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.ai.tago.io%22%2C%22headers%22%3A%7B%22Authorization%22%3A%22%24%7Binput%3Atagoio-token%7D%22%2C%22x-tagoio-region%22%3A%22us-e1%22%7D%2C%22inputs%22%3A%5B%7B%22id%22%3A%22tagoio-token%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Enter%20your%20TagoIO%20Profile%20Token%20(Bearer%20format)%22%2C%22password%22%3Atrue%7D%5D%7D>)
 [![Install in Cursor](https://img.shields.io/badge/Install_in-Cursor-000000?style=flat-square&logoColor=white)](https://cursor.com/en/install-mcp?name=%40tago-io%2Fmcp&config=eyJ0eXBlIjoiaHR0cCIsInVybCI6Imh0dHBzOi8vbWNwLmFpLnRhZ28uaW8iLCJoZWFkZXJzIjp7IkF1dGhvcml6YXRpb24iOiIke2lucHV0OnRhZ29pby10b2tlbn0iLCJ4LXRhZ29pby1yZWdpb24iOiJ1cy1lMSJ9LCJpbnB1dHMiOlt7ImlkIjoidGFnb2lvLXRva2VuIiwidHlwZSI6InByb21wdFN0cmluZyIsImRlc2NyaXB0aW9uIjoiRW50ZXIgeW91ciBUYWdvSU8gUHJvZmlsZSBUb2tlbiAoQmVhcmVyIGZvcm1hdCkiLCJwYXNzd29yZCI6dHJ1ZX1dfQ==)
 [![Add to LM Studio](https://files.lmstudio.ai/deeplink/mcp-install-light.svg)](https://lmstudio.ai/install-mcp?name=%40tago-io%2Fmcp&config=eyJ0eXBlIjoiaHR0cCIsInVybCI6Imh0dHBzOi8vbWNwLmFpLnRhZ28uaW8iLCJoZWFkZXJzIjp7IkF1dGhvcml6YXRpb24iOiIke2lucHV0OnRhZ29pby10b2tlbn0iLCJ4LXRhZ29pby1yZWdpb24iOiJ1cy1lMSJ9LCJpbnB1dHMiOlt7ImlkIjoidGFnb2lvLXRva2VuIiwidHlwZSI6InByb21wdFN0cmluZyIsImRlc2NyaXB0aW9uIjoiRW50ZXIgeW91ciBUYWdvSU8gUHJvZmlsZSBUb2tlbiAoQmVhcmVyIGZvcm1hdCkiLCJwYXNzd29yZCI6dHJ1ZX1dfQ==)
 
 ---
 
-## What you get
-
-Read and write your TagoIO account from an AI assistant, over 81 single-purpose tools:
-
-- **Devices and data**: manage devices with guarded credential rotation, and read, send, edit, and delete their data
-- **Actions**: search and manage automations
-- **Analyses**: manage analyses, upload and download scripts, trigger runs, read console output
-- **Dashboards and widgets**: schema-validated configuration with explicit layout control, including the `.tsx` source behind custom widgets
-- **Entities**: manage entities, evolve schemas and indexes, read and write index-queried rows
-- **TagoRUN users**: manage users and notifications, and mint short-lived tokens to debug the app as a given user
-- **Access management**: revise the policies that let analyses and TagoRUN users reach resources they do not own, and look up the grant a denied operation needs
-- **Files, profile, and docs**: clean up stored files, read limits and usage, search the official docs and code examples
-
-Your account credential never leaves the server; see [Tools](#tools).
-
-## Quick Start
+## Start here
 
 1. **Get a token.** Generate a Profile Token in [TagoIO Profile Settings](https://admin.tago.io/profile).
-2. **Pick a setup.** [Remote server](#remote-server-recommended) needs nothing installed. [Local server](#local-server) runs it yourself over `npx`.
-3. **Configure your client.** Find your IDE or AI tool under [Client setup](#client-setup) and copy the config.
+2. **Add the server to your client.** Use an install button above, or copy the config for your tool from [Client setup](#client-setup).
+3. **Ask something.** Try: _"List my devices and tell me which ones stopped sending data this week."_
 
-The remote server is the fastest way in. Use the local server for offline work, air-gapped networks, or a dedicated TagoDeploy instance.
+Your client connects to the TagoIO hosted server at `https://mcp.ai.tago.io`. You can also [run the server yourself](#run-it-locally).
 
-## Prerequisites
+## What you can ask for
 
-- A TagoIO account and a Profile Token ([generate one](https://admin.tago.io/profile))
-- Node.js 22.12 or newer ([download](https://nodejs.org/en/download/)), for the local server only
+The server gives your assistant around 80 focused capabilities across your account. You describe the outcome, and it picks the tools. Some things that work well today:
 
-## Remote Server (Recommended)
+**Understand your fleet**
 
-Point your client at the TagoIO hosted server, `https://mcp.ai.tago.io`. Nothing to install, no Node.js.
+- "Which devices haven't sent data in the last 7 days?"
+- "Show me the last 50 records from Water Meter 12 and summarize the flow variable."
+- "Create a device on my LoRaWAN network, then give me its token."
 
-Authenticate with your Profile Token in the `Authorization` header. Requests default to US East; see [Regions and endpoints](#regions-and-endpoints) to reach EU West.
+**Debug without tab-switching**
 
-Copy the config for your client from [Client setup](#client-setup).
+- "The Daily Report analysis failed last night. Read the console and tell me why."
+- "Fix the bug you found, upload the script, and run it once to confirm."
+- "A customer says their dashboard is empty. Log in as that user and check what they see."
 
-## Local Server
+**Build dashboards from a description**
 
-Run the server yourself with `npx`. Requires Node.js 22.12 or newer.
+- "Build a dashboard for my cold chain fleet: a map of the units, a temperature line chart for the last 24 hours, and a card for battery level."
+- "This gauge shows no value. Compare its configuration to the variables the device actually sends."
 
-```bash
-npx -y @tago-io/mcp-server        # STDIO transport (default)
-npx -y @tago-io/mcp-server http   # HTTP Streamable transport
-```
+**Untangle permissions**
 
-Run `npx -y @tago-io/mcp-server --help` for the transport list.
+- "My analysis gets a permission error writing to the Sites entity. What policy does it need?"
+- "Show me every access policy that touches TagoRUN users."
 
-### STDIO transport
+**Keep the account tidy**
 
-The default, and what desktop assistants and IDEs expect. The token comes from the environment:
+- "How close am I to my data records limit this month?"
+- "Find stored files older than a year and larger than 5 MB, then delete them."
 
-```json
-{
-  "mcpServers": {
-    "@tago-io/mcp": {
-      "command": "npx",
-      "args": ["-y", "@tago-io/mcp-server"],
-      "env": {
-        "TAGOIO_TOKEN": "YOUR-TAGOIO-TOKEN"
-      }
-    }
-  }
-}
-```
+**Write code with the docs in context**
 
-For Claude Code:
+- "Find the official example for parsing a Dragino LHT65 payload and adapt it to my device."
 
-```bash
-claude mcp add @tago-io/mcp-server -e TAGOIO_TOKEN=YOUR-TAGOIO-TOKEN -- npx -y @tago-io/mcp-server
-```
+The server reads and writes. Deleting data, rotating credentials, and uploading scripts run through your assistant's confirmation flow, so you approve each change before it lands.
 
-For VS Code and GitHub Copilot, prompt for the token instead of storing it:
+## Client setup
 
-```json
-{
-  "servers": {
-    "@tago-io/mcp": {
-      "command": "npx",
-      "args": ["-y", "@tago-io/mcp-server"],
-      "env": {
-        "TAGOIO_TOKEN": "${input:tagoToken}"
-      }
-    }
-  },
-  "inputs": [
-    {
-      "type": "promptString",
-      "id": "tagoToken",
-      "description": "TagoIO Profile Token",
-      "password": true
-    }
-  ]
-}
-```
+Each config below points at the hosted server. Replace `YOUR-TAGOIO-TOKEN` with your Profile Token.
 
-### HTTP Streamable transport
+| Client                                               | Where the config lives                                                                                                             |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| [VS Code / GitHub Copilot](#vs-code--github-copilot) | `.vscode/mcp.json` or User Settings                                                                                                |
+| [Claude Code](#claude-code)                          | `claude mcp add-json` CLI                                                                                                          |
+| [Claude Desktop](#claude-desktop)                    | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS), `%APPDATA%\Claude\claude_desktop_config.json` (Windows) |
+| [Cursor](#cursor)                                    | `~/.cursor/mcp.json`                                                                                                               |
+| [Windsurf](#windsurf)                                | `~/.codeium/windsurf/mcp_config.json`                                                                                              |
+| [JetBrains IDEs](#jetbrains-ides)                    | Settings > Tools > AI Assistant > MCP                                                                                              |
+| [Google Gemini CLI](#google-gemini-cli)              | `~/.gemini/settings.json`                                                                                                          |
+| [Amazon Q CLI](#amazon-q-cli)                        | `~/.aws/amazonq/mcp.json`                                                                                                          |
+| [Warp](#warp)                                        | `~/.warp/mcp.json`                                                                                                                 |
+| [Kiro](#kiro)                                        | `.kiro/mcp.json`                                                                                                                   |
+| [OpenAI Agents / ChatGPT](#openai-agents--chatgpt)   | Agent Builder UI                                                                                                                   |
 
-For web-based AI platforms, or several clients at once:
+### VS Code / GitHub Copilot
 
-```bash
-npx -y @tago-io/mcp-server http              # port 3000
-MCP_PORT=8080 npx -y @tago-io/mcp-server http
-```
-
-The server listens on `http://localhost:3000` by default. Each request carries its own token in the `Authorization` header, so no `TAGOIO_TOKEN` is needed and clients with different credentials can connect at the same time.
-
-`GET /health` returns the server name, version, and status.
-
-## Client Setup
-
-Every config below targets the remote server. To point one at a local HTTP server instead, swap the URL for `http://localhost:3000`.
-
-| Client | Config file |
-|---|---|
-| [VS Code / GitHub Copilot](#vs-code) | `.vscode/mcp.json` or User Settings |
-| [Claude Code](#claude-code) | `claude mcp add-json` CLI |
-| [Claude Desktop](#claude-desktop) | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS), `%APPDATA%\Claude\claude_desktop_config.json` (Windows) |
-| [Cursor](#cursor) | `~/.cursor/mcp.json` |
-| [Windsurf](#windsurf) | `~/.codeium/windsurf/mcp_config.json` |
-| [JetBrains IDEs](#jetbrains-ides) | Settings > Tools > AI Assistant > MCP |
-| [Google Gemini CLI](#google-gemini-cli) | `~/.gemini/settings.json` |
-| [Amazon Q CLI](#amazon-q-cli) | `~/.aws/amazonq/mcp.json` |
-| [Warp](#warp) | `~/.warp/mcp.json` |
-| [Kiro](#kiro) | `.kiro/mcp.json` |
-| [OpenAI Agents / ChatGPT](#openai-agents--chatgpt) | Agent Builder UI |
-
-### VS Code
-
-Add to `.vscode/mcp.json` in your project, or to User Settings for every project. VS Code Insiders takes the same config.
+Add to `.vscode/mcp.json` for one project, or to User Settings for all of them. VS Code Insiders takes the same config, and Copilot reads the same file.
 
 ```json
 {
@@ -168,8 +105,6 @@ Add to `.vscode/mcp.json` in your project, or to User Settings for every project
 }
 ```
 
-GitHub Copilot in VS Code reads the same file.
-
 ### Claude Code
 
 ```bash
@@ -178,7 +113,7 @@ claude mcp add-json @tago-io/mcp '{"type":"http","url":"https://mcp.ai.tago.io",
 
 ### Claude Desktop
 
-Claude Desktop has no native HTTP transport, so bridge through `mcp-remote`:
+Connect through the `mcp-remote` bridge.
 
 ```json
 {
@@ -199,8 +134,6 @@ Claude Desktop has no native HTTP transport, so bridge through `mcp-remote`:
 
 ### Cursor
 
-Add to `~/.cursor/mcp.json`:
-
 ```json
 {
   "mcpServers": {
@@ -215,8 +148,6 @@ Add to `~/.cursor/mcp.json`:
 ```
 
 ### Windsurf
-
-Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ```json
 {
@@ -233,7 +164,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ### JetBrains IDEs
 
-Go to **Settings** > **Tools** > **AI Assistant** > **Model Context Protocol (MCP)** and add a server with this JSON:
+Open **Settings** > **Tools** > **AI Assistant** > **Model Context Protocol (MCP)**, add a server, and paste:
 
 ```json
 {
@@ -252,8 +183,6 @@ Go to **Settings** > **Tools** > **AI Assistant** > **Model Context Protocol (MC
 
 ### Google Gemini CLI
 
-Add to `~/.gemini/settings.json`:
-
 ```json
 {
   "mcpServers": {
@@ -268,8 +197,6 @@ Add to `~/.gemini/settings.json`:
 ```
 
 ### Amazon Q CLI
-
-Add to `~/.aws/amazonq/mcp.json`:
 
 ```json
 {
@@ -286,7 +213,7 @@ Add to `~/.aws/amazonq/mcp.json`:
 
 ### Warp
 
-Warp has no native HTTP transport. Bridge through `mcp-remote` in `~/.warp/mcp.json`:
+Connect through the `mcp-remote` bridge.
 
 ```json
 {
@@ -307,7 +234,7 @@ Warp has no native HTTP transport. Bridge through `mcp-remote` in `~/.warp/mcp.j
 
 ### Kiro
 
-Kiro has no native HTTP transport. Bridge through `mcp-remote` in `.kiro/mcp.json` at your project root:
+Connect through the `mcp-remote` bridge, in `.kiro/mcp.json` at your project root.
 
 ```json
 {
@@ -328,17 +255,76 @@ Kiro has no native HTTP transport. Bridge through `mcp-remote` in `.kiro/mcp.jso
 
 ### OpenAI Agents / ChatGPT
 
-In the OpenAI Agent Builder or ChatGPT MCP settings:
+In Agent Builder or ChatGPT MCP settings:
 
 - **Server URL**: `https://mcp.ai.tago.io`
 - **Protocol**: Streamable HTTP
 - **Authentication**: `Authorization: Bearer YOUR-TAGOIO-TOKEN` header
 
-## Custom Widget Skill
+## Choosing a token
 
-Custom widgets are React components under a strict authoring contract: a provider wrapper, exact `npm:` dependency pins, a `// tailwind` marker, and constructs that are not allowed. The tools validate code against that contract, but they do not teach it. The skill at [`skills/custom-widget-development/SKILL.md`](skills/custom-widget-development/SKILL.md) does, with worked examples.
+| Token        | Where to get it                                     | What it reaches                                                                                                    |
+| ------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Profile**  | [Profile Settings](https://admin.tago.io/profile)   | Your whole profile. Start here.                                                                                    |
+| **Analysis** | **Analysis** > your analysis, set to run "External" | Only what that analysis can reach. Fits shared and production environments where access is controlled through IAM. |
+| **Device**   | The device itself                                   | That device's data. Account-level requests return a permission error.                                              |
 
-Install it for Claude Code, for your user or for one project:
+## Regions and endpoints
+
+Requests go to US East by default. Set the `x-tagoio-region` header to reach a different endpoint:
+
+| Value                          | Target                             |
+| ------------------------------ | ---------------------------------- |
+| `us-e1`                        | US East (default)                  |
+| `eu-w1`                        | EU West                            |
+| `https://api.your-instance.io` | Your dedicated TagoDeploy instance |
+
+```
+x-tagoio-region: eu-w1
+```
+
+For TagoDeploy, pass your instance's full API endpoint over `https://`. This works on the hosted server, so a dedicated instance needs the same one-line config as a public region.
+
+Over STDIO there are no headers. Set `TAGOIO_API` to your endpoint instead.
+
+## Run it locally
+
+Run the server on your own machine for offline work, or when your network blocks outbound connections. Install [Node.js 22.12](https://nodejs.org/en/download/) or newer, then:
+
+```bash
+npx -y @tago-io/mcp-server        # STDIO, what desktop apps and IDEs expect
+npx -y @tago-io/mcp-server http   # HTTP on port 3000
+```
+
+STDIO reads the token from the environment:
+
+```json
+{
+  "mcpServers": {
+    "@tago-io/mcp": {
+      "command": "npx",
+      "args": ["-y", "@tago-io/mcp-server"],
+      "env": {
+        "TAGOIO_TOKEN": "YOUR-TAGOIO-TOKEN"
+      }
+    }
+  }
+}
+```
+
+For Claude Code:
+
+```bash
+claude mcp add @tago-io/mcp-server -e TAGOIO_TOKEN=YOUR-TAGOIO-TOKEN -- npx -y @tago-io/mcp-server
+```
+
+HTTP mode takes the token per request, so several people can share one server with their own credentials. Set the port with `MCP_PORT`, and check `GET /health` to confirm the server is up. To point any config in this README at your local server, swap the URL for `http://localhost:3000`. Run `npx -y @tago-io/mcp-server --help` for the full option list.
+
+## Writing custom widgets
+
+Custom widgets are React components with a strict authoring contract: a provider wrapper, pinned `npm:` dependencies, a `// tailwind` marker. The server validates your code against that contract and reports what breaks it.
+
+The [custom widget skill](skills/custom-widget-development/SKILL.md) teaches the contract itself, with worked examples. Install it for Claude Code:
 
 ```bash
 # all projects
@@ -352,75 +338,53 @@ curl -fsSL https://raw.githubusercontent.com/tago-io/mcp-server/master/skills/cu
   -o .claude/skills/custom-widget-development/SKILL.md
 ```
 
-For other clients, put the same file wherever that client loads skills or reusable prompts from. Skip this unless you write custom widget code; every other tool works without it.
+For other clients, put the same file wherever that client loads skills or reusable prompts from.
 
-## Authentication
+## Your token and your data
 
-The server accepts three kinds of TagoIO token, classified by prefix. Replace `YOUR-TAGOIO-TOKEN` in any config above with the one you pick.
+The server strips your token from every result, error, script download, and console output before it reaches your assistant. Environment variable values, minted analysis tokens, and signed file URLs get the same treatment.
 
-| Token | Prefix | Access |
-|---|---|---|
-| **Profile** | `p-` | Full access to the profile. Generate one in [Profile Settings](https://admin.tago.io/profile). Start here. |
-| **Analysis** | `a-` | Only what the analysis itself can reach. Copy it from **Analysis** > your analysis, which must run "External". Use this for production or shared environments where access is controlled through IAM. |
-| **Device** | none | One device's data, through `read_device_data`, `send_device_data`, `edit_device_data`, and `delete_device_data` only. Account-level tools fail with permission errors. |
-
-Any other prefix is rejected before the server makes a request.
-
-## Regions and Endpoints
-
-| Region | Endpoint |
-|---|---|
-| US East (default) | `https://api.us-e1.tago.io` |
-| EU West | `https://api.eu-w1.tago.io` |
-
-Set the region with the `x-tagoio-region` header, whose only accepted values are `us-e1` and `eu-w1`:
-
-```
-x-tagoio-region: eu-w1
-```
-
-A URL or hostname in this header is rejected with HTTP 400, so no request can name the host the server sends your token to. In STDIO mode there is no header; set `TAGOIO_API` to the region endpoint instead.
-
-**Dedicated TagoDeploy instances** are reached by running the server yourself and setting `TAGOIO_API` to your instance (`https://` only). That works on all three transports: in STDIO it is the endpoint, and in HTTP or Lambda it pins every request to that instance, with the `x-tagoio-region` header ignored. The endpoint is always operator configuration at startup, never request input. The hosted `mcp.ai.tago.io` endpoint serves the public regions only.
-
-## Tools
-
-Every tool is single-purpose, named `verb_noun`, and annotated with whether it reads or writes. Each tool carries its own parameters, limits, and behavior in the description your client reads; the table below is just the map. Search tools take `filter`, `page`, `amount`, `fields`, and a `response_format` of `concise` or `detailed`. Resource IDs are snake_case (`device_id`), and the server applies wildcard name matching for you.
-
-| Domain | Tools |
-|---|---|
-| Devices | `search_devices`, `get_device`, `create_device`, `update_device`, `delete_device`, `configure_device` |
-| Device data | `read_device_data`, `send_device_data`, `edit_device_data`, `delete_device_data` |
-| Actions | `search_actions`, `get_action`, `create_action`, `update_action`, `delete_action` |
-| Analyses | `search_analyses`, `get_analysis`, `create_analysis`, `update_analysis`, `delete_analysis`, `upload_analysis_script`, `download_analysis_script`, `run_analysis`, `read_analysis_console` |
-| Dashboards & widgets | `search_dashboards`, `get_dashboard`, `create_dashboard`, `update_dashboard`, `delete_dashboard`, `get_widget`, `create_widget`, `update_widget`, `delete_widget`, `widget_schema_lookup`, `validate_widget_configuration`, `get_custom_widget_code`, `upload_custom_widget_code` |
-| Entities | `search_entities`, `get_entity`, `create_entity`, `update_entity`, `delete_entity`, `update_entity_schema` |
-| Entity data | `read_entity_data`, `send_entity_data`, `edit_entity_data`, `delete_entity_data`, `empty_entity_data` |
-| Run users | `search_run_users`, `get_run_user`, `create_run_user`, `update_run_user`, `delete_run_user`, `login_as_run_user` |
-| Run-user notifications | `read_run_user_notifications`, `send_run_user_notification`, `update_run_user_notification`, `delete_run_user_notification` |
-| Files | `search_files`, `delete_files` |
-| Access management | `search_access_policies`, `get_access_policy`, `lookup_access_permissions`, `create_analysis_access_policy`, `create_run_user_access_policy`, `update_analysis_access_policy`, `update_run_user_access_policy`, `delete_access_policy` |
-| Profile | `get_profile`, `get_profile_limits`, `get_profile_statistics`, `search_secrets` |
-| Connectors & networks | `search_connectors`, `get_connector`, `search_networks`, `get_network` |
-| Docs & examples | `platform_overview`, `search_docs`, `read_doc`, `search_code_examples`, `get_code_example` |
-
-Your account credential never leaves the server. It is stripped from every result and every error, including script downloads and console output that happen to contain it. Submitted environment-variable values, uploaded script source, minted analysis tokens, and signed storage URLs are redacted the same way.
-
-Deliberately not exposed: TagoRUN environment administration (`run.info`, `run.edit`), SSO and custom-domain settings, test emails, and anonymous-user creation.
+Some settings stay in the TagoIO admin: TagoRUN environment configuration, SSO and custom domains, test emails, and anonymous user creation.
 
 ## Troubleshooting
 
-**Connection failed.** Check the token is valid: Profile Tokens live in [Profile Settings](https://admin.tago.io/profile), Analysis and Device tokens on the analysis or device itself. Check the endpoint matches your region. For the remote server, confirm `https://mcp.ai.tago.io` is reachable.
+**It won't connect.** Confirm the token is still valid and that `https://mcp.ai.tago.io` is reachable from your network. If your account lives in EU West, set the `x-tagoio-region` header.
 
-**Authentication error.** Confirm the token has the permissions the tool needs, and check the format: `Bearer YOUR-TOKEN` in the `Authorization` header over HTTP, or the `TAGOIO_TOKEN` environment variable over STDIO.
+**Authentication error.** Over HTTP the header reads `Bearer YOUR-TOKEN`, with the space. Over STDIO the token goes in `TAGOIO_TOKEN`. If the format checks out, the token may lack permission for what you asked.
 
-**No data comes back.** Check the device permissions on your profile, and that the device has data in the window you asked for.
+**A request comes back empty.** Two usual causes: the device has no data in the window you asked about, or your profile lacks access to that device.
 
-**`mcp-remote` bridge problems** (Claude Desktop, Warp, Kiro). Confirm Node.js 22.12 or newer is installed, and that `mcp-remote` can reach `https://mcp.ai.tago.io`. Run it by hand to see the error:
+**The bridge fails** (Claude Desktop, Warp, Kiro). Check for Node.js 22.12 or newer, then run the bridge by hand to read the real error:
 
 ```bash
 npx -y mcp-remote https://mcp.ai.tago.io --header "Authorization: Bearer YOUR-TOKEN"
 ```
+
+<details>
+<summary><b>Full tool reference</b></summary>
+
+<br/>
+
+Every tool the server exposes, grouped by domain. Each one carries its own parameters, limits, and read or write annotation in the description your client reads.
+
+| Domain                 | Tools                                                                                                                                                                                                                                                                             |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Devices                | `search_devices`, `get_device`, `create_device`, `update_device`, `delete_device`, `configure_device`                                                                                                                                                                             |
+| Device data            | `read_device_data`, `send_device_data`, `edit_device_data`, `delete_device_data`                                                                                                                                                                                                  |
+| Actions                | `search_actions`, `get_action`, `create_action`, `update_action`, `delete_action`                                                                                                                                                                                                 |
+| Analyses               | `search_analyses`, `get_analysis`, `create_analysis`, `update_analysis`, `delete_analysis`, `upload_analysis_script`, `download_analysis_script`, `run_analysis`, `read_analysis_console`                                                                                         |
+| Dashboards & widgets   | `search_dashboards`, `get_dashboard`, `create_dashboard`, `update_dashboard`, `delete_dashboard`, `get_widget`, `create_widget`, `update_widget`, `delete_widget`, `widget_schema_lookup`, `validate_widget_configuration`, `get_custom_widget_code`, `upload_custom_widget_code` |
+| Entities               | `search_entities`, `get_entity`, `create_entity`, `update_entity`, `delete_entity`, `update_entity_schema`                                                                                                                                                                        |
+| Entity data            | `read_entity_data`, `send_entity_data`, `edit_entity_data`, `delete_entity_data`, `empty_entity_data`                                                                                                                                                                             |
+| Run users              | `search_run_users`, `get_run_user`, `create_run_user`, `update_run_user`, `delete_run_user`, `login_as_run_user`                                                                                                                                                                  |
+| Run-user notifications | `read_run_user_notifications`, `send_run_user_notification`, `update_run_user_notification`, `delete_run_user_notification`                                                                                                                                                       |
+| Files                  | `search_files`, `delete_files`                                                                                                                                                                                                                                                    |
+| Access management      | `search_access_policies`, `get_access_policy`, `lookup_access_permissions`, `create_analysis_access_policy`, `create_run_user_access_policy`, `update_analysis_access_policy`, `update_run_user_access_policy`, `delete_access_policy`                                            |
+| Profile                | `get_profile`, `get_profile_limits`, `get_profile_statistics`, `search_secrets`                                                                                                                                                                                                   |
+| Connectors & networks  | `search_connectors`, `get_connector`, `search_networks`, `get_network`                                                                                                                                                                                                            |
+| Docs & examples        | `platform_overview`, `search_docs`, `read_doc`, `search_code_examples`, `get_code_example`                                                                                                                                                                                        |
+
+</details>
 
 ## Contributing
 
@@ -428,8 +392,8 @@ Issues and pull requests are welcome. Agent instructions live in [AGENTS.md](AGE
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT. See the LICENSE file.
 
 ---
 
-Built by the TagoIO team. Need help? Visit the [TagoIO documentation](https://docs.tago.io) or contact support.
+Built by the TagoIO team. Need a hand? Check the [TagoIO documentation](https://docs.tago.io) or contact support.

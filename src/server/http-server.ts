@@ -169,7 +169,8 @@ function handleHealthRequest(res: ServerResponse): void {
  *
  * `apiUrl` is the operator-configured TAGOIO_API endpoint, threaded from
  * startup rather than read here so the request path never reaches process env.
- * Absent on the multi-region deployment.
+ * Absent on the shared deployment, where the `x-tagoio-region` header names the
+ * destination per request.
  */
 async function handleRequest(req: IncomingMessage, res: ServerResponse, apiUrl?: string): Promise<void> {
   const { method, url } = req;
