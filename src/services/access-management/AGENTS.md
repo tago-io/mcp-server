@@ -31,7 +31,7 @@ Because a kind is bound to a tool, a policy cannot be repointed from one kind to
 
 ## How rules are evaluated
 
-There is no single evaluator, and the three the platform has resolve a cross-policy deny differently. A blanket claim in either direction is wrong somewhere, so the tools describe the split.
+There is no single evaluator. Two of the three the platform has let a cross-policy deny win, and the third does not, so a blanket claim in either direction is wrong somewhere and the tools describe the split.
 
 - **Listing resources** goes through `providers/db-functions/am-parser.ts`, which builds `WHERE (allow clauses) AND NOT (deny clauses)`. That is set algebra: every deny applies, whatever policy holds it, in any row order. This is the path behind most of what a policy visibly governs, and it backs `device`, `analysis`, `run_user` and notification listings alike.
 - **Authorizing one operation on one resource** goes through `matchAMPermissions`: a request starts denied, matching rules overwrite the verdict, and the LAST one decides. Rules arrive sorted allow-before-deny per policy, so within one policy a deny beats an allow, but policies are concatenated in unspecified row order, so a deny in a different policy may or may not win.

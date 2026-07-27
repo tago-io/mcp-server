@@ -272,3 +272,41 @@ describe("get_access_policy does not claim coverage from targets that select not
     expect(result).not.toContain("matching ANY line above");
   });
 });
+
+describe("get_access_policy reads as English on every target shape", () => {
+  function policyWith(targets: string[][]) {
+    mockServer.use(
+      http.get(`${API}/am/:amID`, () => HttpResponse.json({ status: true, result: { id: INERT_TARGETS_POLICY, name: "shape", active: true, tags: [], targets, permissions: [] } }))
+    );
+    return getPolicy({ access_policy_id: INERT_TARGETS_POLICY });
+  }
+
+  // The article is per kind and only the first word is capitalised. A previous
+  // version capitalised each element and produced "An analysis or A run user".
+  it("names both kinds without capitalising mid-sentence", async () => {
+    expect(await policyWith([["analysis", "id", fixtures.IDS.analysis], ["run_user"]])).toContain("An analysis or a run user matching ANY line above");
+  });
+
+  it("names one kind when only one is present", async () => {
+    expect(
+      await policyWith([
+        ["run_user", "id", fixtures.IDS.user],
+        ["run_user", "tag.key", "k", "tag.value", "v"],
+      ])
+    ).toContain("A run user matching ANY line above");
+  });
+
+  // The count is of narrower entries OF THE SUBSUMED KINDS. Deriving it from the
+  // total resolved count counted another kind's targets and said "entries" of one.
+  it("counts one narrower entry as one, and agrees the verb", async () => {
+    const result = await policyWith([["analysis"], ["analysis", "id", fixtures.IDS.analysis], ["run_user", "id", fixtures.IDS.user]]);
+
+    expect(result).toContain("the narrower entry of that kind above adds nothing");
+  });
+
+  it("uses the plural and plural verb for two narrower entries", async () => {
+    const result = await policyWith([["analysis"], ["analysis", "id", fixtures.IDS.analysis], ["analysis", "tag.key", "k", "tag.value", "v"]]);
+
+    expect(result).toContain("the narrower entries of that kind above add nothing");
+  });
+});

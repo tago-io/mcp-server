@@ -41,7 +41,7 @@ type PolicyRule = NonNullable<PolicyWire["permissions"]>[number];
 const EVALUATION_NOTE = [
   "How these are evaluated: a request is denied unless a rule matches it, and this policy's rules are returned with every allow before every deny, so within ONE policy a matching deny beats a matching allow.",
   "Across policies the answer depends on what is being asked.",
-  "When the platform LISTS resources, it takes what the matching policies allow and then removes anything any of them denies, so a deny always applies no matter which policy holds it.",
+  "When the platform LISTS resources, it takes what the matching policies allow for that action and removes anything any of them denies for the SAME action, so a deny always applies no matter which policy holds it, but a deny on a different action removes nothing.",
   "When it checks a SINGLE operation on one resource, the last matching rule wins and the order policies are pooled in is unspecified, so a deny in a different policy may or may not take effect.",
   "Keeping a deny in the same policy as the allow it limits is reliable in both cases.",
 ].join(" ");
@@ -111,10 +111,10 @@ function inertReasons(
  * malformed target selects no policy at all, so counting its kind would let it
  * vouch for rules that can never be reached through it.
  */
-function renderTargets(targets: string[][]): { lines: string[]; types: TargetType[]; subsumed: TargetType[]; resolved: number } {
+function renderTargets(targets: string[][]): { lines: string[]; types: TargetType[]; subsumed: TargetType[]; subsumedNarrower: number; resolved: number } {
   const lines: string[] = [];
   const types = new Set<TargetType>();
-  const covers = { analysis: { any: false, narrower: false }, run_user: { any: false, narrower: false } };
+  const covers = { analysis: { any: false, narrower: 0 }, run_user: { any: false, narrower: 0 } };
   // Counted separately from `lines`, because an INERT entry still renders a line
   // and selects nothing. Anything reasoning about what the policy covers has to
   // count what resolves, not what is printed.
@@ -142,7 +142,7 @@ function renderTargets(targets: string[][]): { lines: string[]; types: TargetTyp
     if (match.by === "any") {
       covers[kind].any = true;
     } else {
-      covers[kind].narrower = true;
+      covers[kind].narrower += 1;
     }
     lines.push(`- ${describeMatch(TARGET_NOUNS[kind], match)}`);
   }
@@ -150,9 +150,12 @@ function renderTargets(targets: string[][]): { lines: string[]; types: TargetTyp
   // A kind matched by `any` alongside narrower entries applies to every token of
   // that kind, and the narrower lines are then decoration. Read top-down they
   // suggest a scope the policy does not have.
-  const subsumed = (Object.keys(covers) as TargetType[]).filter((kind) => covers[kind].any && covers[kind].narrower);
+  const subsumed = (Object.keys(covers) as TargetType[]).filter((kind) => covers[kind].any && covers[kind].narrower > 0);
+  // Only the narrower entries OF THE SUBSUMED KINDS are pointless. Deriving this
+  // from the total resolved count counted other kinds' targets too.
+  const subsumedNarrower = subsumed.reduce((total, kind) => total + covers[kind].narrower, 0);
 
-  return { lines, types: [...types], subsumed, resolved };
+  return { lines, types: [...types], subsumed, subsumedNarrower, resolved };
 }
 
 /**
@@ -213,16 +216,22 @@ const DENY_ONLY_NOTE = [
  * nothing said of targets. Named per kind, because the write tools each own one
  * and naming both there would describe a policy they cannot produce.
  */
+/** "an analysis" but "a run user", and only the first word of the sentence is capitalised. */
+function articleFor(kind: TargetType): string {
+  return /^[aeiou]/i.test(TARGET_NOUNS[kind]) ? "an" : "a";
+}
+
 function targetAlternativesNote(kinds: readonly TargetType[]): string {
-  const nouns = kinds.length > 0 ? kinds.map((kind) => `${TARGET_NOUNS[kind] === "analysis" ? "An" : "A"} ${TARGET_NOUNS[kind]}`).join(" or ") : "An analysis or run user";
-  return `${nouns} matching ANY line above is covered by this policy.`;
+  const nouns = kinds.length > 0 ? kinds.map((kind) => `${articleFor(kind)} ${TARGET_NOUNS[kind]}`).join(" or ") : "an analysis or a run user";
+  return `${nouns.charAt(0).toUpperCase()}${nouns.slice(1)} matching ANY line above is covered by this policy.`;
 }
 
 function subsumedTargetNote(kinds: readonly TargetType[], narrowerCount: number): string {
   const nouns = kinds.map((kind) => `any ${TARGET_NOUNS[kind]}`).join(" and ");
-  const entries = narrowerCount === 1 ? "the narrower entry" : "the narrower entries";
+  const subject = narrowerCount === 1 ? "the narrower entry" : "the narrower entries";
+  const verb = narrowerCount === 1 ? "adds" : "add";
   const qualifier = kinds.length > 1 ? "" : " of that kind";
-  return `Note: this policy covers ${nouns}, so ${entries}${qualifier} above adds nothing and the scope is wider than the list suggests.`;
+  return `Note: this policy covers ${nouns}, so ${subject}${qualifier} above ${verb} nothing and the scope is wider than the list suggests.`;
 }
 
 /** The grant's console name, from whichever target kind actually offers it. */
@@ -273,7 +282,7 @@ function renderRules(permissions: readonly PolicyRule[], targetTypes: readonly T
  * highest-traffic write output; the update tool prints it once underneath both.
  */
 function renderPolicyRules(policy: PolicyWire, catalog?: PermissionCatalog, options?: { omitEvaluationNote?: boolean }): string {
-  const { lines: targetLines, types, subsumed, resolved } = renderTargets(policy.targets ?? []);
+  const { lines: targetLines, types, subsumed, subsumedNarrower, resolved } = renderTargets(policy.targets ?? []);
   const sections: string[] = [];
 
   sections.push("**Applies to**");
@@ -287,7 +296,7 @@ function renderPolicyRules(policy: PolicyWire, catalog?: PermissionCatalog, opti
   }
   if (subsumed.length > 0) {
     sections.push("");
-    sections.push(subsumedTargetNote(subsumed, resolved - subsumed.length));
+    sections.push(subsumedTargetNote(subsumed, subsumedNarrower));
   }
   sections.push("");
   if (types.length > 1) {
