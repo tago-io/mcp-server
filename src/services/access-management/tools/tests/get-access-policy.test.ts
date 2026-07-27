@@ -13,6 +13,7 @@ const PROFILE_TOKEN = "p-0000000000000000000000000000000000";
 const API = "https://api.us-e1.tago.io";
 const PARSER_POLICY = fixtures.accessPolicies[0].id;
 const RUN_POLICY = fixtures.accessPolicies[1].id;
+const DENY_ONLY_POLICY = fixtures.accessPolicies.find((policy) => policy.name === "[Analysis] - Deny only, any target")!.id;
 const MIXED_POLICY = fixtures.accessPolicies.find((policy) => policy.name === "[Mixed] - Analysis and run user")!.id;
 const INERT_POLICY = fixtures.accessPolicies[2].id;
 
@@ -164,5 +165,41 @@ describe("get_access_policy names the tool that owns the policy", () => {
     // reversible one has to be named where the problem is reported.
     expect(result).toContain("active: false");
     expect(result).not.toContain("Edit this policy with update_analysis_access_policy");
+  });
+});
+
+describe("get_access_policy names what a policy does not do", () => {
+  // Found live: a policy whose only rule is a deny reads as a working block,
+  // and adds nothing. The rule itself is valid, so nothing marks it INERT.
+  it("says a deny-only policy grants nothing by itself", async () => {
+    const result = await getPolicy({ access_policy_id: DENY_ONLY_POLICY });
+
+    expect(result).toContain("no ALLOW rule");
+    expect(result).toContain("grants nothing by itself");
+    // The claim is scoped to what holds regardless of how the platform orders
+    // rules across policies, which is unspecified on the analysis path.
+    expect(result).toContain("guaranteed only for allows in this same policy");
+  });
+
+  it("does not say it of a policy that has an allow", async () => {
+    const result = await getPolicy({ access_policy_id: PARSER_POLICY });
+    expect(result).not.toContain("no ALLOW rule");
+  });
+
+  it("flags an `any` target that makes its narrower siblings pointless", async () => {
+    const result = await getPolicy({ access_policy_id: DENY_ONLY_POLICY });
+
+    expect(result).toContain("this policy covers any analysis");
+    expect(result).toContain("the scope is wider than the list suggests");
+  });
+
+  it("says multiple targets are alternatives, which nothing said before", async () => {
+    const result = await getPolicy({ access_policy_id: DENY_ONLY_POLICY });
+    expect(result).toContain("matching ANY line above");
+  });
+
+  it("says nothing about alternatives when there is only one target", async () => {
+    const result = await getPolicy({ access_policy_id: PARSER_POLICY });
+    expect(result).not.toContain("matching ANY line above");
   });
 });

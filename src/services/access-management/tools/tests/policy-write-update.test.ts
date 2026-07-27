@@ -14,7 +14,8 @@ const PROFILE_TOKEN = "p-0000000000000000000000000000000000";
 const API = "https://api.us-e1.tago.io";
 const ANALYSIS_POLICY = fixtures.accessPolicies[0].id;
 const RUN_POLICY = fixtures.accessPolicies[1].id;
-const MIXED_POLICY = fixtures.accessPolicies.find((policy) => policy.name === "[Mixed] - Analysis and run user")!.id;
+const MIXED = fixtures.accessPolicies.find((policy) => policy.name === "[Mixed] - Analysis and run user")!;
+const MIXED_POLICY = MIXED.id;
 
 async function callUpdate(config: IToolConfig, params: Record<string, unknown>) {
   const resources = new Resources({ token: PROFILE_TOKEN, region: TEST_REGION });
@@ -150,8 +151,8 @@ describe("each update tool edits only the kind of policy it is named for", () =>
     );
 
     expect(requests).toEqual([`GET /am/${MIXED_POLICY}`, `GET /am/${MIXED_POLICY}`]);
-    expect(policyById(MIXED_POLICY)?.targets).toEqual(fixtures.accessPolicies[6].targets);
-    expect(policyById(MIXED_POLICY)?.permissions).toEqual(fixtures.accessPolicies[6].permissions);
+    expect(policyById(MIXED_POLICY)?.targets).toEqual(MIXED.targets);
+    expect(policyById(MIXED_POLICY)?.permissions).toEqual(MIXED.permissions);
   });
 
   // Deactivating is the reversible way to switch a bad policy off, and it drops
@@ -164,7 +165,7 @@ describe("each update tool edits only the kind of policy it is named for", () =>
 
     expect(policyById(MIXED_POLICY)?.active).toBe(false);
     expect(policyById(MIXED_POLICY)?.name).toBe(`Off via ${kind}`);
-    expect(policyById(MIXED_POLICY)?.targets).toEqual(fixtures.accessPolicies[6].targets);
+    expect(policyById(MIXED_POLICY)?.targets).toEqual(MIXED.targets);
   });
 
   it("lets the analysis tool repair a policy whose targets resolve to nothing", async () => {

@@ -631,6 +631,20 @@ const accessPolicies = [
     ],
   },
   {
+    // Deny-only, and an `any` target beside narrower ones. Both shapes were
+    // found live on a real profile: individually valid rules that add nothing,
+    // and a target list that reads narrower than the policy actually is.
+    id: "61f00000000000000ab00008",
+    profile: IDS.profile,
+    name: "[Analysis] - Deny only, any target",
+    active: true,
+    tags: [],
+    created_at: "2026-01-09T00:00:00.000Z",
+    updated_at: "2026-01-09T00:00:00.000Z",
+    targets: [["analysis", "id", IDS.analysis], ["analysis"]],
+    permissions: [{ effect: "deny", action: ["access"], resource: ["device", "id", IDS.device] }],
+  },
+  {
     // Targets BOTH kinds, which no tool here can produce and a direct API call
     // can. Its `dashboard`/`access` rule is valid for each kind
     // and therefore reaches both, which is the over-grant the split closes.

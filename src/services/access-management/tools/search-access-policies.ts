@@ -61,8 +61,17 @@ async function searchAccessPoliciesTool(context: ServerContext, params: SearchAc
 
   const policies = await context.resources.accessManagement.list(query);
 
+  // The API returns `profile` whatever `fields` asks for. Rendering it would put
+  // a column in the table that `fields` cannot name, exclude, or document, which
+  // breaks this repo's search contract; it is also identical on every row, since
+  // a token reaches exactly one profile.
+  const rows = (policies as unknown as Record<string, unknown>[]).map((policy) => {
+    const { profile: _profile, ...rest } = policy;
+    return rest;
+  });
+
   const rendered = renderList({
-    items: policies as unknown as Record<string, unknown>[],
+    items: rows,
     conciseFields: ["id", "name", "active", "tags"],
     selectedFields: params.fields,
     responseFormat: response_format,

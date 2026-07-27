@@ -97,9 +97,10 @@ function inertReasons(
  * malformed target selects no policy at all, so counting its kind would let it
  * vouch for rules that can never be reached through it.
  */
-function renderTargets(targets: string[][]): { lines: string[]; types: TargetType[] } {
+function renderTargets(targets: string[][]): { lines: string[]; types: TargetType[]; subsumed: TargetType[] } {
   const lines: string[] = [];
   const types = new Set<TargetType>();
+  const covers = { analysis: { any: false, narrower: false }, run_user: { any: false, narrower: false } };
 
   for (const tuple of targets) {
     const kind = tuple[0];
@@ -119,10 +120,20 @@ function renderTargets(targets: string[][]): { lines: string[]; types: TargetTyp
     }
 
     types.add(kind);
+    if (match.by === "any") {
+      covers[kind].any = true;
+    } else {
+      covers[kind].narrower = true;
+    }
     lines.push(`- ${describeMatch(TARGET_NOUNS[kind], match)}`);
   }
 
-  return { lines, types: [...types] };
+  // A kind matched by `any` alongside narrower entries applies to every token of
+  // that kind, and the narrower lines are then decoration. Read top-down they
+  // suggest a scope the policy does not have.
+  const subsumed = (Object.keys(covers) as TargetType[]).filter((kind) => covers[kind].any && covers[kind].narrower);
+
+  return { lines, types: [...types], subsumed };
 }
 
 /**
@@ -157,6 +168,31 @@ const MIXED_TARGET_CONSEQUENCE = [
 ].join(" ");
 
 const MIXED_TARGET_WARNING = `**This policy targets BOTH an analysis and a TagoRUN user.** ${MIXED_TARGET_CONSEQUENCE}`;
+
+/**
+ * A policy whose every rule is a deny adds nothing.
+ *
+ * Evaluation starts denied and each matching rule overwrites the verdict, so a
+ * deny only changes an outcome when an allow matched BEFORE it. That ordering
+ * is guaranteed only within one policy, since the provider sorts each policy's
+ * rules `ORDER BY effect ASC` and the pooled list across policies is a plain
+ * concatenation in unspecified row order. The wording deliberately claims only
+ * what holds either way, so it stays true if the platform ever sorts the pooled
+ * list globally.
+ */
+const DENY_ONLY_NOTE = [
+  "**This policy has no ALLOW rule**, so it grants nothing by itself.",
+  "A deny only takes effect against an allow evaluated before it, which is guaranteed only for allows in this same policy.",
+  "If this is meant to override an allow in a different policy, verify that it does.",
+].join(" ");
+
+/** Multiple targets are alternatives, which the rules section says of rules but nothing said of targets. */
+const TARGET_ALTERNATIVES_NOTE = "An analysis or run user matching ANY line above is covered by this policy.";
+
+function subsumedTargetNote(kinds: readonly TargetType[]): string {
+  const nouns = kinds.map((kind) => `any ${TARGET_NOUNS[kind]}`).join(" and ");
+  return `Note: this policy covers ${nouns}, so the narrower ${kinds.length > 1 ? "entries" : "entries of that kind"} above add nothing and the scope is wider than the list suggests.`;
+}
 
 /** The grant's console name, from whichever target kind actually offers it. */
 function labelFor(catalog: PermissionCatalog, targetTypes: readonly TargetType[], resource: string, action: string): string {
@@ -198,11 +234,22 @@ function renderRules(permissions: readonly PolicyRule[], targetTypes: readonly T
 
 /** Full decoded view of one policy, used by get_access_policy and by the write confirmations. */
 function renderPolicyRules(policy: PolicyWire, catalog?: PermissionCatalog): string {
-  const { lines: targetLines, types } = renderTargets(policy.targets ?? []);
+  const { lines: targetLines, types, subsumed } = renderTargets(policy.targets ?? []);
   const sections: string[] = [];
 
   sections.push("**Applies to**");
   sections.push(targetLines.length > 0 ? targetLines.join("\n") : "- nothing: this policy has no targets, so it grants nothing.");
+  // Targets are alternatives. The rules section explains its own ordering at
+  // length, and saying nothing here left the commonest question about a policy
+  // unanswered on the page that should answer it.
+  if (targetLines.length > 1) {
+    sections.push("");
+    sections.push(TARGET_ALTERNATIVES_NOTE);
+  }
+  if (subsumed.length > 0) {
+    sections.push("");
+    sections.push(subsumedTargetNote(subsumed));
+  }
   sections.push("");
   if (types.length > 1) {
     sections.push(MIXED_TARGET_WARNING);
@@ -212,6 +259,12 @@ function renderPolicyRules(policy: PolicyWire, catalog?: PermissionCatalog): str
   const permissions = policy.permissions ?? [];
   sections.push("**Rules**");
   sections.push(permissions.length > 0 ? renderRules(permissions, types, catalog).join("\n") : "- none: this policy has no rules, so it grants nothing.");
+  // A rule list that is entirely denies is individually valid and collectively
+  // pointless, which is the rule-level INERT problem one level up.
+  if (permissions.length > 0 && permissions.every((permission) => permission.effect === "deny")) {
+    sections.push("");
+    sections.push(DENY_ONLY_NOTE);
+  }
   sections.push("");
   sections.push(EVALUATION_NOTE);
 

@@ -104,3 +104,15 @@ describe("delete_access_policy", () => {
     expect(await searchPolicies()).not.toContain("[Analysis] - Parser device access");
   });
 });
+
+describe("search_access_policies renders only fields it advertises", () => {
+  // The API returns `profile` whatever `fields` asks for. Rendering it puts a
+  // column in the table that `fields` cannot name or exclude, which is exactly
+  // the contract this domain's search is documented to keep.
+  it("does not render the profile column the API returns unasked", async () => {
+    const result = await searchPolicies({ response_format: "detailed" });
+
+    expect(result).not.toContain("profile");
+    expect(result).toContain(fixtures.accessPolicies[0].name);
+  });
+});
