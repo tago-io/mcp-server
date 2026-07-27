@@ -1,6 +1,8 @@
 # services/access-management
 
-Access Management policies: `search_access_policies`, `get_access_policy`, `lookup_access_permissions`, `create_access_policy`, `update_access_policy`, `delete_access_policy`.
+Access Management policies: `search_access_policies`, `get_access_policy`, `lookup_access_permissions`, `create_analysis_access_policy`, `create_run_user_access_policy`, `update_analysis_access_policy`, `update_run_user_access_policy`, `delete_access_policy`.
+
+The write tools are split by target kind and the read tools are not, because reading is how you discover a policy's kind in the first place. Both write variants come from one factory in `tools/policy-write.ts`, so they cannot drift in behaviour, and the prose they share is interpolated from constants: the platform's own agent tooling made the same split with two hand-written descriptions, and those have already fallen out of step with its catalog.
 
 See the repo-root `AGENTS.md` for the cross-cutting tool-design and credential-safe-output rules this domain also obeys.
 
@@ -16,6 +18,16 @@ Policies govern `analysis` and `run_user` tokens, and nothing else.
 - **Dashboard tokens do not participate at all.**
 
 That asymmetry is worth stating in tool descriptions, because the obvious reading (that a policy protects the MCP server too) is wrong in both directions: a profile token can write any policy, and no policy restricts it.
+
+## Why the write tools are split by kind
+
+The two kinds are not two views of one permission list. Five resource NAMES appear under both (`device`, `entity`, `dashboard`, `run_user`, `sql`), with different action sets: `dashboard` offers a run user `access` and `arrangement`, and an analysis `access` plus six others. The overlap is partial and cannot be assumed, which is the trap. `arrangement` exists only for run users; `duplicate`, `related_devices` and `related_analysis` only for analyses. A merged tool has to accept the union and reject the impossible pairings afterwards, which is validation standing in for a distinction the tool could simply have made.
+
+The stronger reason is an over-grant. The API validates each target on its own and never correlates a target to the rules beside it, so one policy may legally hold both an `analysis` and a `run_user` target. The target kind is a WHERE clause that selects the policy and is then discarded: the permission list is re-fetched by policy id alone, and no evaluation code reads a policy's targets at all. A policy holding both kinds therefore grants its entire rule list to both, in both directions, and a rule written for the analysis silently reaches the co-targeted run users. The old merged tool accepted this, because it passed a rule that was meaningful for at least one of the policy's kinds, which is right for a single-kind policy and too permissive for a mixed one. A tool whose kind is fixed cannot express that policy at all.
+
+Nothing server-side treats this as a mistake. No schema, migration, comment, or type expresses the single-kind rule, and a Rust schema test asserts a policy with one `run_user` and one `analysis` target validates. The Admin console appears to pin one kind per policy, and the platform's own agent tooling binds it at registration exactly as these tools do, so the shape is reachable only from a direct API call. Assume such a policy came from somewhere else rather than from a tool that meant it.
+
+Because a kind is bound to a tool, a policy cannot be repointed from one kind to the other in place. That is a real capability removal, and it is the right trade: keeping rules across such a move is exactly what produces a policy that reads correctly and grants nothing. Moving a policy means deleting it and creating the replacement, which both update tools say.
 
 ## How rules are evaluated
 
@@ -36,13 +48,13 @@ Be precise about what the API does and does not check, because it decides what a
 
 `tag_match` means different things in the two positions, so the two schemas describe it differently. On a permission rule it compares values: the resource must carry the same value for that key as the target does. On a target it only requires that the analysis or run user CARRY the key; no value comparison happens (`getPolicyByTarget`).
 
-The tools therefore accept a tagged `match` object and build the tuple in `policy-rules.ts`, which makes the broken arities unrepresentable. Targets use a separate schema without `path`, because the target lookup has no path branch and a path target would resolve to no policy at all.
+The tools therefore accept a tagged `match` object and build the tuple in `policy-rules.ts`, which makes the broken arities unrepresentable. Targets use a separate schema without `path`, because the target lookup has no path branch and a path target would resolve to no policy at all. A target is a bare match spec rather than a `{type, match}` pair, since the kind comes from the tool that is running.
 
 ## Why writes are validated before the wire
 
-The API's action enum and resource enum are independent, so `{resource: ["device"], action: ["login_as_user"]}` is accepted, saved, and inert. So is a match form a grant does not accept, such as scoping device `create` to a single device id when no device exists yet to carry it. Both produce a policy that exists, reads correctly, and does nothing, which is the failure this domain was opened to make diagnosable. Creating one would reproduce the bug, so `create_access_policy` and `update_access_policy` refuse them.
+The API's action enum and resource enum are independent, so `{resource: ["device"], action: ["login_as_user"]}` is accepted, saved, and inert. So is a match form a grant does not accept, such as scoping device `create` to a single device id when no device exists yet to carry it. Both produce a policy that exists, reads correctly, and does nothing, which is the failure this domain was opened to make diagnosable. Creating one would reproduce the bug, so every create and update tool refuses them.
 
-`get_access_policy` marks the same shapes on policies that already contain them, since a policy written in the Admin console can carry them too. A rule is INERT only when nothing in it can fire; a rule whose actions are part live is PARTLY INERT, because calling it dead would hide a permission the policy really does grant. When a policy has no target the platform can resolve, the per-rule verdicts are suppressed entirely and the targets section carries the reason, rather than repeating a misleading cause on every rule.
+`get_access_policy` marks the same shapes on policies that already contain them, since a policy that arrived by any other route can carry them too. A rule is INERT only when nothing in it can fire; a rule whose actions are part live is PARTLY INERT, because calling it dead would hide a permission the policy really does grant. When a policy has no target the platform can resolve, the per-rule verdicts are suppressed entirely and the targets section carries the reason, rather than repeating a misleading cause on every rule.
 
 ## The permission catalog is fetched, never vendored
 
@@ -56,13 +68,15 @@ Reads degrade, writes do not. `get_access_policy` without the catalog still rend
 
 ## Update replaces, it does not merge
 
-`permissions` and `targets` are replaced wholesale when present and untouched when absent, because the provider deletes every row and reinserts what was sent. There is no partial edit. `update_access_policy` reads the policy first whenever either key is supplied and renders it before and after, so the replacement is visible. A change that cannot drop rules makes no extra request.
+`permissions` and `targets` are replaced wholesale when present and untouched when absent, because the provider deletes every row and reinserts what was sent. There is no partial edit. An update renders the policy before and after whenever either key is supplied, so the replacement is visible.
 
-Targets are validated even when no rule is submitted. Because the API keeps the rule list when its key is absent, repointing a policy from an analysis to a run user leaves every rule in place while making most of them meaningless, producing exactly the inert policy this domain exists to prevent. So a target change is checked against the rules that will survive it.
+An update reads the policy first on EVERY path, including a rename. The tool's name asserts which kind of policy it edits, and it cannot honour that claim without seeing the stored targets. Letting a rename through unchecked would mean `update_analysis_access_policy` succeeding on a run-user policy for one field and refusing it for another, which is a worse contract than one extra read. It refuses a policy whose stored kind is the other one, naming the tool that owns it, and refuses a mixed policy outright, since replacing its targets would silently drop one kind. A policy with no resolvable target is owned by neither and either tool may repair it by supplying targets.
 
-That check refuses only what the change NEWLY breaks, compared per action and by liveness rather than by the reason for deadness. A grant already dead grants nothing either way, and refusing it would make any policy that already contains one permanently uneditable, while comparing reasons is the wrong abstraction: the same action can be dead before because its match form is rejected and dead after because the action does not exist, which is not a regression. Liveness is per action rather than per rule because a repoint that leaves a rule with one working action out of three has still silently taken two away, which is the same partial loss the renderer reports as PARTLY INERT. Rules stored in a shape the platform cannot parse are left out of the comparison for the same reason as dead ones.
+Validating a submitted rule list fails closed; labelling a rendered diff degrades, and says so with the same note `get_access_policy` uses. Submitting rules also requires the policy to have a target the platform can resolve, because rules on a policy no token can match are the artefact this domain exists to prevent; a create always supplies targets, so this only catches an update replacing the rules of a policy whose stored targets are malformed.
 
-The check sees only what the catalog can express. A rule scoped by `tag_match` can still stop matching after a repoint because the new targets do not carry the tag, which depends on the targets' own data rather than on the permission model, and detecting it would mean evaluating concrete tags on both the targets and the resources, which is the verdict simulation this domain declines to build. The tool description says what the check covers instead of implying more.
+A targets-only change submits no rule to judge, so it runs no catalog check. The one case where that change alters liveness is repairing a policy whose stored targets resolve to nothing, since either tool may claim such a policy: rules kept across that repair can land under a kind that cannot honour them. Nothing goes from live to dead, because a policy no token matched had no live grant to lose, and the After diff marks the survivors INERT. The pre-split tool behaved identically here.
+
+What that leaves unchecked is stated rather than implied: a rule scoped by `tag_match` can still stop matching when the new targets do not carry the tag, which depends on the targets' own data rather than on the permission model. Detecting it would mean evaluating concrete tags on both the targets and the resources, which is the verdict simulation this domain declines to build.
 
 An action is only called dead when every grant that could serve it can be judged. A grant the catalog ships with no match forms leaves the answer unknown, and unknown is not dead: refusing it would produce an error naming no acceptable form at all, in exactly the drift scenario that fetching rather than vendoring exists to survive.
 
@@ -72,8 +86,12 @@ Locally built rule lists are rendered allow-first before being shown, because a 
 
 `search_access_policies` follows the resource-list search shape, with one exception: the list route reads only the policy table, so it returns neither `permissions` nor `targets` at any `fields` value. Those are absent from the `fields` enum rather than advertised and permanently empty, and every result steers to `get_access_policy`, which is the only source of a policy's rules.
 
+That limitation has a second consequence now the write tools are split: a search result cannot say which kind a policy targets, so it cannot say which update tool edits it. `get_access_policy` names the owning tool, which is why both update descriptions send the caller there first.
+
 Rules are rendered as an ordered list, not a table. The order is load-bearing, and tag keys and values are free-form user text that the shared markdown table renderer does not escape.
 
 ## Mock fidelity
 
-`testing/mocks/am-policies.ts` is a stateful mock that reproduces the behaviours a canned fixture would hide: the list projection that cannot return rules or targets, the info route's re-sort by effect, the wholesale replacement on edit, the storing of malformed or unmatchable tuples without complaint, and the provider's truncation of a tuple to positions 0 to 4. The seed policies include a deny written before an allow, so a tool that echoed submission order fails, and a policy holding all three inert shapes. Creation is capped at the free plan's limit of 5 policies.
+`testing/mocks/am-policies.ts` is a stateful mock that reproduces the behaviours a canned fixture would hide: the list projection that cannot return rules or targets, the info route's re-sort by effect, the wholesale replacement on edit, the storing of malformed or unmatchable tuples without complaint, and the provider's truncation of a tuple to positions 0 to 4. The seed policies include a deny written before an allow, so a tool that echoed submission order fails, a policy holding all three inert shapes, and a policy targeting both kinds, which no tool here can produce and a direct API call still can.
+
+The `amSettings` fixture carries `dashboard` and `sql` under both kinds with different action sets, because a subset holding only kind-exclusive resources would let a merged check pass every test it should fail.

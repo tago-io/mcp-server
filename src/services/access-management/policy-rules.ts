@@ -83,7 +83,9 @@ const targetMatchSchema = z
       key: z.string().min(1).describe("Tag key the analysis or run user must carry. Any value counts; the value is compared only by a permission rule using the same form."),
     }),
   ])
-  .describe('Which analyses or run users the policy applies to. Defaults to {"by": "any"}, which is every one of that kind.');
+  .describe(
+    'How this target selects the analyses or run users it covers. Required: use {"by": "any"} for every one of the kind this tool targets. The kind itself comes from the tool, not from here.'
+  );
 
 /** Builds the wire tuple. Every branch produces an arity the API's parser reads. */
 function buildMatchTuple(head: string, match: MatchSpec): string[] {

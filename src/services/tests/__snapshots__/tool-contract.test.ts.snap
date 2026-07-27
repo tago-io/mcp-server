@@ -72,255 +72,6 @@ exports[`tool listing snapshot > matches the committed catalog snapshot (names, 
       "$schema": "http://json-schema.org/draft-07/schema#",
       "additionalProperties": false,
       "properties": {
-        "active": {
-          "description": "Whether the policy takes effect immediately. Defaults to true; an inactive policy grants nothing.",
-          "type": "boolean",
-        },
-        "name": {
-          "description": "Name for the policy. The Admin console convention is to name it after what it is for, e.g. "[Analysis] - Parser device access".",
-          "maxLength": 100,
-          "minLength": 1,
-          "type": "string",
-        },
-        "permissions": {
-          "description": "The rules. Each names a resource, the actions allowed or denied on it, and which resources of that type it covers.",
-          "items": {
-            "additionalProperties": false,
-            "properties": {
-              "actions": {
-                "description": "Actions on that resource, e.g. \`["send_data"]\`. Each must be an action the resource offers to this policy's target kind; lookup_access_permissions lists them.",
-                "items": {
-                  "minLength": 1,
-                  "type": "string",
-                },
-                "minItems": 1,
-                "type": "array",
-              },
-              "effect": {
-                "description": "Whether this rule grants or withholds the actions.",
-                "enum": [
-                  "allow",
-                  "deny",
-                ],
-                "type": "string",
-              },
-              "match": {
-                "anyOf": [
-                  {
-                    "$ref": "#/properties/targets/items/properties/match/anyOf/0",
-                  },
-                  {
-                    "$ref": "#/properties/targets/items/properties/match/anyOf/1",
-                  },
-                  {
-                    "$ref": "#/properties/targets/items/properties/match/anyOf/2",
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "by": {
-                        "const": "tag_match",
-                        "type": "string",
-                      },
-                      "key": {
-                        "description": "Tag key whose value must be the SAME on the target and on the resource. Use this to scope an analysis to only the devices sharing its own tag value for this key.",
-                        "minLength": 1,
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "by",
-                      "key",
-                    ],
-                    "type": "object",
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "by": {
-                        "const": "path",
-                        "type": "string",
-                      },
-                      "path": {
-                        "description": "Storage path prefix, e.g. \`reports/\`. Covers every file whose path starts with it.",
-                        "minLength": 1,
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "by",
-                      "path",
-                    ],
-                    "type": "object",
-                  },
-                ],
-                "description": "Which resources of this type the rule covers. Defaults to {"by": "any"}. Not every resource accepts every form: lookup_access_permissions reports the accepted ones as \`match_by\`.",
-              },
-              "resource": {
-                "description": "Resource type the rule covers, e.g. \`device\`, \`analysis\`, \`file\`. Call lookup_access_permissions for the resources a target kind can grant on.",
-                "minLength": 1,
-                "type": "string",
-              },
-            },
-            "required": [
-              "effect",
-              "resource",
-              "actions",
-            ],
-            "type": "object",
-          },
-          "minItems": 1,
-          "type": "array",
-        },
-        "tags": {
-          "description": "Tags for the policy. E.g: [{ key: 'purpose', value: 'parser' }]",
-          "items": {
-            "additionalProperties": false,
-            "properties": {
-              "key": {
-                "description": "Tag key",
-                "type": "string",
-              },
-              "value": {
-                "description": "Tag value",
-                "type": "string",
-              },
-            },
-            "required": [
-              "key",
-              "value",
-            ],
-            "type": "object",
-          },
-          "type": "array",
-        },
-        "targets": {
-          "description": "Which analyses or TagoRUN users the policy applies to. A policy with no targets grants nothing.",
-          "items": {
-            "additionalProperties": false,
-            "properties": {
-              "match": {
-                "anyOf": [
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "by": {
-                        "const": "any",
-                        "description": "Covers every resource of this type.",
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "by",
-                    ],
-                    "type": "object",
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "by": {
-                        "const": "id",
-                        "type": "string",
-                      },
-                      "id": {
-                        "description": "The 24-character ID of the single resource this rule covers.",
-                        "maxLength": 24,
-                        "minLength": 24,
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "by",
-                      "id",
-                    ],
-                    "type": "object",
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "by": {
-                        "const": "tag",
-                        "type": "string",
-                      },
-                      "key": {
-                        "description": "Tag key the resource must carry.",
-                        "minLength": 1,
-                        "type": "string",
-                      },
-                      "value": {
-                        "description": "Tag value the resource must carry for that key.",
-                        "minLength": 1,
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "by",
-                      "key",
-                      "value",
-                    ],
-                    "type": "object",
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "by": {
-                        "const": "tag_match",
-                        "type": "string",
-                      },
-                      "key": {
-                        "description": "Tag key the analysis or run user must carry. Any value counts; the value is compared only by a permission rule using the same form.",
-                        "minLength": 1,
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "by",
-                      "key",
-                    ],
-                    "type": "object",
-                  },
-                ],
-                "description": "Which analyses or run users the policy applies to. Defaults to {"by": "any"}, which is every one of that kind.",
-              },
-              "type": {
-                "description": "Which kind of token the policy applies to. Access Management governs analysis and run_user tokens only; profile tokens bypass it entirely.",
-                "enum": [
-                  "analysis",
-                  "run_user",
-                ],
-                "type": "string",
-              },
-            },
-            "required": [
-              "type",
-            ],
-            "type": "object",
-          },
-          "minItems": 1,
-          "type": "array",
-        },
-      },
-      "required": [
-        "name",
-        "targets",
-        "permissions",
-      ],
-      "type": "object",
-    },
-    "name": "create_access_policy",
-    "title": "Create Access Policy",
-  },
-  {
-    "annotations": {
-      "destructiveHint": false,
-      "idempotentHint": false,
-      "openWorldHint": false,
-      "readOnlyHint": false,
-    },
-    "inputSchema": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "additionalProperties": false,
-      "properties": {
         "action": {
           "anyOf": [
             {
@@ -1153,6 +904,238 @@ The type parameter accepts one of seven values:
       "$schema": "http://json-schema.org/draft-07/schema#",
       "additionalProperties": false,
       "properties": {
+        "active": {
+          "description": "Whether the policy takes effect immediately. Defaults to true; an inactive policy grants nothing.",
+          "type": "boolean",
+        },
+        "name": {
+          "description": "Name for the policy. The Admin console convention is to name it after what it is for, e.g. "[Analysis] - Parser device access".",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string",
+        },
+        "permissions": {
+          "description": "The rules. Each names a resource, the actions allowed or denied on it, and which resources of that type it covers.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "actions": {
+                "description": "Actions on that resource, e.g. \`["send_data"]\`. Each must be an action the resource offers to this kind of policy; lookup_access_permissions lists them.",
+                "items": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "effect": {
+                "description": "Whether this rule grants or withholds the actions.",
+                "enum": [
+                  "allow",
+                  "deny",
+                ],
+                "type": "string",
+              },
+              "match": {
+                "anyOf": [
+                  {
+                    "$ref": "#/properties/targets/items/anyOf/0",
+                  },
+                  {
+                    "$ref": "#/properties/targets/items/anyOf/1",
+                  },
+                  {
+                    "$ref": "#/properties/targets/items/anyOf/2",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "by": {
+                        "const": "tag_match",
+                        "type": "string",
+                      },
+                      "key": {
+                        "description": "Tag key whose value must be the SAME on the target and on the resource. Use this to scope an analysis to only the devices sharing its own tag value for this key.",
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "by",
+                      "key",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "by": {
+                        "const": "path",
+                        "type": "string",
+                      },
+                      "path": {
+                        "description": "Storage path prefix, e.g. \`reports/\`. Covers every file whose path starts with it.",
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "by",
+                      "path",
+                    ],
+                    "type": "object",
+                  },
+                ],
+                "description": "Which resources of this type the rule covers. Defaults to {"by": "any"}. Not every resource accepts every form: lookup_access_permissions reports the accepted ones as \`match_by\`.",
+              },
+              "resource": {
+                "description": "Resource type the rule covers, e.g. \`device\`, \`analysis\`, \`file\`. Call lookup_access_permissions for the resources this kind of policy can grant on.",
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "required": [
+              "effect",
+              "resource",
+              "actions",
+            ],
+            "type": "object",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+        "tags": {
+          "description": "Tags for the policy. E.g: [{ key: 'purpose', value: 'parser' }]",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "targets": {
+          "description": "Which analyses the policy applies to. Every target is an analysis; this tool cannot target the other kind. Scope by tag rather than by ID where you can, so the policy keeps working as analyses are added.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "any",
+                    "description": "Covers every resource of this type.",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "id",
+                    "type": "string",
+                  },
+                  "id": {
+                    "description": "The 24-character ID of the single resource this rule covers.",
+                    "maxLength": 24,
+                    "minLength": 24,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                  "id",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "tag",
+                    "type": "string",
+                  },
+                  "key": {
+                    "description": "Tag key the resource must carry.",
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "value": {
+                    "description": "Tag value the resource must carry for that key.",
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                  "key",
+                  "value",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "tag_match",
+                    "type": "string",
+                  },
+                  "key": {
+                    "description": "Tag key the analysis or run user must carry. Any value counts; the value is compared only by a permission rule using the same form.",
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                  "key",
+                ],
+                "type": "object",
+              },
+            ],
+            "description": "How this target selects the analyses or run users it covers. Required: use {"by": "any"} for every one of the kind this tool targets. The kind itself comes from the tool, not from here.",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+      },
+      "required": [
+        "name",
+        "targets",
+        "permissions",
+      ],
+      "type": "object",
+    },
+    "name": "create_analysis_access_policy",
+    "title": "Create Analysis Access Policy",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
         "arrangement": {
           "description": "Widget placement grid. Replaces the current arrangement atomically; always send the complete desired arrangement.",
           "items": {
@@ -1584,6 +1567,238 @@ The type parameter accepts one of seven values:
     },
     "name": "create_run_user",
     "title": "Create Run User",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "description": "Whether the policy takes effect immediately. Defaults to true; an inactive policy grants nothing.",
+          "type": "boolean",
+        },
+        "name": {
+          "description": "Name for the policy. The Admin console convention is to name it after what it is for, e.g. "[RUN] - Plant floor dashboard access".",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string",
+        },
+        "permissions": {
+          "description": "The rules. Each names a resource, the actions allowed or denied on it, and which resources of that type it covers.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "actions": {
+                "description": "Actions on that resource, e.g. \`["send_data"]\`. Each must be an action the resource offers to this kind of policy; lookup_access_permissions lists them.",
+                "items": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "effect": {
+                "description": "Whether this rule grants or withholds the actions.",
+                "enum": [
+                  "allow",
+                  "deny",
+                ],
+                "type": "string",
+              },
+              "match": {
+                "anyOf": [
+                  {
+                    "$ref": "#/properties/targets/items/anyOf/0",
+                  },
+                  {
+                    "$ref": "#/properties/targets/items/anyOf/1",
+                  },
+                  {
+                    "$ref": "#/properties/targets/items/anyOf/2",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "by": {
+                        "const": "tag_match",
+                        "type": "string",
+                      },
+                      "key": {
+                        "description": "Tag key whose value must be the SAME on the target and on the resource. Use this to scope an analysis to only the devices sharing its own tag value for this key.",
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "by",
+                      "key",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "by": {
+                        "const": "path",
+                        "type": "string",
+                      },
+                      "path": {
+                        "description": "Storage path prefix, e.g. \`reports/\`. Covers every file whose path starts with it.",
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "by",
+                      "path",
+                    ],
+                    "type": "object",
+                  },
+                ],
+                "description": "Which resources of this type the rule covers. Defaults to {"by": "any"}. Not every resource accepts every form: lookup_access_permissions reports the accepted ones as \`match_by\`.",
+              },
+              "resource": {
+                "description": "Resource type the rule covers, e.g. \`device\`, \`analysis\`, \`file\`. Call lookup_access_permissions for the resources this kind of policy can grant on.",
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "required": [
+              "effect",
+              "resource",
+              "actions",
+            ],
+            "type": "object",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+        "tags": {
+          "description": "Tags for the policy. E.g: [{ key: 'purpose', value: 'parser' }]",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "targets": {
+          "description": "Which TagoRUN users the policy applies to. Every target is a TagoRUN user; this tool cannot target the other kind. Scope by tag rather than by ID where you can, so the policy keeps working as TagoRUN users are added.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "any",
+                    "description": "Covers every resource of this type.",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "id",
+                    "type": "string",
+                  },
+                  "id": {
+                    "description": "The 24-character ID of the single resource this rule covers.",
+                    "maxLength": 24,
+                    "minLength": 24,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                  "id",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "tag",
+                    "type": "string",
+                  },
+                  "key": {
+                    "description": "Tag key the resource must carry.",
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "value": {
+                    "description": "Tag value the resource must carry for that key.",
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                  "key",
+                  "value",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "tag_match",
+                    "type": "string",
+                  },
+                  "key": {
+                    "description": "Tag key the analysis or run user must carry. Any value counts; the value is compared only by a permission rule using the same form.",
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                  "key",
+                ],
+                "type": "object",
+              },
+            ],
+            "description": "How this target selects the analyses or run users it covers. Required: use {"by": "any"} for every one of the kind this tool targets. The kind itself comes from the tool, not from here.",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+      },
+      "required": [
+        "name",
+        "targets",
+        "permissions",
+      ],
+      "type": "object",
+    },
+    "name": "create_run_user_access_policy",
+    "title": "Create Run-User Access Policy",
   },
   {
     "annotations": {
@@ -4324,259 +4539,6 @@ The type parameter accepts one of seven values:
   },
   {
     "annotations": {
-      "destructiveHint": true,
-      "idempotentHint": true,
-      "openWorldHint": false,
-      "readOnlyHint": false,
-    },
-    "inputSchema": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "additionalProperties": false,
-      "properties": {
-        "access_policy_id": {
-          "description": "The 24-character access policy ID.",
-          "maxLength": 24,
-          "minLength": 24,
-          "type": "string",
-        },
-        "active": {
-          "description": "Whether the policy takes effect. An inactive policy grants nothing.",
-          "type": "boolean",
-        },
-        "name": {
-          "description": "New name for the policy.",
-          "maxLength": 100,
-          "minLength": 1,
-          "type": "string",
-        },
-        "permissions": {
-          "description": "REPLACES every rule on the policy. Pass the complete list you want, not just the ones being added; read the current list with get_access_policy first.",
-          "items": {
-            "additionalProperties": false,
-            "properties": {
-              "actions": {
-                "description": "Actions on that resource, e.g. \`["send_data"]\`. Each must be an action the resource offers to this policy's target kind; lookup_access_permissions lists them.",
-                "items": {
-                  "minLength": 1,
-                  "type": "string",
-                },
-                "minItems": 1,
-                "type": "array",
-              },
-              "effect": {
-                "description": "Whether this rule grants or withholds the actions.",
-                "enum": [
-                  "allow",
-                  "deny",
-                ],
-                "type": "string",
-              },
-              "match": {
-                "anyOf": [
-                  {
-                    "$ref": "#/properties/targets/items/properties/match/anyOf/0",
-                  },
-                  {
-                    "$ref": "#/properties/targets/items/properties/match/anyOf/1",
-                  },
-                  {
-                    "$ref": "#/properties/targets/items/properties/match/anyOf/2",
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "by": {
-                        "const": "tag_match",
-                        "type": "string",
-                      },
-                      "key": {
-                        "description": "Tag key whose value must be the SAME on the target and on the resource. Use this to scope an analysis to only the devices sharing its own tag value for this key.",
-                        "minLength": 1,
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "by",
-                      "key",
-                    ],
-                    "type": "object",
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "by": {
-                        "const": "path",
-                        "type": "string",
-                      },
-                      "path": {
-                        "description": "Storage path prefix, e.g. \`reports/\`. Covers every file whose path starts with it.",
-                        "minLength": 1,
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "by",
-                      "path",
-                    ],
-                    "type": "object",
-                  },
-                ],
-                "description": "Which resources of this type the rule covers. Defaults to {"by": "any"}. Not every resource accepts every form: lookup_access_permissions reports the accepted ones as \`match_by\`.",
-              },
-              "resource": {
-                "description": "Resource type the rule covers, e.g. \`device\`, \`analysis\`, \`file\`. Call lookup_access_permissions for the resources a target kind can grant on.",
-                "minLength": 1,
-                "type": "string",
-              },
-            },
-            "required": [
-              "effect",
-              "resource",
-              "actions",
-            ],
-            "type": "object",
-          },
-          "minItems": 1,
-          "type": "array",
-        },
-        "tags": {
-          "description": "REPLACES the policy's tags. E.g: [{ key: 'purpose', value: 'parser' }]",
-          "items": {
-            "additionalProperties": false,
-            "properties": {
-              "key": {
-                "description": "Tag key",
-                "type": "string",
-              },
-              "value": {
-                "description": "Tag value",
-                "type": "string",
-              },
-            },
-            "required": [
-              "key",
-              "value",
-            ],
-            "type": "object",
-          },
-          "type": "array",
-        },
-        "targets": {
-          "description": "REPLACES every target on the policy. Pass the complete list you want, not just the ones being added; read the current list with get_access_policy first. Changing the kind of token a policy applies to can invalidate rules you are keeping, so pass \`permissions\` in the same call when it does.",
-          "items": {
-            "additionalProperties": false,
-            "properties": {
-              "match": {
-                "anyOf": [
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "by": {
-                        "const": "any",
-                        "description": "Covers every resource of this type.",
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "by",
-                    ],
-                    "type": "object",
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "by": {
-                        "const": "id",
-                        "type": "string",
-                      },
-                      "id": {
-                        "description": "The 24-character ID of the single resource this rule covers.",
-                        "maxLength": 24,
-                        "minLength": 24,
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "by",
-                      "id",
-                    ],
-                    "type": "object",
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "by": {
-                        "const": "tag",
-                        "type": "string",
-                      },
-                      "key": {
-                        "description": "Tag key the resource must carry.",
-                        "minLength": 1,
-                        "type": "string",
-                      },
-                      "value": {
-                        "description": "Tag value the resource must carry for that key.",
-                        "minLength": 1,
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "by",
-                      "key",
-                      "value",
-                    ],
-                    "type": "object",
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "by": {
-                        "const": "tag_match",
-                        "type": "string",
-                      },
-                      "key": {
-                        "description": "Tag key the analysis or run user must carry. Any value counts; the value is compared only by a permission rule using the same form.",
-                        "minLength": 1,
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "by",
-                      "key",
-                    ],
-                    "type": "object",
-                  },
-                ],
-                "description": "Which analyses or run users the policy applies to. Defaults to {"by": "any"}, which is every one of that kind.",
-              },
-              "type": {
-                "description": "Which kind of token the policy applies to. Access Management governs analysis and run_user tokens only; profile tokens bypass it entirely.",
-                "enum": [
-                  "analysis",
-                  "run_user",
-                ],
-                "type": "string",
-              },
-            },
-            "required": [
-              "type",
-            ],
-            "type": "object",
-          },
-          "minItems": 1,
-          "type": "array",
-        },
-      },
-      "required": [
-        "access_policy_id",
-      ],
-      "type": "object",
-    },
-    "name": "update_access_policy",
-    "title": "Update Access Policy",
-  },
-  {
-    "annotations": {
       "destructiveHint": false,
       "idempotentHint": true,
       "openWorldHint": false,
@@ -5410,6 +5372,242 @@ The type parameter accepts one of seven values:
   },
   {
     "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "access_policy_id": {
+          "description": "The 24-character access policy ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "active": {
+          "description": "Whether the policy takes effect. An inactive policy grants nothing.",
+          "type": "boolean",
+        },
+        "name": {
+          "description": "New name for the policy.",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string",
+        },
+        "permissions": {
+          "description": "REPLACES every rule on the policy. Pass the complete list you want, not just the ones being added; read the current list with get_access_policy first.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "actions": {
+                "description": "Actions on that resource, e.g. \`["send_data"]\`. Each must be an action the resource offers to this kind of policy; lookup_access_permissions lists them.",
+                "items": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "effect": {
+                "description": "Whether this rule grants or withholds the actions.",
+                "enum": [
+                  "allow",
+                  "deny",
+                ],
+                "type": "string",
+              },
+              "match": {
+                "anyOf": [
+                  {
+                    "$ref": "#/properties/targets/items/anyOf/0",
+                  },
+                  {
+                    "$ref": "#/properties/targets/items/anyOf/1",
+                  },
+                  {
+                    "$ref": "#/properties/targets/items/anyOf/2",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "by": {
+                        "const": "tag_match",
+                        "type": "string",
+                      },
+                      "key": {
+                        "description": "Tag key whose value must be the SAME on the target and on the resource. Use this to scope an analysis to only the devices sharing its own tag value for this key.",
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "by",
+                      "key",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "by": {
+                        "const": "path",
+                        "type": "string",
+                      },
+                      "path": {
+                        "description": "Storage path prefix, e.g. \`reports/\`. Covers every file whose path starts with it.",
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "by",
+                      "path",
+                    ],
+                    "type": "object",
+                  },
+                ],
+                "description": "Which resources of this type the rule covers. Defaults to {"by": "any"}. Not every resource accepts every form: lookup_access_permissions reports the accepted ones as \`match_by\`.",
+              },
+              "resource": {
+                "description": "Resource type the rule covers, e.g. \`device\`, \`analysis\`, \`file\`. Call lookup_access_permissions for the resources this kind of policy can grant on.",
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "required": [
+              "effect",
+              "resource",
+              "actions",
+            ],
+            "type": "object",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+        "tags": {
+          "description": "REPLACES the policy's tags. E.g: [{ key: 'purpose', value: 'parser' }]",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "targets": {
+          "description": "REPLACES every target on the policy. Pass the complete list you want, not just the ones being added. Every target is an analysis; this tool cannot target the other kind. Scope by tag rather than by ID where you can, so the policy keeps working as analyses are added.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "any",
+                    "description": "Covers every resource of this type.",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "id",
+                    "type": "string",
+                  },
+                  "id": {
+                    "description": "The 24-character ID of the single resource this rule covers.",
+                    "maxLength": 24,
+                    "minLength": 24,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                  "id",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "tag",
+                    "type": "string",
+                  },
+                  "key": {
+                    "description": "Tag key the resource must carry.",
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "value": {
+                    "description": "Tag value the resource must carry for that key.",
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                  "key",
+                  "value",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "tag_match",
+                    "type": "string",
+                  },
+                  "key": {
+                    "description": "Tag key the analysis or run user must carry. Any value counts; the value is compared only by a permission rule using the same form.",
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                  "key",
+                ],
+                "type": "object",
+              },
+            ],
+            "description": "How this target selects the analyses or run users it covers. Required: use {"by": "any"} for every one of the kind this tool targets. The kind itself comes from the tool, not from here.",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+      },
+      "required": [
+        "access_policy_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_analysis_access_policy",
+    "title": "Update Analysis Access Policy",
+  },
+  {
+    "annotations": {
       "destructiveHint": false,
       "idempotentHint": true,
       "openWorldHint": false,
@@ -5932,6 +6130,242 @@ The type parameter accepts one of seven values:
     },
     "name": "update_run_user",
     "title": "Update Run User",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "access_policy_id": {
+          "description": "The 24-character access policy ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "active": {
+          "description": "Whether the policy takes effect. An inactive policy grants nothing.",
+          "type": "boolean",
+        },
+        "name": {
+          "description": "New name for the policy.",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string",
+        },
+        "permissions": {
+          "description": "REPLACES every rule on the policy. Pass the complete list you want, not just the ones being added; read the current list with get_access_policy first.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "actions": {
+                "description": "Actions on that resource, e.g. \`["send_data"]\`. Each must be an action the resource offers to this kind of policy; lookup_access_permissions lists them.",
+                "items": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "effect": {
+                "description": "Whether this rule grants or withholds the actions.",
+                "enum": [
+                  "allow",
+                  "deny",
+                ],
+                "type": "string",
+              },
+              "match": {
+                "anyOf": [
+                  {
+                    "$ref": "#/properties/targets/items/anyOf/0",
+                  },
+                  {
+                    "$ref": "#/properties/targets/items/anyOf/1",
+                  },
+                  {
+                    "$ref": "#/properties/targets/items/anyOf/2",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "by": {
+                        "const": "tag_match",
+                        "type": "string",
+                      },
+                      "key": {
+                        "description": "Tag key whose value must be the SAME on the target and on the resource. Use this to scope an analysis to only the devices sharing its own tag value for this key.",
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "by",
+                      "key",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "by": {
+                        "const": "path",
+                        "type": "string",
+                      },
+                      "path": {
+                        "description": "Storage path prefix, e.g. \`reports/\`. Covers every file whose path starts with it.",
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "by",
+                      "path",
+                    ],
+                    "type": "object",
+                  },
+                ],
+                "description": "Which resources of this type the rule covers. Defaults to {"by": "any"}. Not every resource accepts every form: lookup_access_permissions reports the accepted ones as \`match_by\`.",
+              },
+              "resource": {
+                "description": "Resource type the rule covers, e.g. \`device\`, \`analysis\`, \`file\`. Call lookup_access_permissions for the resources this kind of policy can grant on.",
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "required": [
+              "effect",
+              "resource",
+              "actions",
+            ],
+            "type": "object",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+        "tags": {
+          "description": "REPLACES the policy's tags. E.g: [{ key: 'purpose', value: 'parser' }]",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "targets": {
+          "description": "REPLACES every target on the policy. Pass the complete list you want, not just the ones being added. Every target is a TagoRUN user; this tool cannot target the other kind. Scope by tag rather than by ID where you can, so the policy keeps working as TagoRUN users are added.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "any",
+                    "description": "Covers every resource of this type.",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "id",
+                    "type": "string",
+                  },
+                  "id": {
+                    "description": "The 24-character ID of the single resource this rule covers.",
+                    "maxLength": 24,
+                    "minLength": 24,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                  "id",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "tag",
+                    "type": "string",
+                  },
+                  "key": {
+                    "description": "Tag key the resource must carry.",
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "value": {
+                    "description": "Tag value the resource must carry for that key.",
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                  "key",
+                  "value",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "by": {
+                    "const": "tag_match",
+                    "type": "string",
+                  },
+                  "key": {
+                    "description": "Tag key the analysis or run user must carry. Any value counts; the value is compared only by a permission rule using the same form.",
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "by",
+                  "key",
+                ],
+                "type": "object",
+              },
+            ],
+            "description": "How this target selects the analyses or run users it covers. Required: use {"by": "any"} for every one of the kind this tool targets. The kind itself comes from the tool, not from here.",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+      },
+      "required": [
+        "access_policy_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_run_user_access_policy",
+    "title": "Update Run-User Access Policy",
   },
   {
     "annotations": {

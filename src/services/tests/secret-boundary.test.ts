@@ -29,8 +29,15 @@ const FILE_PATH = `widgets/${fixtures.IDS.widgetCustom}.tsx`;
 const ACCESS_POLICY_ID = fixtures.accessPolicies[0].id;
 const ACCESS_POLICY_BODY = {
   name: "Boundary Policy",
-  targets: [{ type: "analysis", match: { by: "id", id: ANALYSIS_ID } }],
+  targets: [{ by: "id", id: ANALYSIS_ID }],
   permissions: [{ effect: "allow", resource: "device", actions: ["send_data"] }],
+};
+
+const RUN_USER_POLICY_ID = fixtures.accessPolicies[1].id;
+const RUN_USER_POLICY_BODY = {
+  name: "Boundary Run Policy",
+  targets: [{ by: "any" }],
+  permissions: [{ effect: "allow", resource: "dashboard", actions: ["access"] }],
 };
 
 const ENV_STRING_SENTINEL = "sentinel-env-string-do-not-echo";
@@ -162,19 +169,31 @@ const reflectionCases: ReflectionCase[] = [
     override: () => mockServer.use(http.get(`${API}/am/settings`, () => reflect(`catalog rejected for ${REQUEST_TOKEN}`))),
   },
   {
-    tool: "create_access_policy",
+    tool: "create_analysis_access_policy",
     args: ACCESS_POLICY_BODY,
     override: () => mockServer.use(http.post(`${API}/am`, () => reflect(`bad request by ${REQUEST_TOKEN}`))),
   },
   {
-    tool: "update_access_policy",
+    // The two create variants share a factory but are registered separately, so
+    // each is its own path out of the server.
+    tool: "create_run_user_access_policy",
+    args: RUN_USER_POLICY_BODY,
+    override: () => mockServer.use(http.post(`${API}/am`, () => reflect(`bad request by ${REQUEST_TOKEN}`))),
+  },
+  {
+    tool: "update_analysis_access_policy",
     args: { access_policy_id: ACCESS_POLICY_ID, name: "X" },
     override: () => mockServer.use(http.put(`${API}/am/:amID`, () => reflect(`bad request by ${REQUEST_TOKEN}`))),
   },
   {
-    // The pre-read that supplies the before/after view is the other
-    // credential-reflecting path into update_access_policy.
-    tool: "update_access_policy",
+    tool: "update_run_user_access_policy",
+    args: { access_policy_id: RUN_USER_POLICY_ID, name: "X" },
+    override: () => mockServer.use(http.put(`${API}/am/:amID`, () => reflect(`bad request by ${REQUEST_TOKEN}`))),
+  },
+  {
+    // The pre-read that establishes the policy's target kind runs on every
+    // update path, so it is a credential-reflecting path of its own.
+    tool: "update_analysis_access_policy",
     args: { access_policy_id: ACCESS_POLICY_ID, permissions: ACCESS_POLICY_BODY.permissions },
     override: () => mockServer.use(http.get(`${API}/am/:amID`, () => reflect(`policy read rejected for ${REQUEST_TOKEN}`))),
   },

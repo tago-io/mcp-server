@@ -125,6 +125,39 @@ function renderTargets(targets: string[][]): { lines: string[]; types: TargetTyp
   return { lines, types: [...types] };
 }
 
+/**
+ * The kinds of token a stored policy actually applies to.
+ *
+ * A malformed target selects no policy, so its kind does not count; an empty
+ * result means the policy currently grants nothing to anyone.
+ */
+function targetKindsOf(targets: readonly string[][]): TargetType[] {
+  return renderTargets([...targets]).types;
+}
+
+/**
+ * A policy holding both kinds of target grants its WHOLE rule list to both.
+ *
+ * The API validates each target on its own and never correlates a target to the
+ * rules beside it, and evaluation pools a matched policy's entire rule list
+ * without filtering by kind. Five resources exist in both catalogs (`device`,
+ * `entity`, `dashboard`, `run_user`, `sql`), so a rule written for the analysis
+ * silently reaches the co-targeted run users too, and the reverse.
+ *
+ * These tools cannot produce one, and neither can the platform's own agent
+ * tooling, which binds the kind the same way. It is reachable from a direct
+ * `POST`/`PUT /am` call, so a policy that arrived by any other route may hold
+ * both kinds and this is worth naming when it does.
+ */
+const MIXED_TARGET_CONSEQUENCE = [
+  "Its rules are not split between the two: every rule applies to whichever kind matched, so any rule naming a resource both kinds share",
+  "(`device`, `entity`, `dashboard`, `run_user`, `sql`) grants to both, which is rarely what was intended.",
+  "Either update tool can still rename it, retag it, or set `active: false` to switch it off reversibly; neither will replace its rules or targets,",
+  "because doing so resolves it to one kind and drops the other. To split it properly, create one policy per kind and then delete this one.",
+].join(" ");
+
+const MIXED_TARGET_WARNING = `**This policy targets BOTH an analysis and a TagoRUN user.** ${MIXED_TARGET_CONSEQUENCE}`;
+
 /** The grant's console name, from whichever target kind actually offers it. */
 function labelFor(catalog: PermissionCatalog, targetTypes: readonly TargetType[], resource: string, action: string): string {
   const owner = targetTypes.find((targetType) => findGrant(catalog, targetType, resource, action) !== undefined);
@@ -171,6 +204,10 @@ function renderPolicyRules(policy: PolicyWire, catalog?: PermissionCatalog): str
   sections.push("**Applies to**");
   sections.push(targetLines.length > 0 ? targetLines.join("\n") : "- nothing: this policy has no targets, so it grants nothing.");
   sections.push("");
+  if (types.length > 1) {
+    sections.push(MIXED_TARGET_WARNING);
+    sections.push("");
+  }
 
   const permissions = policy.permissions ?? [];
   sections.push("**Rules**");
@@ -181,5 +218,5 @@ function renderPolicyRules(policy: PolicyWire, catalog?: PermissionCatalog): str
   return sections.join("\n");
 }
 
-export { EVALUATION_NOTE, orderLikeApi, renderPolicyRules, renderRules, renderTargets };
+export { EVALUATION_NOTE, MIXED_TARGET_CONSEQUENCE, MIXED_TARGET_WARNING, orderLikeApi, renderPolicyRules, renderRules, renderTargets, targetKindsOf };
 export type { PolicyRule, PolicyWire };

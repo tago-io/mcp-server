@@ -47,7 +47,7 @@ Every tool is single-purpose with accurate read/write annotations. Resource-list
 | Run users | `search_run_users`, `get_run_user`, `create_run_user`, `update_run_user`, `delete_run_user`, `login_as_run_user` |
 | Run-user notifications | `read_run_user_notifications`, `send_run_user_notification`, `update_run_user_notification`, `delete_run_user_notification` |
 | Files | `search_files`, `delete_files` |
-| Access management | `search_access_policies`, `get_access_policy`, `lookup_access_permissions`, `create_access_policy`, `update_access_policy`, `delete_access_policy` |
+| Access management | `search_access_policies`, `get_access_policy`, `lookup_access_permissions`, `create_analysis_access_policy`, `create_run_user_access_policy`, `update_analysis_access_policy`, `update_run_user_access_policy`, `delete_access_policy` |
 | Profile | `get_profile`, `get_profile_limits`, `get_profile_statistics`, `search_secrets` |
 | Connectors & networks | `search_connectors`, `get_connector`, `search_networks`, `get_network` |
 | Docs & examples | `platform_overview`, `search_docs`, `read_doc`, `search_code_examples`, `get_code_example` |

@@ -488,6 +488,20 @@ const amSettings = {
         { label: "Edit", value: "edit", description: "Allows analyses to edit and move a file", match_by: ["path", "any"] },
         { label: "Delete", value: "delete", description: "Allows analyses to delete a file", match_by: ["path", "any"] },
       ],
+      // `dashboard` and `sql` exist for BOTH kinds with different action sets,
+      // which is what makes a rule valid for one kind and inert for the other.
+      dashboard: [
+        { label: "Access", value: "access", description: "Allows analyses to access a dashboard", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Create", value: "create", description: "Allows analyses to create a dashboard", match_by: ["tag", "tag_match", "any"] },
+        { label: "Edit", value: "edit", description: "Allows analyses to edit a dashboard", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Delete", value: "delete", description: "Allows analyses to delete a dashboard", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Duplicate", value: "duplicate", description: "Allows analyses to duplicate a dashboard", match_by: ["id", "tag", "tag_match", "any"] },
+      ],
+      sql: [
+        { label: "Access", value: "access", description: "Allows analyses to list and view a saved SQL query", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Create", value: "create", description: "Allows analyses to create a saved SQL query", match_by: ["tag", "tag_match", "any"] },
+        { label: "Execute", value: "execute", description: "Allows analyses to execute a saved SQL query", match_by: ["id", "tag", "tag_match", "any"] },
+      ],
       account: [
         { label: "Access Account Information", value: "access", description: "Allows analyses to access information of account", match_by: ["any"] },
         { label: "Access profile", value: "access_profile", description: "Allows analyses to access a profile from account", match_by: ["id", "any"] },
@@ -506,6 +520,10 @@ const amSettings = {
       ],
       device: [
         { label: "Dashboard access", value: "access", description: "Allows TagoRun users to use this device in the dashboards", match_by: ["id", "tag", "tag_match", "any"] },
+      ],
+      sql: [
+        { label: "Access", value: "access", description: "Allows TagoRun users to list and view a saved SQL query", match_by: ["id", "tag", "tag_match", "any"] },
+        { label: "Execute", value: "execute", description: "Allows TagoRun users to execute a saved SQL query", match_by: ["id", "tag", "tag_match", "any"] },
       ],
     },
   },
@@ -597,9 +615,8 @@ const accessPolicies = [
     permissions: [{ effect: "allow", action: [], resource: ["file"] }],
   },
   {
-    // First rule is unreadable and is skipped by the retained-rule check; the
-    // second is live today and would be stranded by a repoint. The reported
-    // position must be the stored one (1), not the filtered one (0).
+    // An unreadable rule beside a live one. The renderer must mark only the
+    // first inert and still number them by their stored position.
     id: "61f00000000000000ab00006",
     profile: IDS.profile,
     name: "[Analysis] - Unreadable then live",
@@ -612,6 +629,21 @@ const accessPolicies = [
       { effect: "allow", action: ["access"], resource: ["device", "id"] },
       { effect: "allow", action: ["send_data"], resource: ["device"] },
     ],
+  },
+  {
+    // Targets BOTH kinds, which no tool here can produce and a direct API call
+    // can. Its `dashboard`/`access` rule is valid for each kind
+    // and therefore reaches both, which is the over-grant the split closes.
+    // Neither update tool may edit it, and get_access_policy must say why.
+    id: "61f00000000000000ab00007",
+    profile: IDS.profile,
+    name: "[Mixed] - Analysis and run user",
+    active: true,
+    tags: [],
+    created_at: "2026-01-08T00:00:00.000Z",
+    updated_at: "2026-01-08T00:00:00.000Z",
+    targets: [["analysis", "id", IDS.analysis], ["run_user"]],
+    permissions: [{ effect: "allow", action: ["access"], resource: ["dashboard"] }],
   },
 ];
 

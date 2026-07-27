@@ -18,7 +18,9 @@ const deleteAccessPolicyConfigJSON: IToolConfig = {
   name: "delete_access_policy",
   description: `Permanently deletes an Access Management policy, immediately revoking every permission it granted.
 
-Use this only when the user explicitly asks to remove a policy. Anything the policy allowed stops working as soon as it is gone: an analysis fails at runtime with "Authorization Denied" rather than at deploy time, and a TagoRUN user gets no error at all, the resources simply vanish from their lists. So read it with get_access_policy first and prefer update_access_policy with \`active: false\` when the intent is to switch it off while diagnosing.
+Use this only when the user explicitly asks to remove a policy. Anything the policy allowed stops working as soon as it is gone: an analysis fails at runtime with "Authorization Denied" rather than at deploy time, and a TagoRUN user gets no error at all, the resources simply vanish from their lists. So read it with get_access_policy first and prefer setting \`active: false\` with the update tool for its target kind when the intent is to switch it off while diagnosing.
+
+Deleting and recreating is also the only way to move a policy between target kinds, since neither update tool will repoint one from analyses to TagoRUN users or back.
 
 <example>
 { "access_policy_id": "6299f0b1c72f2f00181d8b3c" }

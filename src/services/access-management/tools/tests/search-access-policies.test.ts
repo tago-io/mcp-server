@@ -42,7 +42,7 @@ describe("search_access_policies renders what the list endpoint can actually ret
     expect(rows).not.toContain("permissions");
     expect(rows).not.toContain("targets");
     expect(rows).not.toContain("send_data");
-    expect(result).toContain("Read them with get_access_policy");
+    expect(result).toContain("Read it with get_access_policy");
   });
 
   it("does not offer rules or targets as selectable fields", () => {

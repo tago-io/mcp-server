@@ -13,6 +13,7 @@ const PROFILE_TOKEN = "p-0000000000000000000000000000000000";
 const API = "https://api.us-e1.tago.io";
 const PARSER_POLICY = fixtures.accessPolicies[0].id;
 const RUN_POLICY = fixtures.accessPolicies[1].id;
+const MIXED_POLICY = fixtures.accessPolicies.find((policy) => policy.name === "[Mixed] - Analysis and run user")!.id;
 const INERT_POLICY = fixtures.accessPolicies[2].id;
 
 async function getPolicy(params: Record<string, unknown>) {
@@ -135,5 +136,33 @@ describe("get_access_policy without the permission catalog", () => {
     expect(result).toContain("were not checked");
     // The malformed tuple is grammar, not catalog, so it is still caught.
     expect(result).toContain("the stored resource is malformed");
+  });
+});
+
+describe("get_access_policy names the tool that owns the policy", () => {
+  it.each([
+    ["analysis", PARSER_POLICY, "update_analysis_access_policy"],
+    ["run_user", RUN_POLICY, "update_run_user_access_policy"],
+  ])("points a %s policy at its own update tool", async (_kind, id, tool) => {
+    const result = await getPolicy({ access_policy_id: id });
+    expect(result).toContain(tool);
+  });
+
+  // The search route returns no targets, so this is the only place a caller can
+  // learn which update tool will accept the policy.
+  it("flags a policy targeting both kinds and names the cross-grant", async () => {
+    const result = await getPolicy({ access_policy_id: MIXED_POLICY });
+
+    expect(result).toContain("targets BOTH an analysis and a TagoRUN user");
+    expect(result).toContain("grants to both");
+  });
+
+  it("tells the caller what either update tool will still do to a mixed policy", async () => {
+    const result = await getPolicy({ access_policy_id: MIXED_POLICY });
+
+    // Refusing every edit would leave deletion as the only remedy, so the
+    // reversible one has to be named where the problem is reported.
+    expect(result).toContain("active: false");
+    expect(result).not.toContain("Edit this policy with update_analysis_access_policy");
   });
 });

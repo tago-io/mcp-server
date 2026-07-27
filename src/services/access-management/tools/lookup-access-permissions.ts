@@ -41,7 +41,7 @@ async function lookupAccessPermissionsTool(context: ServerContext, params: Looku
   const detailed = params.response_format === "detailed";
 
   const sections = [
-    `Grants available to \`${targetType}\` targets. Each entry is one \`actions\` value for a \`permissions\` rule in create_access_policy or update_access_policy, paired with that rule's \`resource\`.`,
+    `Grants available to \`${targetType}\` targets. Each entry is one \`actions\` value for a \`permissions\` rule in create_${targetType}_access_policy or update_${targetType}_access_policy, paired with that rule's \`resource\`.`,
     "",
     ...resources.map((resource) => `${renderResource(catalog, targetType, resource, detailed)}\n`),
     "A rule's `match` decides which resources of that type it covers, and must be one of the forms the grant accepts: `any` (all of them), `id` (one, by 24-character ID), `tag` (a key and value the resource carries), `tag_match` (a key whose value must be the same on the target and on the resource), or `path` (a storage prefix, files only). A form the grant does not accept is stored and then never matches.",
@@ -58,7 +58,9 @@ const lookupAccessPermissionsConfigJSON: IToolConfig = {
   name: "lookup_access_permissions",
   description: `Lists the permissions an Access Management policy can grant: for a given kind of token, which resources it can be granted on, which actions each resource offers, and how each action can be scoped.
 
-Use this when an analysis or a TagoRUN user is denied at runtime and you need to know which grant to add, and before create_access_policy or update_access_policy to get the \`resource\`, \`actions\`, and \`match\` values right. The catalog is read from the platform, so it always reflects what the API will actually honour.
+Use this when an analysis or a TagoRUN user is denied at runtime and you need to know which grant to add, and before writing a policy with create_analysis_access_policy or create_run_user_access_policy, to get the \`resource\`, \`actions\`, and \`match\` values right. The catalog is read from the platform, so it always reflects what the API will actually honour.
+
+The two kinds are not two views of one list. Five resource names appear under both, with different action sets: \`dashboard\` offers a run user \`access\` and \`arrangement\`, and an analysis \`access\` plus six others a run user cannot have. Overlap is partial, never a rule you can assume, so look up the kind you are about to write a policy for.
 
 An analysis calling the SDK's Resources class needs a grant for each thing it touches: sending data to a device it does not own needs \`device\` / \`send_data\`, reading one needs \`device\` / \`get_data\`, and so on.
 

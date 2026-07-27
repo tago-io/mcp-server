@@ -70,10 +70,10 @@ async function searchAccessPoliciesTool(context: ServerContext, params: SearchAc
     page,
     resourceLabel: "access policies",
     emptyHint:
-      'With no policies, every analysis and run_user token is denied everything beyond its own resource. An analysis sees that as "Authorization Denied" at runtime; a run_user sees no error at all, because list routes return only what the token may see, so an empty dashboard or device list IS the denial. Use lookup_access_permissions to find the grant an operation needs, then create_access_policy.',
+      'With no policies, every analysis and run_user token is denied everything beyond its own resource. An analysis sees that as "Authorization Denied" at runtime; a run_user sees no error at all, because list routes return only what the token may see, so an empty dashboard or device list IS the denial. Use lookup_access_permissions to find the grant an operation needs, then create_analysis_access_policy or create_run_user_access_policy.',
   });
 
-  return `${rendered}\n\nThis endpoint does not return a policy's rules or targets. Read them with get_access_policy.`;
+  return `${rendered}\n\nThis endpoint does not return a policy's rules or targets, so it cannot tell you whether a policy applies to analyses or to TagoRUN users. Read it with get_access_policy, which names the update tool that owns it.`;
 }
 
 const searchAccessPoliciesConfigJSON: IToolConfig = {
@@ -88,7 +88,7 @@ Use lookup_access_permissions to find which grant an operation needs, and get_ac
 { "filter": { "active": true }, "amount": 20 }
 </example>
 
-Key limitations: returns at most 200 policies per page; the list endpoint returns no rules and no targets, so it cannot tell you what a policy grants or who it applies to; profile tokens bypass Access Management entirely, so these policies never affect what this MCP server itself can do.`,
+Key limitations: returns at most 200 policies per page; the list endpoint returns no rules and no targets, so it cannot tell you what a policy grants, who it applies to, or which update tool edits it; profile tokens bypass Access Management entirely, so these policies never affect what this MCP server itself can do.`,
   parameters: searchAccessPoliciesBaseSchema.shape,
   title: "Search Access Policies",
   annotations: { readOnlyHint: true, openWorldHint: false },

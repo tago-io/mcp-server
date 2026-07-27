@@ -146,15 +146,9 @@ async function catalogForRead(context: ServerContext): Promise<PermissionCatalog
 const CATALOG_UNREADABLE_NOTE =
   "The permission catalog (`GET /am/settings`) could not be read, so rules are shown with their raw wire values and were not checked for whether they can ever match.";
 
-/** Resources the given target kinds can grant on at all, deduplicated. */
-function grantableResources(catalog: PermissionCatalog, targetTypes: readonly TargetType[]): string[] {
-  const resources = new Set<string>();
-  for (const targetType of targetTypes) {
-    for (const resource of Object.keys(catalog.grants[targetType])) {
-      resources.add(resource);
-    }
-  }
-  return [...resources].sort();
+/** Resources this kind of token can be granted anything on at all. */
+function grantableResources(catalog: PermissionCatalog, targetType: TargetType): string[] {
+  return Object.keys(catalog.grants[targetType]).sort();
 }
 
 function findGrant(catalog: PermissionCatalog, targetType: TargetType, resource: string, action: string): PermissionGrant | undefined {
