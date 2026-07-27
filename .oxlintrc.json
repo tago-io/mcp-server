@@ -1,0 +1,59 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["typescript", "unicorn", "oxc", "import"],
+	"categories": {
+		"correctness": "error"
+	},
+	"env": {
+		"builtin": true,
+		"node": true,
+		"es2023": true
+	},
+	"globals": {
+		"describe": "readonly",
+		"it": "readonly",
+		"test": "readonly",
+		"expect": "readonly"
+	},
+	"ignorePatterns": ["build", "**/*.js"],
+	"rules": {
+		"curly": "error",
+		"eqeqeq": "off",
+		"no-caller": "error",
+		"no-cond-assign": "error",
+		"no-debugger": "error",
+		"no-empty": "error",
+		"no-fallthrough": "error",
+		"no-prototype-builtins": "error",
+		"no-redeclare": "error",
+		"no-regex-spaces": "error",
+		"no-shadow-restricted-names": "error",
+		"no-undef": "error",
+		"no-unused-vars": ["error", { "ignoreRestSiblings": true }],
+		"no-useless-catch": "error",
+		"no-var": "error",
+		"no-with": "error",
+		"prefer-const": "error",
+		"require-yield": "error",
+		"use-isnan": "error",
+		"valid-typeof": "error",
+		"typescript/no-explicit-any": "warn",
+		"typescript/no-extra-non-null-assertion": "error",
+		"typescript/no-misused-new": "error",
+		"typescript/no-namespace": "error",
+		"typescript/no-this-alias": "error",
+		"typescript/no-unnecessary-type-constraint": "error",
+		"typescript/no-unsafe-declaration-merging": "error",
+		"typescript/no-unsafe-function-type": "error",
+		"typescript/no-wrapper-object-types": "error",
+		"typescript/prefer-as-const": "error",
+		"import/no-default-export": "warn",
+		"unicorn/explicit-length-check": "error",
+		"unicorn/filename-case": ["error", { "case": "kebabCase" }],
+		"unicorn/no-array-for-each": "warn",
+		"unicorn/no-instanceof-builtins": "error",
+		"unicorn/prefer-array-flat-map": "warn",
+		"unicorn/prefer-node-protocol": "error",
+		"unicorn/prefer-number-properties": "error"
+	}
+}

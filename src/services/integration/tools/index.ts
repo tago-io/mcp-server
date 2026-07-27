@@ -1,11 +1,9 @@
-import { IDeviceToolConfig } from "../../types";
-import { integrationLookupConfigJSON } from "./integration-lookup";
+import { IToolConfig } from "../../types";
+import { getConnectorConfigJSON } from "./get-connector";
+import { getNetworkConfigJSON } from "./get-network";
+import { searchConnectorsConfigJSON } from "./search-connectors";
+import { searchNetworksConfigJSON } from "./search-networks";
 
-/**
- * @description Array of all entity tool configurations.
- * Each tool configuration follows the IDeviceToolConfig interface structure
- * and will be automatically registered in the MCP server.
- */
-const integrationTools: IDeviceToolConfig[] = [integrationLookupConfigJSON];
+const integrationTools: IToolConfig[] = [searchConnectorsConfigJSON, getConnectorConfigJSON, searchNetworksConfigJSON, getNetworkConfigJSON];
 
 export { integrationTools };

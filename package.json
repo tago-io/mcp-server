@@ -1,61 +1,76 @@
 {
-	"name": "@tago-io/mcp-server",
-	"version": "3.1.0",
-	"main": "build/index.js",
-	"mcpName": "io.github.tago-io/mcp-server",
-	"bin": {
-		"tagoio-mcp-server": "build/index.js"
-	},
-	"type": "commonjs",
-	"files": [
-		"build"
-	],
-	"scripts": {
-		"test": "vitest run",
-		"test:single": "vitest --",
-		"linter": "biome lint ./src --no-errors-on-unmatched --diagnostic-level=error",
-		"linter-fix": "biome lint --apply ./src",
-		"build": "rm -rf ./build; tsc --build && shx chmod +x build/*.js",
-		"start": "tsx src/index.ts",
-		"start:http": "tsx src/index.ts http",
-		"test:http": "tsx src/index.ts http & SERVER_PID=$! && for i in $(seq 1 30); do curl -s http://localhost:${MCP_PORT:-3000} > /dev/null 2>&1 && break; sleep 1; done && npx tsx src/server/tests/http-server.test.ts; EXIT_CODE=$?; kill $SERVER_PID 2>/dev/null; exit $EXIT_CODE",
-		"test:stdio": "npx tsx src/server/tests/stdio-server.test.ts"
-	},
-	"keywords": [
-		"mcp",
-		"model-context-protocol",
-		"tagoio",
-		"ai",
-		"tools"
-	],
-	"author": "TagoIO",
-	"engines": {
-		"node": ">=22"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/tago-io/mcp-server.git"
-	},
-	"license": "ISC",
-	"description": "Model Context Protocol server for TagoIO data and analytics",
-	"homepage": "https://github.com/tago-io/mcp-server",
-	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
-		"@types/aws-lambda": "^8.10.161",
-		"@types/node": "^24",
-		"aws-cdk-lib": "^2.249.0",
-		"constructs": "^10.6.0",
-		"ts-node": "^10.9.2",
-		"ts-node-dev": "^2.0.0",
-		"typescript": "^6.0.2",
-		"vitest": "^4.1.4"
-	},
-	"dependencies": {
-		"@modelcontextprotocol/sdk": "^1.29.0",
-		"@tago-io/sdk": "^12.2.2",
-		"dotenv": "^16.5.0",
-		"mcps-logger": "^1.0.0",
-		"shx": "^0.4.0",
-		"zod": "^4.3.6"
-	}
+  "name": "@tago-io/mcp-server",
+  "version": "4.0.0",
+  "description": "Model Context Protocol server for TagoIO data and analytics",
+  "keywords": [
+    "ai",
+    "mcp",
+    "model-context-protocol",
+    "tagoio",
+    "tools"
+  ],
+  "homepage": "https://github.com/tago-io/mcp-server",
+  "license": "ISC",
+  "author": "TagoIO",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tago-io/mcp-server.git"
+  },
+  "bin": {
+    "tagoio-mcp-server": "build/index.js"
+  },
+  "files": [
+    "build",
+    "skills"
+  ],
+  "type": "commonjs",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "vitest run",
+    "test:single": "vitest run",
+    "linter": "oxlint ./src",
+    "linter-fix": "oxlint --fix ./src",
+    "format": "oxfmt ./src",
+    "format-check": "oxfmt --check ./src",
+    "build": "rm -rf ./build; tsc --build && shx chmod +x build/*.js",
+    "start": "tsx src/index.ts",
+    "start:http": "tsx src/index.ts http",
+    "test:docs:live": "tsx src/testing/live-docs-smoke.ts",
+    "test:snippets:live": "tsx src/testing/live-snippets-smoke.ts",
+    "test:evals": "EVAL_REQUIRE_PROVIDER=1 vitest run --config vitest.config.evals.ts",
+    "test:evals:offline": "vitest run evals/tests && EVAL_REQUIRE_PROVIDER= OPENROUTER_API_KEY= vitest run --config vitest.config.evals.ts",
+    "test:validator:node": "node build/testing/validator-runtime-check.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@tago-io/dashboard-schema": "2.7.0",
+    "@tago-io/sdk": "^12.2.7",
+    "dotenv": "^17.4.2",
+    "ipaddr.js": "2.4.0",
+    "mcps-logger": "^1.0.0",
+    "shx": "^0.4.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@openrouter/ai-sdk-provider": "^2.10.0",
+    "@types/aws-lambda": "^8.10.162",
+    "@types/node": "^24.13.3",
+    "@vitest-evals/harness-ai-sdk": "^0.14.0",
+    "ai": "^6.0.222",
+    "aws-cdk-lib": "^2.261.0",
+    "constructs": "^10.6.0",
+    "fast-check": "^4.9.0",
+    "msw": "^2.15.0",
+    "oxfmt": "^0.58.0",
+    "oxlint": "^1.73.0",
+    "tsx": "^4.23.0",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10",
+    "vitest-evals": "^0.14.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "packageManager": "pnpm@11.11.0",
+  "mcpName": "io.github.tago-io/mcp-server"
 }

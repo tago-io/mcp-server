@@ -1,12 +1,7 @@
-import { IDeviceToolConfig } from "../../types";
-import { analysisCodeConfigJSON } from "./analysis-code";
-import { documentationConfigJSON } from "./documentation-lookup";
+import { IToolConfig } from "../../types";
+import { getCodeExampleConfigJSON } from "./get-code-example";
+import { searchCodeExamplesConfigJSON } from "./search-code-examples";
 
-/**
- * @description Array of all documentation tool configurations.
- * Each tool configuration follows the IDeviceToolConfig interface structure
- * and will be automatically registered in the MCP server.
- */
-const documentationTools: IDeviceToolConfig[] = [analysisCodeConfigJSON, documentationConfigJSON];
+const documentationTools: IToolConfig[] = [searchCodeExamplesConfigJSON, getCodeExampleConfigJSON];
 
 export { documentationTools };

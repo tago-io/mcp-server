@@ -2,22 +2,36 @@ name: Run Unit Tests
 
 on:
   push:
+  pull_request:
 
 jobs:
   build:
     runs-on: macos-latest
-
-    strategy:
-      matrix:
-        node-version: [24.x]
-
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - uses: pnpm/action-setup@v4
+      # 22.12.0 is the oldest supported engine, but the pinned pnpm needs Node
+      # >= 22.13, so the pnpm-driven toolchain runs on .node-version and the
+      # floor is covered by the last steps of this job instead.
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-      - run: npm ci --ignore-scripts
-      - run: npm run linter
-      - run: npm test
-      - run: npm run build --if-present
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm run linter
+      - run: pnpm run format-check
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm test
+      - run: pnpm run build
+      # Drop to the floor engine to verify what engines.node claims. Both steps
+      # below reuse the workspace installed above and invoke their runner
+      # directly, because pnpm itself cannot run on this version.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
+      # Catches anything that depends on a Node API newer than the floor.
+      - run: node_modules/.bin/vitest run
+      # Proves the built CommonJS server can require() the ESM-only
+      # dashboard-schema validator on the oldest supported engine (unflagged
+      # require(esm) landed in 22.12.0).
+      - run: node build/testing/validator-runtime-check.js

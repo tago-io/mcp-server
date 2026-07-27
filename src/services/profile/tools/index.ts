@@ -1,12 +1,9 @@
-import { IDeviceToolConfig } from "../../types";
-import { profileLookupConfigJSON } from "./profile-lookup";
-import { profileMetricsConfigJSON } from "./profile-metrics";
+import { IToolConfig } from "../../types";
+import { getProfileConfigJSON } from "./get-profile";
+import { getProfileLimitsConfigJSON } from "./get-profile-limits";
+import { getProfileStatisticsConfigJSON } from "./get-profile-statistics";
+import { searchSecretsConfigJSON } from "./search-secrets";
 
-/**
- * @description Array of all profile tool configurations.
- * Each tool configuration follows the IDeviceToolConfig interface structure
- * and will be automatically registered in the MCP server.
- */
-const profileMetricsTools: IDeviceToolConfig[] = [profileMetricsConfigJSON, profileLookupConfigJSON];
+const profileMetricsTools: IToolConfig[] = [getProfileConfigJSON, getProfileLimitsConfigJSON, getProfileStatisticsConfigJSON, searchSecretsConfigJSON];
 
 export { profileMetricsTools };

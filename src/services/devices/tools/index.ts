@@ -1,13 +1,26 @@
-import { IDeviceToolConfig } from "../../types";
-import { deviceDataConfigJSON } from "./device-data";
-import { deviceDeleteDataConfigJSON } from "./device-delete-data";
-import { deviceOperationsConfigJSON } from "./device-operations";
+import { IToolConfig } from "../../types";
+import { configureDeviceConfigJSON } from "./configure-device";
+import { createDeviceConfigJSON } from "./create-device";
+import { deleteDeviceConfigJSON } from "./delete-device";
+import { deleteDeviceDataConfigJSON } from "./delete-device-data";
+import { editDeviceDataConfigJSON } from "./edit-device-data";
+import { getDeviceConfigJSON } from "./get-device";
+import { readDeviceDataConfigJSON } from "./read-device-data";
+import { searchDevicesConfigJSON } from "./search-devices";
+import { sendDeviceDataConfigJSON } from "./send-device-data";
+import { updateDeviceConfigJSON } from "./update-device";
 
-/**
- * @description Array of all device tool configurations.
- * Each tool configuration follows the IDeviceToolConfig interface structure
- * and will be automatically registered in the MCP server.
- */
-const deviceTools: IDeviceToolConfig[] = [deviceOperationsConfigJSON, deviceDeleteDataConfigJSON, deviceDataConfigJSON];
+const deviceTools: IToolConfig[] = [
+  searchDevicesConfigJSON,
+  getDeviceConfigJSON,
+  createDeviceConfigJSON,
+  updateDeviceConfigJSON,
+  deleteDeviceConfigJSON,
+  configureDeviceConfigJSON,
+  readDeviceDataConfigJSON,
+  sendDeviceDataConfigJSON,
+  editDeviceDataConfigJSON,
+  deleteDeviceDataConfigJSON,
+];
 
 export { deviceTools };

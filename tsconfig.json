@@ -1,13 +1,13 @@
 {
 	"compilerOptions": {
 		"target": "ES2022",
-		"module": "node16",
+		"module": "nodenext",
 		"lib": ["ES2023", "DOM"],
 		"allowJs": true,
 		"outDir": "./build",
 		"noImplicitAny": true,
 		"resolveJsonModule": true,
-		"moduleResolution": "node16",
+		"moduleResolution": "nodenext",
 		"allowSyntheticDefaultImports": true,
 		"forceConsistentCasingInFileNames": true,
 		"rootDir": "./src",
@@ -20,11 +20,5 @@
 		"sourceMap": true
 	},
 	"include": ["src/**/*"],
-	"exclude": ["node_modules"],
-	"rules": {
-		"no-unused-declaration": true
-	},
-	"ts-node": {
-		"transpileOnly": true
-	}
+	"exclude": ["node_modules"]
 }

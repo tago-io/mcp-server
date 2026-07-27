@@ -1,0 +1,108 @@
+import type { AccessQuery } from "@tago-io/sdk";
+import { z } from "zod/v3";
+
+import { amountSchema, pageSchema, responseFormatSchema, tagsObjectModel, wildcardFilter } from "../../../utils/global-params.model";
+import { parseOrderBy } from "../../../utils/order-by";
+import { renderList } from "../../../utils/tool-output";
+import { IToolConfig, ServerContext } from "../../types";
+
+/**
+ * The list endpoint reads only the policy table, so it never returns
+ * `permissions` or `targets`. Advertising them as selectable fields would
+ * promise columns the API cannot fill, so they are absent here and callers are
+ * steered to get_access_policy, which is the only source of a policy's rules.
+ */
+const POLICY_FIELDS = ["id", "name", "active", "tags", "created_at", "updated_at"] as const;
+const ORDER_FIELDS = ["name", "active", "created_at", "updated_at"] as const;
+const DEFAULT_AMOUNT = 20;
+
+const searchAccessPoliciesBaseSchema = z.object({
+  filter: z
+    .object({
+      name: z.string().describe('Filter by policy name. Wildcard matching is applied automatically, so "analysis" matches "[Analysis] - Parser".').optional(),
+      active: z.boolean().describe("Filter by active status. An inactive policy grants nothing. E.g: true").optional(),
+      tags: z.array(tagsObjectModel).describe("Filter by tags. E.g: [{ key: 'purpose', value: 'parser' }]").optional(),
+      orderBy: z
+        .string()
+        .describe(`Sort as "field,direction". Field is one of: ${ORDER_FIELDS.join(", ")}; direction is asc or desc. E.g: "name,asc"`)
+        .optional(),
+    })
+    .describe("Filter object to apply to the query.")
+    .optional(),
+  page: pageSchema,
+  amount: amountSchema(200, DEFAULT_AMOUNT),
+  fields: z
+    .array(z.enum(POLICY_FIELDS))
+    .describe(
+      `Fields to request from the API. Defaults to all of: ${POLICY_FIELDS.join(", ")}. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode. A policy's rules and targets are not available here at all.`
+    )
+    .optional(),
+  response_format: responseFormatSchema,
+});
+
+type SearchAccessPoliciesSchema = z.infer<typeof searchAccessPoliciesBaseSchema>;
+
+async function searchAccessPoliciesTool(context: ServerContext, params: SearchAccessPoliciesSchema): Promise<string> {
+  const { filter, page, response_format } = params;
+  const amount = params.amount ?? DEFAULT_AMOUNT;
+  const fields = params.fields ?? [...POLICY_FIELDS];
+
+  const query: AccessQuery = { amount, fields: fields as AccessQuery["fields"] };
+  if (page) {
+    query.page = page;
+  }
+  if (filter) {
+    const { orderBy, ...filterFields } = filter;
+    query.filter = wildcardFilter(filterFields, ["name"]) as AccessQuery["filter"];
+    if (orderBy) {
+      query.orderBy = parseOrderBy(orderBy, ORDER_FIELDS) as AccessQuery["orderBy"];
+    }
+  }
+
+  const policies = await context.resources.accessManagement.list(query);
+
+  // The API returns `profile` whatever `fields` asks for. Rendering it would put
+  // a column in the table that `fields` cannot name, exclude, or document, which
+  // breaks this repo's search contract; it is also identical on every row, since
+  // a token reaches exactly one profile.
+  const rows = (policies as unknown as Record<string, unknown>[]).map((policy) => {
+    const { profile: _profile, ...rest } = policy;
+    return rest;
+  });
+
+  const rendered = renderList({
+    items: rows,
+    conciseFields: ["id", "name", "active", "tags"],
+    selectedFields: params.fields,
+    responseFormat: response_format,
+    requestedAmount: amount,
+    page,
+    resourceLabel: "access policies",
+    emptyHint:
+      'With no policies, every analysis and run_user token is denied everything beyond its own resource. An analysis sees that as "Authorization Denied" at runtime; a run_user sees no error at all, because list routes return only what the token may see, so an empty dashboard or device list IS the denial. Use lookup_access_permissions to find the grant an operation needs, then create_analysis_access_policy or create_run_user_access_policy.',
+  });
+
+  return `${rendered}\n\nThis endpoint does not return a policy's rules or targets, so it cannot tell you whether a policy applies to analyses or to TagoRUN users. Read it with get_access_policy, which names the update tool that owns it.`;
+}
+
+const searchAccessPoliciesConfigJSON: IToolConfig = {
+  name: "search_access_policies",
+  description: `Searches the Access Management policies in the TagoIO profile, filtered by name, active status, or tags, and returns a paginated list.
+
+Access Management policies are what grant an analysis or a TagoRUN user permission to touch resources they do not own. An analysis that fails at runtime with "Authorization Denied" is almost always missing one, and so is a TagoRUN user whose dashboard or device list comes back empty instead of erroring, so start here: if no policy targets the analysis or run user, that is the answer.
+
+Use lookup_access_permissions to find which grant an operation needs, and get_access_policy to read a policy's actual rules.
+
+<example>
+{ "filter": { "active": true }, "amount": 20 }
+</example>
+
+Key limitations: returns at most 200 policies per page; the list endpoint returns no rules and no targets, so it cannot tell you what a policy grants, who it applies to, or which update tool edits it; profile tokens bypass Access Management entirely, so these policies never affect what this MCP server itself can do.`,
+  parameters: searchAccessPoliciesBaseSchema.shape,
+  title: "Search Access Policies",
+  annotations: { readOnlyHint: true, openWorldHint: false },
+  mutationClass: "read",
+  tool: searchAccessPoliciesTool,
+};
+
+export { POLICY_FIELDS, searchAccessPoliciesConfigJSON };

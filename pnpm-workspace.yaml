@@ -1,0 +1,12 @@
+allowBuilds:
+  esbuild: true
+  # msw's postinstall only provisions the browser service worker; Node interceptor usage doesn't need it
+  msw: false
+minimumReleaseAge: 2880
+minimumReleaseAgeExclude:
+  # typescript 7.0.2 published 2026-07-10, inside the 2-day gate; explicitly vetted
+  - typescript@7.0.2
+trustPolicyExclude:
+  # backport release (2023) published after provenance-attested 7.x versions,
+  # so the publish-date-based downgrade check false-positives on it (via shx)
+  - semver@5.7.2

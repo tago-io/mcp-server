@@ -1,11 +1,24 @@
-import { IDeviceToolConfig } from "../../types";
-import { analysisOperationsConfigJSON } from "./analysis-operations";
+import { IToolConfig } from "../../types";
+import { createAnalysisConfigJSON } from "./create-analysis";
+import { deleteAnalysisConfigJSON } from "./delete-analysis";
+import { downloadAnalysisScriptConfigJSON } from "./download-analysis-script";
+import { getAnalysisConfigJSON } from "./get-analysis";
+import { readAnalysisConsoleConfigJSON } from "./read-analysis-console";
+import { runAnalysisConfigJSON } from "./run-analysis";
+import { searchAnalysesConfigJSON } from "./search-analyses";
+import { updateAnalysisConfigJSON } from "./update-analysis";
+import { uploadAnalysisScriptConfigJSON } from "./upload-analysis-script";
 
-/**
- * @description Array of all analysis tool configurations.
- * Each tool configuration follows the IDeviceToolConfig interface structure
- * and will be automatically registered in the MCP server.
- */
-const analysisTools: IDeviceToolConfig[] = [analysisOperationsConfigJSON];
+const analysisTools: IToolConfig[] = [
+  searchAnalysesConfigJSON,
+  getAnalysisConfigJSON,
+  createAnalysisConfigJSON,
+  updateAnalysisConfigJSON,
+  deleteAnalysisConfigJSON,
+  uploadAnalysisScriptConfigJSON,
+  downloadAnalysisScriptConfigJSON,
+  runAnalysisConfigJSON,
+  readAnalysisConsoleConfigJSON,
+];
 
 export { analysisTools };

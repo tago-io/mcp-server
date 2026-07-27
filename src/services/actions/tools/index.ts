@@ -1,11 +1,10 @@
-import { IDeviceToolConfig } from "../../types";
-import { actionOperationsConfigJSON } from "./action-operations";
+import { IToolConfig } from "../../types";
+import { createActionConfigJSON } from "./create-action";
+import { deleteActionConfigJSON } from "./delete-action";
+import { getActionConfigJSON } from "./get-action";
+import { searchActionsConfigJSON } from "./search-actions";
+import { updateActionConfigJSON } from "./update-action";
 
-/**
- * @description Array of all action tool configurations.
- * Each tool configuration follows the IDeviceToolConfig interface structure
- * and will be automatically registered in the MCP server.
- */
-const actionTools: IDeviceToolConfig[] = [actionOperationsConfigJSON];
+const actionTools: IToolConfig[] = [searchActionsConfigJSON, getActionConfigJSON, createActionConfigJSON, updateActionConfigJSON, deleteActionConfigJSON];
 
 export { actionTools };
