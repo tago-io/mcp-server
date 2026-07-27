@@ -147,7 +147,11 @@ function policyInfo(id: string): StoredPolicy | undefined {
 }
 
 function createPolicy(body: Record<string, unknown>): { am_id: string } {
-  if (policies.length >= policyLimit) {
+  // The API rejects only when the existing amount is GREATER than the limit
+  // (`checkResourceLimit`), so a profile sitting exactly at its nominal limit
+  // still accepts one more. Using `>=` here made the mock stricter than the
+  // platform by one policy.
+  if (policies.length > policyLimit) {
     throw new Error(`You have exceeded the maximum limit of Access management (${policyLimit}). Please upgrade you plan or contact support.`);
   }
 

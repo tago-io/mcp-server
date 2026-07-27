@@ -26,10 +26,24 @@ interface PolicyWire {
 
 type PolicyRule = NonNullable<PolicyWire["permissions"]>[number];
 
+/**
+ * The platform has more than one evaluator, and they resolve a cross-policy
+ * deny differently, so a single blanket statement is wrong either way.
+ *
+ * Listing goes through a SQL filter built as `allow AND NOT deny`
+ * (`providers/db-functions/am-parser.ts`), which is set algebra: every deny
+ * applies, whatever policy holds it and in any order. Authorizing one operation
+ * on one resource goes through `matchAMPermissions`, a last-match-wins loop over
+ * permissions pooled from each matching policy in unspecified row order, so
+ * there a deny in another policy may or may not fire. Only the same-policy case
+ * is reliable on both.
+ */
 const EVALUATION_NOTE = [
-  "How these are evaluated: a request is denied unless a rule matches it, and when several match, the last one in this list wins.",
-  "The API returns a policy's rules with every allow before every deny, so inside ONE policy a matching deny beats a matching allow.",
-  "Across policies it defines no order, so do not rely on a deny in one policy overriding an allow in another; keep both rules in the same policy instead.",
+  "How these are evaluated: a request is denied unless a rule matches it, and this policy's rules are returned with every allow before every deny, so within ONE policy a matching deny beats a matching allow.",
+  "Across policies the answer depends on what is being asked.",
+  "When the platform LISTS resources, it takes what the matching policies allow and then removes anything any of them denies, so a deny always applies no matter which policy holds it.",
+  "When it checks a SINGLE operation on one resource, the last matching rule wins and the order policies are pooled in is unspecified, so a deny in a different policy may or may not take effect.",
+  "Keeping a deny in the same policy as the allow it limits is reliable in both cases.",
 ].join(" ");
 
 const TARGET_NOUNS: Record<TargetType, string> = { analysis: "analysis", run_user: "run user" };
@@ -97,10 +111,14 @@ function inertReasons(
  * malformed target selects no policy at all, so counting its kind would let it
  * vouch for rules that can never be reached through it.
  */
-function renderTargets(targets: string[][]): { lines: string[]; types: TargetType[]; subsumed: TargetType[] } {
+function renderTargets(targets: string[][]): { lines: string[]; types: TargetType[]; subsumed: TargetType[]; resolved: number } {
   const lines: string[] = [];
   const types = new Set<TargetType>();
   const covers = { analysis: { any: false, narrower: false }, run_user: { any: false, narrower: false } };
+  // Counted separately from `lines`, because an INERT entry still renders a line
+  // and selects nothing. Anything reasoning about what the policy covers has to
+  // count what resolves, not what is printed.
+  let resolved = 0;
 
   for (const tuple of targets) {
     const kind = tuple[0];
@@ -111,15 +129,16 @@ function renderTargets(targets: string[][]): { lines: string[]; types: TargetTyp
       continue;
     }
     if (!match) {
-      lines.push(`- ${TARGET_NOUNS[kind]} (INERT: the stored target is malformed, so this policy applies to nothing)`);
+      lines.push(`- ${TARGET_NOUNS[kind]} (INERT: this target is stored malformed, so it selects nothing)`);
       continue;
     }
     if (match.by === "path") {
-      lines.push(`- ${TARGET_NOUNS[kind]} (INERT: targets cannot be matched by path)`);
+      lines.push(`- ${TARGET_NOUNS[kind]} (INERT: targets cannot be matched by path, so this entry selects nothing)`);
       continue;
     }
 
     types.add(kind);
+    resolved += 1;
     if (match.by === "any") {
       covers[kind].any = true;
     } else {
@@ -133,7 +152,7 @@ function renderTargets(targets: string[][]): { lines: string[]; types: TargetTyp
   // suggest a scope the policy does not have.
   const subsumed = (Object.keys(covers) as TargetType[]).filter((kind) => covers[kind].any && covers[kind].narrower);
 
-  return { lines, types: [...types], subsumed };
+  return { lines, types: [...types], subsumed, resolved };
 }
 
 /**
@@ -161,10 +180,12 @@ function targetKindsOf(targets: readonly string[][]): TargetType[] {
  * both kinds and this is worth naming when it does.
  */
 const MIXED_TARGET_CONSEQUENCE = [
-  "Its rules are not split between the two: every rule applies to whichever kind matched, so any rule naming a resource both kinds share",
-  "(`device`, `entity`, `dashboard`, `run_user`, `sql`) grants to both, which is rarely what was intended.",
-  "Either update tool can still rename it, retag it, or set `active: false` to switch it off reversibly; neither will replace its rules or targets,",
-  "because doing so resolves it to one kind and drops the other. To split it properly, create one policy per kind and then delete this one.",
+  "Its rules are not split between the two: every rule applies to whichever kind matched.",
+  "So any rule naming a resource AND action that both kinds can be granted reaches both, which is rarely what was intended.",
+  "The shared resource names are `device`, `entity`, `dashboard`, `run_user` and `sql`, but their action sets differ, so check the pairing with lookup_access_permissions rather than assuming every rule on those crosses over.",
+  "Either update tool can still rename this policy, retag it, or set `active: false` to switch it off reversibly.",
+  "Neither will replace its targets, since that resolves it to one kind and drops the other, and neither will replace its rules, since a tool that owns one kind cannot safely author rules for both.",
+  "To split it properly, create one policy per kind and then delete this one.",
 ].join(" ");
 
 const MIXED_TARGET_WARNING = `**This policy targets BOTH an analysis and a TagoRUN user.** ${MIXED_TARGET_CONSEQUENCE}`;
@@ -181,17 +202,27 @@ const MIXED_TARGET_WARNING = `**This policy targets BOTH an analysis and a TagoR
  * list globally.
  */
 const DENY_ONLY_NOTE = [
-  "**This policy has no ALLOW rule**, so it grants nothing by itself.",
-  "A deny only takes effect against an allow evaluated before it, which is guaranteed only for allows in this same policy.",
-  "If this is meant to override an allow in a different policy, verify that it does.",
+  "**This policy has no ALLOW rule**, so it grants nothing by itself and can only narrow what another policy allows.",
+  "That is reliable where the platform lists resources, since every deny applies there whatever policy holds it.",
+  "It is not reliable where the platform checks a single operation, since the last matching rule wins and the order policies are pooled in is unspecified.",
+  "Putting the deny in the same policy as the allow it limits works in both cases.",
 ].join(" ");
 
-/** Multiple targets are alternatives, which the rules section says of rules but nothing said of targets. */
-const TARGET_ALTERNATIVES_NOTE = "An analysis or run user matching ANY line above is covered by this policy.";
+/**
+ * Multiple targets are alternatives, which the rules section says of rules and
+ * nothing said of targets. Named per kind, because the write tools each own one
+ * and naming both there would describe a policy they cannot produce.
+ */
+function targetAlternativesNote(kinds: readonly TargetType[]): string {
+  const nouns = kinds.length > 0 ? kinds.map((kind) => `${TARGET_NOUNS[kind] === "analysis" ? "An" : "A"} ${TARGET_NOUNS[kind]}`).join(" or ") : "An analysis or run user";
+  return `${nouns} matching ANY line above is covered by this policy.`;
+}
 
-function subsumedTargetNote(kinds: readonly TargetType[]): string {
+function subsumedTargetNote(kinds: readonly TargetType[], narrowerCount: number): string {
   const nouns = kinds.map((kind) => `any ${TARGET_NOUNS[kind]}`).join(" and ");
-  return `Note: this policy covers ${nouns}, so the narrower ${kinds.length > 1 ? "entries" : "entries of that kind"} above add nothing and the scope is wider than the list suggests.`;
+  const entries = narrowerCount === 1 ? "the narrower entry" : "the narrower entries";
+  const qualifier = kinds.length > 1 ? "" : " of that kind";
+  return `Note: this policy covers ${nouns}, so ${entries}${qualifier} above adds nothing and the scope is wider than the list suggests.`;
 }
 
 /** The grant's console name, from whichever target kind actually offers it. */
@@ -234,21 +265,21 @@ function renderRules(permissions: readonly PolicyRule[], targetTypes: readonly T
 
 /** Full decoded view of one policy, used by get_access_policy and by the write confirmations. */
 function renderPolicyRules(policy: PolicyWire, catalog?: PermissionCatalog): string {
-  const { lines: targetLines, types, subsumed } = renderTargets(policy.targets ?? []);
+  const { lines: targetLines, types, subsumed, resolved } = renderTargets(policy.targets ?? []);
   const sections: string[] = [];
 
   sections.push("**Applies to**");
   sections.push(targetLines.length > 0 ? targetLines.join("\n") : "- nothing: this policy has no targets, so it grants nothing.");
-  // Targets are alternatives. The rules section explains its own ordering at
-  // length, and saying nothing here left the commonest question about a policy
-  // unanswered on the page that should answer it.
-  if (targetLines.length > 1) {
+  // Targets are alternatives. Gated on how many RESOLVE, not on how many lines
+  // print: an INERT entry renders a line and selects nothing, so counting lines
+  // would announce coverage directly beneath entries that say they cover nothing.
+  if (resolved > 1) {
     sections.push("");
-    sections.push(TARGET_ALTERNATIVES_NOTE);
+    sections.push(targetAlternativesNote(types));
   }
   if (subsumed.length > 0) {
     sections.push("");
-    sections.push(subsumedTargetNote(subsumed));
+    sections.push(subsumedTargetNote(subsumed, resolved - subsumed.length));
   }
   sections.push("");
   if (types.length > 1) {

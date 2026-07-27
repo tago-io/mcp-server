@@ -127,7 +127,7 @@ async function loadOwnPolicy(context: ServerContext, kind: KindCopy, policyId: s
   if (kinds.length === 1 && kinds[0] !== kind.type) {
     const other = otherKind(kind.type);
     throw new Error(
-      `Access policy \`${policyId}\` targets ${other.plural}, not ${kind.plural}, so this tool will not edit it. Use update_${other.slug}_access_policy instead. A policy's target kind cannot be changed in place: to move it, delete this policy and create the replacement with create_${other.slug}_access_policy.`
+      `Access policy \`${policyId}\` targets ${other.plural}, not ${kind.plural}, so this tool will not edit it. To edit it as it stands, use update_${other.slug}_access_policy. A policy's target kind cannot be changed in place, so to move it to ${kind.plural} instead, create the replacement with create_${kind.slug}_access_policy and then delete this one.`
     );
   }
 
@@ -276,7 +276,10 @@ function buildUpdateTool(kind: KindCopy): IToolConfig {
     if (showsDiff) {
       const after = { targets: targets ?? existing.targets, permissions: orderLikeApi(permissions ?? existing.permissions ?? []) };
       sections.push("", "**Before**", renderPolicyRules(existing, catalog), "", "**After**", renderPolicyRules(after, catalog));
-      sections.push("", "Rule and target lists are replaced whole, so anything absent from the request above is gone.");
+      sections.push(
+        "",
+        "Each list you sent replaced its previous contents whole, so anything missing from it is gone. A list you did NOT send is untouched: the API replaces `permissions` and `targets` independently, by key."
+      );
       if (!catalog) {
         sections.push("", CATALOG_UNREADABLE_NOTE);
       }

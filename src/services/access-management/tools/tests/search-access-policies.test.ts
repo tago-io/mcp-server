@@ -100,7 +100,9 @@ describe("delete_access_policy", () => {
     const result = await deleteAccessPolicyConfigJSON.tool(context(), parsed as never);
 
     expect(result).toContain("deleted");
-    expect(result).toContain("loses those permissions");
+    expect(result).toContain("revoked immediately");
+    // Deleting one policy does not settle access: another may grant the same.
+    expect(result).toContain("shared with another policy survives");
     expect(await searchPolicies()).not.toContain("[Analysis] - Parser device access");
   });
 });

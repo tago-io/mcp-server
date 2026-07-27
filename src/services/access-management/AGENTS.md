@@ -31,18 +31,19 @@ Because a kind is bound to a tool, a policy cannot be repointed from one kind to
 
 ## How rules are evaluated
 
-A request starts denied. The policies whose targets match the token are collected, their rules are pooled, and each rule that matches overwrites the verdict, so the LAST matching rule decides. This is not deny-overrides and not first-match, and a tool that renders rules in any other order misreports which one is responsible.
+There is no single evaluator, and the three the platform has resolve a cross-policy deny differently. A blanket claim in either direction is wrong somewhere, so the tools describe the split.
 
-Two consequences shape what the read tools may claim:
+- **Listing resources** goes through `providers/db-functions/am-parser.ts`, which builds `WHERE (allow clauses) AND NOT (deny clauses)`. That is set algebra: every deny applies, whatever policy holds it, in any row order. This is the path behind most of what a policy visibly governs, and it backs `device`, `analysis`, `run_user` and notification listings alike.
+- **Authorizing one operation on one resource** goes through `matchAMPermissions`: a request starts denied, matching rules overwrite the verdict, and the LAST one decides. Rules arrive sorted allow-before-deny per policy, so within one policy a deny beats an allow, but policies are concatenated in unspecified row order, so a deny in a different policy may or may not win.
+- **The Rust run-user path** (`packages/access-management-rs`, used by realtime SSE) fetches every matched policy's permissions in one query ordered by effect, so deny wins globally there too.
 
-- The info route returns a policy's rules sorted by effect, every allow before every deny. So inside one policy a matching deny beats a matching allow, and the order rules are written in is not the order they come back in.
-- Across policies the pooling order is the order the underlying query happens to return, which is not specified. A deny in one policy and an allow in another therefore have no defined winner. `get_access_policy` says so rather than implying a resolution.
+Two consequences shape what the read tools may claim. The info route returns a policy's rules sorted by effect, so the order rules are written in is not the order they come back in, and a tool rendering them in submission order misreports which one is responsible. And the only advice reliable on all three paths is to keep a deny in the same policy as the allow it limits, which is what `EVALUATION_NOTE` says.
 
 For the same reason no tool simulates a verdict. Answering "would this token be allowed" means reimplementing the platform's matcher, which can drift from it, and being confidently wrong exactly in the case the platform itself does not define. The tools render what a policy says and name the grant an operation needs; the caller reasons from that.
 
 ## The wire grammar, and why input does not mirror it
 
-A permission's `resource` and a policy's `targets` are bare string tuples on the wire, classified by arity and separator words: `[type]` is any, `[type, "id", <id>]` is one resource, `[type, "tag.key", k, "tag.value", v]` is a tag pair, `[type, "tag_match", k]` is a tag key, and `[type, "path", p]` is a storage prefix. A tuple of any other arity is stored, classified as nothing, and silently grants nothing.
+A permission's `resource` and a policy's `targets` are bare string tuples on the wire, classified by arity and separator words: `[type]` is any, `[type, "id", <id>]` is one resource, `[type, "tag.key", k, "tag.value", v]` is a tag pair, `[type, "tag_match", k]` is a tag key, and `[type, "path", p]` is a storage prefix. A tuple of any other arity up to five is stored, classified as nothing, and silently grants nothing. Longer than five is worse: the provider persists only positions 0 to 4, so a six-element tuple is truncated into a shape the parser accepts and a rule the caller did not write can start matching.
 
 Be precise about what the API does and does not check, because it decides what a failure here means. It DOES refine `resource[0]` against its resource list, each target's first entry against `run_user`/`analysis`, and every action against a closed enum, so a misspelled resource or action name is rejected upstream. What it never checks is the tuple's arity, its separator words, and whether the resource and action belong together. Those three are the whole gap, and they are the ones that fail silently.
 

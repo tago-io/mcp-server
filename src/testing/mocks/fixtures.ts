@@ -525,6 +525,8 @@ const amSettings = {
         { label: "Access", value: "access", description: "Allows TagoRun users to list and view a saved SQL query", match_by: ["id", "tag", "tag_match", "any"] },
         { label: "Execute", value: "execute", description: "Allows TagoRun users to execute a saved SQL query", match_by: ["id", "tag", "tag_match", "any"] },
       ],
+      entity: [{ label: "Access", value: "access", description: "Allows TagoRun users to use this entity in the dashboards", match_by: ["id", "tag", "tag_match", "any"] }],
+      run_user: [{ label: "Access", value: "access", description: "Allows TagoRun users to access other run users", match_by: ["id", "tag", "tag_match", "any"] }],
     },
   },
 };

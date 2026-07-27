@@ -76,7 +76,7 @@ describe("the update tools replace rule lists rather than merging", () => {
     const [, after] = result.split("**After**");
     expect(result).toContain("Device / Send data");
     expect(after).not.toContain("Device / Send data");
-    expect(result).toContain("replaced whole");
+    expect(result).toContain("replaced its previous contents whole");
   });
 
   it("renders the After view allow-first, the order the API will return", async () => {

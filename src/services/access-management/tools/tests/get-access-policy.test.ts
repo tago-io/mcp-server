@@ -13,6 +13,7 @@ const PROFILE_TOKEN = "p-0000000000000000000000000000000000";
 const API = "https://api.us-e1.tago.io";
 const PARSER_POLICY = fixtures.accessPolicies[0].id;
 const RUN_POLICY = fixtures.accessPolicies[1].id;
+const INERT_TARGETS_POLICY = "61f00000000000000ab000ff";
 const DENY_ONLY_POLICY = fixtures.accessPolicies.find((policy) => policy.name === "[Analysis] - Deny only, any target")!.id;
 const MIXED_POLICY = fixtures.accessPolicies.find((policy) => policy.name === "[Mixed] - Analysis and run user")!.id;
 const INERT_POLICY = fixtures.accessPolicies[2].id;
@@ -45,9 +46,16 @@ describe("get_access_policy renders rules in the order that decides them", () =>
   it("states how the rules are evaluated, including the cross-policy caveat", async () => {
     const result = await getPolicy({ access_policy_id: PARSER_POLICY });
 
-    expect(result).toContain("the last one in this list wins");
+    expect(result).toContain("the last matching rule wins");
     expect(result).toContain("a matching deny beats a matching allow");
-    expect(result).toContain("Across policies it defines no order");
+    // The platform has more than one evaluator and they resolve a cross-policy
+    // deny differently, so the page must not assert either behaviour globally.
+    // Listing is `allow AND NOT deny`, where a deny always applies; a single
+    // operation check is last-match-wins over policies pooled in unspecified
+    // order, where it may not.
+    expect(result).toContain("a deny always applies no matter which policy holds it");
+    expect(result).toContain("the order policies are pooled in is unspecified");
+    expect(result).toContain("Keeping a deny in the same policy as the allow it limits is reliable in both cases");
   });
 
   it("decodes each rule into the grant name and what it covers", async () => {
@@ -110,7 +118,7 @@ describe("get_access_policy flags rules that can never fire", () => {
 
     const result = await getPolicy({ access_policy_id: PARSER_POLICY });
 
-    expect(result).toContain("the stored target is malformed");
+    expect(result).toContain("this target is stored malformed");
     // No per-rule catalog verdict, because the targets section already carries
     // the real cause and repeating it per rule would bury it.
     expect(result).not.toContain("PARTLY INERT");
@@ -155,7 +163,7 @@ describe("get_access_policy names the tool that owns the policy", () => {
     const result = await getPolicy({ access_policy_id: MIXED_POLICY });
 
     expect(result).toContain("targets BOTH an analysis and a TagoRUN user");
-    expect(result).toContain("grants to both");
+    expect(result).toContain("reaches both");
   });
 
   it("tells the caller what either update tool will still do to a mixed policy", async () => {
@@ -178,7 +186,7 @@ describe("get_access_policy names what a policy does not do", () => {
     expect(result).toContain("grants nothing by itself");
     // The claim is scoped to what holds regardless of how the platform orders
     // rules across policies, which is unspecified on the analysis path.
-    expect(result).toContain("guaranteed only for allows in this same policy");
+    expect(result).toContain("can only narrow what another policy allows");
   });
 
   it("does not say it of a policy that has an allow", async () => {
@@ -200,6 +208,67 @@ describe("get_access_policy names what a policy does not do", () => {
 
   it("says nothing about alternatives when there is only one target", async () => {
     const result = await getPolicy({ access_policy_id: PARSER_POLICY });
+    expect(result).not.toContain("matching ANY line above");
+  });
+});
+
+describe("get_access_policy does not claim coverage from targets that select nothing", () => {
+  // Regression: the alternatives note was gated on how many target LINES
+  // rendered, and an INERT entry renders a line while selecting nothing, so a
+  // policy whose every target was dead announced that it covered them.
+  it("stays silent when every target is inert", async () => {
+    mockServer.use(
+      http.get(`${API}/am/:amID`, () =>
+        HttpResponse.json({
+          status: true,
+          result: {
+            id: INERT_TARGETS_POLICY,
+            name: "All targets inert",
+            active: true,
+            tags: [],
+            targets: [
+              ["analysis", "id"],
+              ["run_user", "path", "reports/"],
+            ],
+            permissions: [],
+          },
+        })
+      )
+    );
+
+    const result = await getPolicy({ access_policy_id: INERT_TARGETS_POLICY });
+
+    expect(result).toContain("selects nothing");
+    expect(result).not.toContain("matching ANY line above");
+  });
+
+  // An inert entry beside a working one must not make the working one claim the
+  // whole policy is dead, nor the dead one claim coverage.
+  it("describes an inert entry as itself, not as the whole policy", async () => {
+    mockServer.use(
+      http.get(`${API}/am/:amID`, () =>
+        HttpResponse.json({
+          status: true,
+          result: {
+            id: INERT_TARGETS_POLICY,
+            name: "One live, one inert",
+            active: true,
+            tags: [],
+            targets: [
+              ["analysis", "id", fixtures.IDS.analysis],
+              ["analysis", "id"],
+            ],
+            permissions: [],
+          },
+        })
+      )
+    );
+
+    const result = await getPolicy({ access_policy_id: INERT_TARGETS_POLICY });
+
+    expect(result).toContain("this target is stored malformed, so it selects nothing");
+    expect(result).not.toContain("this policy applies to nothing");
+    // Only one target resolves, so there is nothing to call an alternative.
     expect(result).not.toContain("matching ANY line above");
   });
 });
