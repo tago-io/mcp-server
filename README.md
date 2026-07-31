@@ -108,7 +108,7 @@ Add to `.vscode/mcp.json` for one project, or to User Settings for all of them. 
 ### Claude Code
 
 ```bash
-claude mcp add-json @tago-io/mcp '{"type":"http","url":"https://mcp.ai.tago.io","headers":{"Authorization":"Bearer YOUR-TAGOIO-TOKEN"}}'
+claude mcp add-json tagoio '{"type":"http","url":"https://mcp.ai.tago.io","headers":{"Authorization":"Bearer YOUR-TAGOIO-TOKEN"}}'
 ```
 
 ### Claude Desktop
