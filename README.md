@@ -338,7 +338,7 @@ curl -fsSL https://raw.githubusercontent.com/tago-io/mcp-server/master/skills/cu
   -o .claude/skills/custom-widget-development/SKILL.md
 ```
 
-For other clients, put the same file wherever that client loads skills or reusable prompts from.
+For other clients, put the same file wherever that client loads skills or reusable prompts from. See [skills/](skills/README.md) for everything in the folder.
 
 ## Your token and your data
 
@@ -392,8 +392,13 @@ Issues and pull requests are welcome. Agent instructions live in [AGENTS.md](AGE
 
 ## License
 
-MIT. See the LICENSE file.
+This repository is licensed under the [Apache License 2.0](LICENSE.md).
+
+### Copyright Notice
+
+TagoIO Inc. retains all rights to the TagoIO name, logo, and branding assets. These
+materials are not covered under the Apache License. See [LICENSE.md](LICENSE.md#copyright-notice).
 
 ---
 
-Built by the TagoIO team. Need a hand? Check the [TagoIO documentation](https://docs.tago.io) or contact support.
+Built by the TagoIO team. Need a hand? Check the [TagoIO documentation](https://docs.tago.io) or contact support. Software licensed under [Apache-2.0](LICENSE.md). TagoIO logos and branding are not covered by Apache-2.0; see [Copyright Notice](LICENSE.md#copyright-notice) in LICENSE.md.
