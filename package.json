@@ -10,7 +10,7 @@
     "tools"
   ],
   "homepage": "https://github.com/tago-io/mcp-server",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "author": "TagoIO",
   "repository": {
     "type": "git",
