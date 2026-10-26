@@ -13,10 +13,10 @@ import { targetMatchSchema } from "../policy-rules";
  * The four policy write tools, built once per target kind.
  *
  * Access Management governs `analysis` and `run_user` tokens, and the two are
- * different enough that a merged tool cannot serve either well: five resource
+ * different enough that a merged tool cannot serve either well: six resource
  * names appear under both kinds with different action sets, so `dashboard`
- * offers a run user `access` and `arrangement`, and an analysis `access` plus
- * six others it does not share. Binding the kind to the tool lets each one
+ * offers a run user `access`, `arrangement` and `ai_access`, and an analysis
+ * `access` plus six others it does not share. Binding the kind to the tool lets each one
  * validate against exactly one catalog and describe exactly one failure mode.
  *
  * It also closes a quiet over-grant. The API validates each target on its own
@@ -73,7 +73,8 @@ const RUN_USER: KindCopy = {
   titleWord: "Run-User",
   plural: "TagoRUN users",
   denial: "the user gets no error at all; the resources simply do not appear, because list routes return only what the token may see, so an empty list IS the denial",
-  reach: "A TagoRUN user can be granted far less than an analysis: only `device`, `entity`, `dashboard`, `run_user` and `sql`, and mostly only `access` on them.",
+  reach:
+    "A TagoRUN user can be granted far fewer resources and actions than an analysis; call lookup_access_permissions for the current set. Its `analysis` grant is `call_endpoint`, which lets the user call a Luau analysis Endpoint.",
   example: `{
   "name": "[RUN] - Plant floor dashboard access",
   "targets": [{ "by": "tag", "key": "site", "value": "plant-a" }],

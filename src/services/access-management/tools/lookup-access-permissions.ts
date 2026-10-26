@@ -60,7 +60,7 @@ const lookupAccessPermissionsConfigJSON: IToolConfig = {
 
 Use this when an analysis or a TagoRUN user is denied at runtime and you need to know which grant to add, and before writing a policy with create_analysis_access_policy or create_run_user_access_policy, to get the \`resource\`, \`actions\`, and \`match\` values right. The catalog is read from the platform, so it always reflects what the API will actually honour.
 
-The two kinds are not two views of one list. Five resource names appear under both, with different action sets: \`dashboard\` offers a run user \`access\` and \`arrangement\`, and an analysis \`access\` plus six others a run user cannot have. Overlap is partial, never a rule you can assume, so look up the kind you are about to write a policy for.
+The two kinds are not two views of one list. Six resource names appear under both, with different action sets: \`dashboard\` offers a run user \`access\`, \`arrangement\` and \`ai_access\`, and an analysis \`access\` plus six others a run user cannot have. Overlap is partial, never a rule you can assume, so look up the kind you are about to write a policy for.
 
 An analysis calling the SDK's Resources class needs a grant for each thing it touches: sending data to a device it does not own needs \`device\` / \`send_data\`, reading one needs \`device\` / \`get_data\`, and so on.
 

@@ -452,6 +452,8 @@ const fileStorageAllocation = { total: 200, usage: 5.25 };
  * - `run_user` can be granted on far less than `analysis`, and its one device
  *   grant is a different action set, so a rule valid for one target kind can be
  *   inert for the other.
+ * - `analysis`/`call_endpoint` is offered to both kinds (Luau Endpoints), the
+ *   only `analysis` grant a run user can hold.
  */
 const amSettings = {
   resources: {
@@ -463,6 +465,7 @@ const amSettings = {
     run_user: { label: "Run User" },
     entity: { label: "Entity" },
     sql: { label: "SQL Query" },
+    analysis: { label: "Analysis" },
   },
   settings: {
     analysis: {
@@ -506,6 +509,7 @@ const amSettings = {
         { label: "Create", value: "create", description: "Allows analyses to create a saved SQL query", match_by: ["tag", "tag_match", "any"] },
         { label: "Execute", value: "execute", description: "Allows analyses to execute a saved SQL query", match_by: ["id", "tag", "tag_match", "any"] },
       ],
+      analysis: [{ label: "Call Endpoint", value: "call_endpoint", description: "Allows analyses to call this Analysis's Endpoint", match_by: ["id", "tag", "tag_match", "any"] }],
       account: [
         { label: "Access Account Information", value: "access", description: "Allows analyses to access information of account", match_by: ["any"] },
         { label: "Access profile", value: "access_profile", description: "Allows analyses to access a profile from account", match_by: ["id", "any"] },
@@ -518,6 +522,9 @@ const amSettings = {
       ],
     },
     run_user: {
+      analysis: [
+        { label: "Call Endpoint", value: "call_endpoint", description: "Allows TagoRUN users to call this Analysis's Endpoint", match_by: ["id", "tag", "tag_match", "any"] },
+      ],
       dashboard: [
         { label: "Access", value: "access", description: "Allows users to receive this dashboard", match_by: ["id", "tag", "tag_match", "any"] },
         { label: "Arrangement", value: "arrangement", description: "Allows users to move/resize widgets", match_by: ["id", "tag", "tag_match", "any"] },
