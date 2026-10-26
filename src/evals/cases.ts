@@ -600,6 +600,55 @@ const TOOL_PREDICTION_CASES: EvalCase[] = [
       expectedArguments: { run_user_id: "61f00000000000000c900001", expire_time: "2 hours" },
     },
   ]),
+  ...createTestCases("sql", [
+    {
+      id: "sql-search-01",
+      prompt: "Find my saved SQL queries with 'temperature' in the name.",
+      expectedTool: "search_sql_queries",
+      expectedArguments: { filter: { name: "temperature" } },
+    },
+    {
+      id: "sql-get-01",
+      prompt: "Show me the SQL text of saved query 61f0000000000000000c5001.",
+      expectedTool: "get_sql_query",
+      expectedArguments: { sql_query_id: "61f0000000000000000c5001" },
+    },
+    {
+      id: "sql-create-01",
+      prompt: "Save a TagoSQL query named 'Fleet devices' that lists the id and name of all my devices, at most 100 rows.",
+      expectedTool: "create_sql_query",
+      expectedArguments: { name: "Fleet devices" },
+    },
+    {
+      id: "sql-update-01",
+      prompt: "Change the default value of parameter $1 to 40 on saved query 61f0000000000000000c5001.",
+      expectedTool: "update_sql_query",
+      expectedArguments: { sql_query_id: "61f0000000000000000c5001" },
+    },
+    {
+      id: "sql-delete-01",
+      prompt: "Delete saved SQL query 61f0000000000000000c5001.",
+      expectedTool: "delete_sql_query",
+      expectedArguments: { sql_query_id: "61f0000000000000000c5001" },
+    },
+    {
+      id: "sql-version-01",
+      prompt: "Show me what saved query 61f0000000000000000c5001 looked like in version 1.",
+      expectedTool: "get_sql_query_version",
+      expectedArguments: { sql_query_id: "61f0000000000000000c5001", version: 1 },
+    },
+    {
+      id: "sql-execute-01",
+      prompt: "Run saved query 61f0000000000000000c5001 and show me the rows it returns.",
+      expectedTool: "execute_sql_query",
+      expectedArguments: { sql_query_id: "61f0000000000000000c5001" },
+    },
+    {
+      id: "sql-tables-01",
+      prompt: "Which tables and columns can I use when writing a TagoSQL query?",
+      expectedTool: "lookup_sql_tables",
+    },
+  ]),
 ];
 
 export { EvalCase, FROZEN_SYSTEM_PROMPT, TOOL_PREDICTION_CASES, checkToolPrediction, collectPinMismatches, matchArgumentSubset, matchArrayIncludes };

@@ -107,6 +107,15 @@ const handlers = [
   // Signed script storage host (download_analysis_script bounded fetch)
   http.get("https://storage.tago.example/scripts/abc", () => HttpResponse.text(fixtures.analysisScript)),
 
+  // TagoSQL: the literal /sql/tables route must precede /sql/:sqlID.
+  http.get(`${API}/sql/tables`, () => ok(fixtures.sqlTables)),
+  http.get(`${API}/sql/:sqlID/version/:version`, () => ok(fixtures.sqlQueryVersion)),
+  http.post(`${API}/sql/:sqlID/execute`, () => ok(fixtures.sqlExecuteResult)),
+  http.get(`${API}/sql`, () => ok(fixtures.sqlQueryList)),
+  http.post(`${API}/sql`, () => ok(fixtures.sqlQueryInfo)),
+  http.get(`${API}/sql/:sqlID`, () => ok(fixtures.sqlQueryInfo)),
+  http.put(`${API}/sql/:sqlID`, () => ok({ ...fixtures.sqlQueryInfo, version: 2 })),
+  http.delete(`${API}/sql/:sqlID`, () => ok({ id: fixtures.IDS.sqlQuery })),
   // Entities
   // List rows may omit projected keys the client requested (e.g. `index`).
   // Dropping `index` here encodes that contract so #850 cannot silently regress.
