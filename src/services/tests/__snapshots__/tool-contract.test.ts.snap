@@ -1184,6 +1184,146 @@ The type parameter accepts one of seven values:
           },
           "type": "array",
         },
+        "blueprint_device_behavior": {
+          "description": "When the slot selectors appear: "always", or "more_than_one" to show a selector only when it has more than one option.",
+          "enum": [
+            "always",
+            "more_than_one",
+          ],
+          "type": "string",
+        },
+        "blueprint_devices": {
+          "description": "Blueprint slots (at most 20). Replaces the current slots entirely: read them with get_dashboard and resend every slot to keep exactly as returned, changing only what you intend. A field left out of a kept slot is cleared, so resend type "entity" on entity slots, and widgets bound to a dropped slot lose their data source.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "conditions": {
+                "description": "Tags a device or entity must carry to appear in this slot's selector, e.g. [{ key: 'entity_type', value: 'organization' }].",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                    },
+                    "value": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "key",
+                    "value",
+                  ],
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "description": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "filter_conditions": {
+                "description": "Narrows this slot to resources whose tag_key value equals the same tag on the resource selected in another slot.",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "blueprint_device": {
+                      "description": "Name of the other slot whose selection drives this one.",
+                      "type": "string",
+                    },
+                    "tag_key": {
+                      "description": "Tag key compared on both sides.",
+                      "type": "string",
+                    },
+                    "type": {
+                      "const": "tag_match",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "tag_key",
+                    "blueprint_device",
+                  ],
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "hide_when_empty": {
+                "type": [
+                  "boolean",
+                  "null",
+                ],
+              },
+              "id": {
+                "description": "ID of an existing slot, as get_dashboard returns it. Omit for a new slot; the API assigns one.",
+                "maxLength": 24,
+                "minLength": 24,
+                "type": "string",
+              },
+              "label": {
+                "description": "Selector label shown to the dashboard viewer.",
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "name": {
+                "description": "Slot identifier. Widgets bind to the slot ID; filter_conditions of other slots refer to this name.",
+                "minLength": 1,
+                "type": "string",
+              },
+              "placeholder": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "tag_to_replace": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "type": {
+                "description": "What the slot resolves to: a device (default) or an entity.",
+                "enum": [
+                  "device",
+                  "entity",
+                ],
+                "type": "string",
+              },
+              "use_item_label_tag": {
+                "type": [
+                  "boolean",
+                  "null",
+                ],
+              },
+            },
+            "required": [
+              "name",
+              "conditions",
+            ],
+            "type": "object",
+          },
+          "maxItems": 20,
+          "type": "array",
+        },
+        "blueprint_selector_behavior": {
+          "description": "How the slot selector starts and whether the viewer can toggle it.",
+          "enum": [
+            "open",
+            "closed",
+            "always_open",
+            "always_closed",
+          ],
+          "type": "string",
+        },
+        "disable_blueprint_fallback": {
+          "description": "Whether to disable the fallback selection when no resource is chosen.",
+          "type": "boolean",
+        },
         "label": {
           "description": "The label (display name) for the dashboard.",
           "minLength": 1,
@@ -1239,6 +1379,14 @@ The type parameter accepts one of seven values:
             "type": "object",
           },
           "type": "array",
+        },
+        "type": {
+          "description": ""blueprint" creates a dashboard whose widgets bind to slots the viewer picks at runtime. Defaults to "dashboard". Cannot be changed later.",
+          "enum": [
+            "dashboard",
+            "blueprint",
+          ],
+          "type": "string",
         },
         "visible": {
           "description": "Whether the dashboard is visible in the sidebar. Defaults to true.",
@@ -5826,11 +5974,151 @@ The type parameter accepts one of seven values:
           },
           "type": "array",
         },
+        "blueprint_device_behavior": {
+          "description": "When the slot selectors appear: "always", or "more_than_one" to show a selector only when it has more than one option.",
+          "enum": [
+            "always",
+            "more_than_one",
+          ],
+          "type": "string",
+        },
+        "blueprint_devices": {
+          "description": "Blueprint slots (at most 20). Replaces the current slots entirely: read them with get_dashboard and resend every slot to keep exactly as returned, changing only what you intend. A field left out of a kept slot is cleared, so resend type "entity" on entity slots, and widgets bound to a dropped slot lose their data source.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "conditions": {
+                "description": "Tags a device or entity must carry to appear in this slot's selector, e.g. [{ key: 'entity_type', value: 'organization' }].",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                    },
+                    "value": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "key",
+                    "value",
+                  ],
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "description": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "filter_conditions": {
+                "description": "Narrows this slot to resources whose tag_key value equals the same tag on the resource selected in another slot.",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "blueprint_device": {
+                      "description": "Name of the other slot whose selection drives this one.",
+                      "type": "string",
+                    },
+                    "tag_key": {
+                      "description": "Tag key compared on both sides.",
+                      "type": "string",
+                    },
+                    "type": {
+                      "const": "tag_match",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "tag_key",
+                    "blueprint_device",
+                  ],
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "hide_when_empty": {
+                "type": [
+                  "boolean",
+                  "null",
+                ],
+              },
+              "id": {
+                "description": "ID of an existing slot, as get_dashboard returns it. Omit for a new slot; the API assigns one.",
+                "maxLength": 24,
+                "minLength": 24,
+                "type": "string",
+              },
+              "label": {
+                "description": "Selector label shown to the dashboard viewer.",
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "name": {
+                "description": "Slot identifier. Widgets bind to the slot ID; filter_conditions of other slots refer to this name.",
+                "minLength": 1,
+                "type": "string",
+              },
+              "placeholder": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "tag_to_replace": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "type": {
+                "description": "What the slot resolves to: a device (default) or an entity.",
+                "enum": [
+                  "device",
+                  "entity",
+                ],
+                "type": "string",
+              },
+              "use_item_label_tag": {
+                "type": [
+                  "boolean",
+                  "null",
+                ],
+              },
+            },
+            "required": [
+              "name",
+              "conditions",
+            ],
+            "type": "object",
+          },
+          "maxItems": 20,
+          "type": "array",
+        },
+        "blueprint_selector_behavior": {
+          "description": "How the slot selector starts and whether the viewer can toggle it.",
+          "enum": [
+            "open",
+            "closed",
+            "always_open",
+            "always_closed",
+          ],
+          "type": "string",
+        },
         "dashboard_id": {
           "description": "The 24-character dashboard ID.",
           "maxLength": 24,
           "minLength": 24,
           "type": "string",
+        },
+        "disable_blueprint_fallback": {
+          "description": "Whether to disable the fallback selection when no resource is chosen.",
+          "type": "boolean",
         },
         "label": {
           "description": "The new label for the dashboard.",
