@@ -33,6 +33,19 @@ A custom widget is an `iframe` widget whose code is one `.tsx` React component i
 - **`display.variables` is a decoy**: host-recomputed from `data` every render (drives write auto-fill, not reads); anything written there is overwritten and never selects data.
 - The load handshake delivers an initial snapshot of STORED data per these bindings; history appears in `useRealtimeData()` immediately; there is no separate history fetch.
 
+### Resource data sources: entities
+
+`useResourceData` delivers the rows the widget's top-level `resource` array binds. Bind entity rows there: the entry takes the entity ID as `id`; on a blueprint dashboard, use a slot ID instead (from `blueprint_devices` in `get_dashboard`) and the rows follow the entity the viewer picks in that slot:
+
+```json
+{
+  "resource": [{ "type": "entity", "id": "<blueprint_slot_id or entity_id>", "index": "<entity index>", "view": ["name", "organization_id"], "editable": [], "amount": 1000, "orderBy": "desc" }]
+}
+```
+
+- `view` lists the fields delivered per row and `editable` the fields `useEditResourceData` may write; anything outside `editable` is silently dropped.
+- Configure user and device sources in the Admin. It keeps them in `display.resource_options` and builds their `resource` entries from it, so user or device entries written here may not survive the next Admin save. `update_widget` keeps the stored `resource_options` on every update; never author it.
+
 ## Updating an existing widget
 
 1. `get_custom_widget_code` first, always: edit what is deployed, not what you remember.

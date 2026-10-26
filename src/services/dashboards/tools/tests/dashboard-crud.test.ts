@@ -1,6 +1,7 @@
 import { Resources } from "@tago-io/sdk";
 import { http } from "msw";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { z } from "zod/v3";
 
 import { makeTestContext, TEST_REGION } from "../../../../testing/context";
 import { invokeTool } from "../../../../testing/invoke-tool";
@@ -250,5 +251,92 @@ describe("search_dashboards and get_dashboard rendering", () => {
     expect(output).toContain(fixtures.IDS.widget);
     expect(output).toContain(fixtures.IDS.widgetOther);
     expect(output).toContain("Fleet Overview");
+  });
+});
+
+describe("blueprint slots", () => {
+  const ORGANIZATION_SLOT = { id: "6adf687312f2ac000cafd9a5", name: "organization", type: "entity", conditions: [{ key: "entity_type", value: "organization" }] };
+  const PROFILE_SLOT = {
+    name: "user_profile",
+    type: "entity",
+    conditions: [{ key: "entity_type", value: "user_profile" }],
+    filter_conditions: [{ type: "tag_match", tag_key: "organization_id", blueprint_device: "organization" }],
+  };
+
+  function useBlueprintDashboard() {
+    mockServer.use(
+      http.get(`${API}/dashboard/:dashboardID`, () =>
+        ok({ ...fixtures.dashboardInfo, type: "blueprint", blueprint_devices: [{ ...ORGANIZATION_SLOT, label: "", filter_conditions: [] }], blueprint_device_behavior: "always" })
+      )
+    );
+  }
+
+  it("shows the slot IDs in the concise get_dashboard view of a blueprint dashboard only", async () => {
+    useBlueprintDashboard();
+    const blueprintOutput = await getDashboardConfigJSON.tool(makeContext(), { dashboard_id: DASHBOARD_ID });
+    mockServer.resetHandlers();
+    const regularOutput = await getDashboardConfigJSON.tool(makeContext(), { dashboard_id: DASHBOARD_ID });
+
+    expect(blueprintOutput).toContain("blueprint_devices");
+    expect(blueprintOutput).toContain(ORGANIZATION_SLOT.id);
+    expect(regularOutput).not.toContain("blueprint_devices");
+  });
+
+  it("creates a blueprint dashboard with entity slots, leaving slot IDs for the API to assign", async () => {
+    const bodies = captureBodies("post", `${API}/dashboard`, fixtures.dashboardCreateResponse);
+    const { id: _id, ...newOrganizationSlot } = ORGANIZATION_SLOT;
+    const params = { label: "Organizations", type: "blueprint", blueprint_devices: [newOrganizationSlot, PROFILE_SLOT], blueprint_selector_behavior: "open" };
+
+    await invokeTool(createDashboardConfigJSON, makeContext(), params);
+
+    expect(bodies).toEqual([params]);
+  });
+
+  it("rejects blueprint fields on create without type blueprint, with zero outbound requests", async () => {
+    const requests = trackAllRequests();
+
+    await expect(invokeTool(createDashboardConfigJSON, makeContext(), { label: "Plain", blueprint_devices: [PROFILE_SLOT] })).rejects.toThrow(
+      /blueprint_devices.*type "blueprint"/s
+    );
+    expect(requests).toEqual([]);
+  });
+
+  it("updates the slots of a blueprint dashboard: kept slots keep their ID, a new slot is sent without one", async () => {
+    useBlueprintDashboard();
+    const bodies = captureBodies("put", `${API}/dashboard/:dashboardID`, "Successfully Updated");
+    const blueprintDevices = [ORGANIZATION_SLOT, PROFILE_SLOT];
+
+    await invokeTool(updateDashboardConfigJSON, makeContext(), { dashboard_id: DASHBOARD_ID, blueprint_devices: blueprintDevices });
+
+    expect(bodies).toEqual([{ blueprint_devices: blueprintDevices }]);
+  });
+
+  it("rejects blueprint fields on a regular dashboard with no PUT traffic", async () => {
+    const bodies = captureBodies("put", `${API}/dashboard/:dashboardID`, "Successfully Updated");
+
+    await expect(invokeTool(updateDashboardConfigJSON, makeContext(), { dashboard_id: DASHBOARD_ID, blueprint_devices: [PROFILE_SLOT] })).rejects.toThrow(
+      /blueprint_devices.*only applies to blueprint dashboards/s
+    );
+    expect(bodies).toHaveLength(0);
+  });
+
+  it("accepts stored slots as get_dashboard returns them, and rejects unknown slot keys and more than 20 slots", () => {
+    const schema = z.object(updateDashboardConfigJSON.parameters).strict();
+    const storedSlot = {
+      ...ORGANIZATION_SLOT,
+      label: "",
+      description: null,
+      placeholder: "",
+      tag_to_replace: "",
+      hide_when_empty: null,
+      filter_conditions: [],
+      use_item_label_tag: false,
+    };
+    const slots = (count: number) => Array.from({ length: count }, (_, index) => ({ ...PROFILE_SLOT, name: `slot_${index}` }));
+
+    expect(schema.safeParse({ dashboard_id: DASHBOARD_ID, blueprint_devices: [storedSlot] }).success).toBe(true);
+    expect(schema.safeParse({ dashboard_id: DASHBOARD_ID, blueprint_devices: [{ ...PROFILE_SLOT, colour: "red" }] }).success).toBe(false);
+    expect(schema.safeParse({ dashboard_id: DASHBOARD_ID, blueprint_devices: slots(20) }).success).toBe(true);
+    expect(schema.safeParse({ dashboard_id: DASHBOARD_ID, blueprint_devices: slots(21) }).success).toBe(false);
   });
 });

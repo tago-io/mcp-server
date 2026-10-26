@@ -41,6 +41,8 @@ const updateWidgetConfigJSON: IToolConfig = {
 
 Configuration only: placement (x/y/size) is never accepted here; it lives in the dashboard arrangement and is changed via update_dashboard. The widget type is immutable: delete and recreate the widget to change its type.
 
+A custom widget (type "iframe") reads entity rows from the top-level \`resource\` array. On a blueprint dashboard, an entity entry bound to a slot uses the slot ID from get_dashboard as its \`id\`: \`{ "type": "entity", "id": "<slot_id>", "index": "<entity index>", "view": ["name"] }\`. User and device sources belong in the Admin, which keeps them in \`display.resource_options\` and rebuilds their \`resource\` entries from it; never author \`resource_options\`, which is kept on every update.
+
 <example>
 {
   "dashboard_id": "61f0000000000000000da001",

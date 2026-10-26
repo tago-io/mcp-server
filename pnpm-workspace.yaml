@@ -6,6 +6,8 @@ minimumReleaseAge: 2880
 minimumReleaseAgeExclude:
   # typescript 7.0.2 published 2026-07-10, inside the 2-day gate; explicitly vetted
   - typescript@7.0.2
+  # first-party; published 2026-10-26 from tago-io/dashboard-schema#16, inside the 2-day gate
+  - "@tago-io/dashboard-schema@2.8.0"
 trustPolicyExclude:
   # backport release (2023) published after provenance-attested 7.x versions,
   # so the publish-date-based downgrade check false-positives on it (via shx)
