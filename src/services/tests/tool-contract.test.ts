@@ -35,6 +35,7 @@ const WIDGET_ID = "61f0000000000000000db001";
 // placement preflight lets it through.
 const WIDGET_UNPLACED_ID = "61f0000000000000000db003";
 const WIDGET_CUSTOM_ID = "61f0000000000000000db004";
+const SQL_QUERY_ID = "61f0000000000000000c5001";
 const ACCESS_POLICY_ID = "61f00000000000000ab00001";
 // Deleted by the delete case, so it must not be the policy other cases read.
 const ACCESS_POLICY_INERT_ID = "61f00000000000000ab00003";
@@ -229,6 +230,18 @@ const contractCases: Record<string, ContractCase> = {
     happy: { type: "analysis", runtime: "node-rt2025", filename: "console.js" },
     invalid: { type: "analysis", filename: "console.js" },
   },
+  search_sql_queries: { happy: {}, invalid: { amount: 0 } },
+  get_sql_query: { happy: { sql_query_id: SQL_QUERY_ID }, invalid: { sql_query_id: "too-short" } },
+  create_sql_query: { happy: { name: "Contract query", query: "SELECT d.id FROM devices() AS d LIMIT 5" }, invalid: { name: "No query" } },
+  update_sql_query: {
+    happy: { sql_query_id: SQL_QUERY_ID, name: "Renamed" },
+    // No editable field alongside the ID; rejected before any SDK traffic.
+    invalid: { sql_query_id: SQL_QUERY_ID },
+  },
+  delete_sql_query: { happy: { sql_query_id: SQL_QUERY_ID }, invalid: {} },
+  get_sql_query_version: { happy: { sql_query_id: SQL_QUERY_ID, version: 1 }, invalid: { sql_query_id: SQL_QUERY_ID, version: 0 } },
+  execute_sql_query: { happy: { sql_query_id: SQL_QUERY_ID, test: true }, invalid: { sql_query_id: SQL_QUERY_ID, params: [{ key: "1", value: "30" }] } },
+  lookup_sql_tables: { happy: { filter: "compressor" }, invalid: { amount: 0 } },
 };
 
 async function connect() {

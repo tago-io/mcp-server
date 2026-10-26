@@ -26,7 +26,7 @@ Your client connects to the TagoIO hosted server at `https://mcp.ai.tago.io`. Yo
 
 ## What you can ask for
 
-The server gives your assistant around 80 focused capabilities across your account. You describe the outcome, and it picks the tools. Some things that work well today:
+The server gives your assistant around 90 focused capabilities across your account. You describe the outcome, and it picks the tools. Some things that work well today:
 
 **Understand your fleet**
 
@@ -376,6 +376,7 @@ Every tool the server exposes, grouped by domain. Each one carries its own param
 | Dashboards & widgets   | `search_dashboards`, `get_dashboard`, `create_dashboard`, `update_dashboard`, `delete_dashboard`, `get_widget`, `create_widget`, `update_widget`, `delete_widget`, `widget_schema_lookup`, `validate_widget_configuration`, `get_custom_widget_code`, `upload_custom_widget_code` |
 | Entities               | `search_entities`, `get_entity`, `create_entity`, `update_entity`, `delete_entity`, `update_entity_schema`                                                                                                                                                                        |
 | Entity data            | `read_entity_data`, `send_entity_data`, `edit_entity_data`, `delete_entity_data`, `empty_entity_data`                                                                                                                                                                             |
+| TagoSQL queries        | `search_sql_queries`, `get_sql_query`, `create_sql_query`, `update_sql_query`, `delete_sql_query`, `get_sql_query_version`, `execute_sql_query`, `lookup_sql_tables`                                                                                                              |
 | Run users              | `search_run_users`, `get_run_user`, `create_run_user`, `update_run_user`, `delete_run_user`, `login_as_run_user`                                                                                                                                                                  |
 | Run-user notifications | `read_run_user_notifications`, `send_run_user_notification`, `update_run_user_notification`, `delete_run_user_notification`                                                                                                                                                       |
 | Files                  | `search_files`, `delete_files`                                                                                                                                                                                                                                                    |

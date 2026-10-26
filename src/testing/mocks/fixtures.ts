@@ -23,6 +23,7 @@ const IDS = {
   dataRecord: "61f0000000000000000dd001",
   entityDataRow: "61f0000000000000000fd001",
   notification: "61f00000000000000ca00001",
+  sqlQuery: "61f0000000000000000c5001",
 } as const;
 
 const FAKE_DEVICE_TOKEN = "00000000-0000-4000-8000-000000000001";
@@ -683,6 +684,83 @@ const accessPolicies = [
   },
 ];
 
+// TagoSQL shapes copied from the live API: info carries the version map and
+// session_context, the list projects only the requested fields, and execute
+// returns typed columns with rows keyed by column name.
+const sqlQueryInfo = {
+  id: IDS.sqlQuery,
+  profile: IDS.profile,
+  name: "Hot compressors",
+  description: "Readings above a threshold",
+  query: `SELECT variable, value, time FROM device('${IDS.device}') AS d WHERE value > $1 ORDER BY time DESC LIMIT 5`,
+  params: [{ key: "$1", value: "30" }],
+  cache_enabled: true,
+  cache_ttl_seconds: 120,
+  cache_version: 1,
+  rate_limit_rpm: 30,
+  active: true,
+  session_context: false,
+  tags: [{ key: "audience", value: "portal" }],
+  version: 1,
+  versions: { "1": { created_at: "2026-10-26T19:32:45.314719+00:00", created_by: "61f00000000000000c600001", version_id: "vx.fixture" } },
+  created_at: "2026-10-26T19:32:45.314719",
+  updated_at: "2026-10-26T19:32:45.314719",
+};
+
+const sqlQueryList = [{ id: IDS.sqlQuery, name: "Hot compressors", active: true, tags: [{ key: "audience", value: "portal" }] }];
+
+const sqlQueryVersion = { query: sqlQueryInfo.query, params: sqlQueryInfo.params, created_at: "2026-10-26T19:32:45.314719+00:00" };
+
+const sqlExecuteResult = {
+  columns: [
+    { name: "variable", type: "string" },
+    { name: "value", type: "number" },
+    { name: "time", type: "timestamp" },
+  ],
+  rows: [
+    { time: "2026-10-26T18:55:52.663+00:00", value: 50.68, variable: "battery" },
+    { time: "2026-10-26T18:55:52.663+00:00", value: 62.2, variable: "oil_temperature" },
+  ],
+  row_count: 2,
+  execution_ms: 144,
+  served_from_cache: false,
+};
+
+const sqlTables = {
+  tables: [
+    {
+      function: "device",
+      label: "Device Data",
+      tag_form: "device_tag",
+      columns: [
+        { name: "variable", type: "string" },
+        { name: "value", type: "auto" },
+        { name: "time", type: "timestamp" },
+      ],
+    },
+    {
+      function: "devices",
+      label: "Devices",
+      tag_form: "devices_tag",
+      columns: [
+        { name: "id", type: "string" },
+        { name: "name", type: "string" },
+      ],
+    },
+  ],
+  resources: { devices: [{ id: IDS.device, name: "Compressor - Assembly North" }], entities: [{ id: IDS.entity, name: "Organizations" }] },
+  functions: [
+    { name: "avg", kind: "aggregate", args: ["column"], description: "Average of a numeric column" },
+    {
+      name: "session_user_tag",
+      kind: "session",
+      args: ["key"],
+      description: "The executing user's value for a tag key, filled by the server",
+      example: "COALESCE(session_user_tag('key'), '...')",
+    },
+  ],
+};
+
 const fixtures = {
   IDS,
   FAKE_DEVICE_TOKEN,
@@ -744,6 +822,11 @@ const fixtures = {
   fileStorageAllocation,
   amSettings,
   accessPolicies,
+  sqlQueryInfo,
+  sqlQueryList,
+  sqlQueryVersion,
+  sqlExecuteResult,
+  sqlTables,
 };
 
 export { fixtures };

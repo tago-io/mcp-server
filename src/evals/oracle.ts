@@ -77,6 +77,14 @@ const NEW_TOOL_MAP = {
   platform_overview: "docs.overview",
   search_code_examples: "code_examples.search",
   get_code_example: "code_examples.get",
+  search_sql_queries: "sql.search",
+  get_sql_query: "sql.get",
+  create_sql_query: "sql.create",
+  update_sql_query: "sql.update",
+  delete_sql_query: "sql.delete",
+  get_sql_query_version: "sql.get_version",
+  execute_sql_query: "sql.execute",
+  lookup_sql_tables: "sql.tables",
 } as const;
 
 type SemanticOperation = (typeof NEW_TOOL_MAP)[keyof typeof NEW_TOOL_MAP];

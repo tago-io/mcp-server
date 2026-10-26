@@ -1961,6 +1961,121 @@ The type parameter accepts one of seven values:
       "$schema": "http://json-schema.org/draft-07/schema#",
       "additionalProperties": false,
       "properties": {
+        "active": {
+          "description": "An inactive query cannot be executed.",
+          "type": "boolean",
+        },
+        "cache_enabled": {
+          "description": "Serve repeat executions with the same parameter values from cache, free of Data Output. Off by default; takes effect only with cache_ttl_seconds above 0.",
+          "type": "boolean",
+        },
+        "cache_ttl_seconds": {
+          "description": "How long a cached result stays fresh, at most 86400 (24 hours).",
+          "maximum": 86400,
+          "minimum": 0,
+          "type": "integer",
+        },
+        "description": {
+          "anyOf": [
+            {
+              "maxLength": 1024,
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Free text describing what the query returns (at most 1024 characters).",
+        },
+        "name": {
+          "description": "Display name of the saved query (1-64 characters).",
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string",
+        },
+        "params": {
+          "description": "Stored default values for the query's $1..$n placeholders. They must cover every placeholder the query uses, numbered 1..N without gaps, each key once.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Placeholder, e.g. "$1".",
+                "pattern": "^\\$[1-9]\\d*$",
+                "type": "string",
+              },
+              "value": {
+                "description": "Always a string; the server converts it to the type the query needs (number, timestamp, boolean, text).",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "query": {
+          "description": "The TagoSQL statement: one read-only SELECT. Every FROM table is a table function with an alias, e.g. \`FROM device('DEVICE_ID') AS d\`: device('id') and entity('id') read one resource's data; device_tag and entity_tag read the FIRST resource matching the tag (lowest ID); device_data_by_tag('key','value', ...) returns the latest reading of every matching device; devices(), entities(), devices_tag, and entities_tag list resources, the tag forms returning EVERY match. Allowed: aliases, DISTINCT, COUNT/AVG/SUM/MIN/MAX, JOIN with ON (Starter plan or above), WHERE, IN, BETWEEN, IS NULL, LIKE/ILIKE, GROUP BY, HAVING, ORDER BY, LIMIT/OFFSET, arithmetic. Not allowed: subqueries, WITH, UNION, window functions, ::casts, writes. Always add LIMIT: a query without one saves, but fails at execution once its result exceeds the plan row cap. LIMIT and OFFSET take fixed numbers, never placeholders; page with a parameter cursor instead (e.g. WHERE time < $1). Use $1..$n placeholders for values, and in the id slot of device($1) or entity($1). The list tables and device_data_by_tag cannot be joined, and device_data_by_tag allows no aggregates or GROUP BY. In a JOIN, alias same-named columns apart (rows are keyed by column name). Call lookup_sql_tables for columns and functions.",
+          "minLength": 1,
+          "type": "string",
+        },
+        "rate_limit_rpm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Per-query cap on executions per minute; null removes it.",
+        },
+        "tags": {
+          "description": "Tags for the query, also usable to grant execution through Access Management. E.g: [{ key: 'audience', value: 'portal' }]",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "name",
+        "query",
+      ],
+      "type": "object",
+    },
+    "name": "create_sql_query",
+    "title": "Create SQL Query",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
         "configuration": {
           "additionalProperties": {},
           "description": "Compact widget configuration object. Must include "type", "label", and "display" as the widget schema demands (see widget_schema_lookup).",
@@ -2353,6 +2468,32 @@ The type parameter accepts one of seven values:
       "$schema": "http://json-schema.org/draft-07/schema#",
       "additionalProperties": false,
       "properties": {
+        "sql_query_id": {
+          "description": "The 24-character SQL query ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "sql_query_id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_sql_query",
+    "title": "Delete SQL Query",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
         "dashboard_id": {
           "description": "The 24-character dashboard ID.",
           "maxLength": 24,
@@ -2572,6 +2713,63 @@ The type parameter accepts one of seven values:
     },
     "name": "empty_entity_data",
     "title": "Empty Entity Data",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "after_device": {
+          "description": "Fleet queries (device_data_by_tag) only: the last device ID of the previous page, to fetch the next page. Order the query by device.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "params": {
+          "description": "Values for this run only, overriding the stored defaults per key; stored defaults fill the rest.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Placeholder, e.g. "$1".",
+                "pattern": "^\\$[1-9]\\d*$",
+                "type": "string",
+              },
+              "value": {
+                "description": "Always a string; the server converts it to the type the query needs (number, timestamp, boolean, text).",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "sql_query_id": {
+          "description": "The 24-character SQL query ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "test": {
+          "description": "Skip the result cache entirely (no read, no write) while iterating on a query. Still counts against Data Output and rate limits.",
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "sql_query_id",
+      ],
+      "type": "object",
+    },
+    "name": "execute_sql_query",
+    "title": "Execute SQL Query",
   },
   {
     "annotations": {
@@ -3040,6 +3238,68 @@ The type parameter accepts one of seven values:
       "$schema": "http://json-schema.org/draft-07/schema#",
       "additionalProperties": false,
       "properties": {
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+        "sql_query_id": {
+          "description": "The 24-character SQL query ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+      },
+      "required": [
+        "sql_query_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_sql_query",
+    "title": "Get SQL Query",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "sql_query_id": {
+          "description": "The 24-character SQL query ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "version": {
+          "description": "Version number, as get_sql_query reports it. Version 1 is the query as first saved.",
+          "minimum": 1,
+          "type": "integer",
+        },
+      },
+      "required": [
+        "sql_query_id",
+        "version",
+      ],
+      "type": "object",
+    },
+    "name": "get_sql_query_version",
+    "title": "Get SQL Query Version",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
         "dashboard_id": {
           "description": "The 24-character dashboard ID.",
           "maxLength": 24,
@@ -3137,6 +3397,43 @@ The type parameter accepts one of seven values:
     },
     "name": "lookup_access_permissions",
     "title": "Lookup Access Permissions",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Devices and entities to list (1-100, default 20).",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "entity_id": {
+          "description": "Resolve the columns of one entity you own; entity tables expose that entity's own schema fields.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "filter": {
+          "description": "Substring match on device and entity names, to find the IDs to put in device('id') or entity('id').",
+          "minLength": 1,
+          "type": "string",
+        },
+        "page": {
+          "description": "Page of results, starting from 1.",
+          "minimum": 1,
+          "type": "integer",
+        },
+      },
+      "type": "object",
+    },
+    "name": "lookup_sql_tables",
+    "title": "Lookup SQL Tables",
   },
   {
     "annotations": {
@@ -4516,6 +4813,92 @@ The type parameter accepts one of seven values:
     },
     "name": "search_secrets",
     "title": "Search Profile Secrets",
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Number of items to return (min 1, max 200, default 20).",
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "fields": {
+          "description": "Fields to include per query. Defaults to all key fields. Also controls the rendered columns: when supplied, output shows exactly these fields, even in concise mode.",
+          "items": {
+            "enum": [
+              "id",
+              "name",
+              "active",
+              "tags",
+              "created_at",
+              "updated_at",
+            ],
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "filter": {
+          "additionalProperties": false,
+          "description": "Filters to narrow the search.",
+          "properties": {
+            "active": {
+              "description": "Filter by active status.",
+              "type": "boolean",
+            },
+            "name": {
+              "description": "Partial query name. Wildcard matching is applied automatically ('fleet' finds 'Fleet temperatures').",
+              "type": "string",
+            },
+            "orderBy": {
+              "description": "Sort as "field,direction". Field is one of: name, active, created_at, updated_at; direction is asc or desc. E.g: "name,asc"",
+              "type": "string",
+            },
+            "tags": {
+              "description": "Filter by tags. E.g: [{ key: 'audience', value: 'portal' }]",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "description": "Tag key",
+                    "type": "string",
+                  },
+                  "value": {
+                    "description": "Tag value",
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "type": "array",
+            },
+          },
+          "type": "object",
+        },
+        "page": {
+          "description": "Page of results, starting from 1.",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "response_format": {
+          "description": "Response verbosity. 'concise' (default) returns key identity fields; 'detailed' returns every field.",
+          "enum": [
+            "concise",
+            "detailed",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "search_sql_queries",
+    "title": "Search SQL Queries",
   },
   {
     "annotations": {
@@ -7026,6 +7409,126 @@ The type parameter accepts one of seven values:
     },
     "name": "update_run_user_notification",
     "title": "Update Run User Notification",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "description": "An inactive query cannot be executed.",
+          "type": "boolean",
+        },
+        "cache_enabled": {
+          "description": "Serve repeat executions with the same parameter values from cache, free of Data Output. Off by default; takes effect only with cache_ttl_seconds above 0.",
+          "type": "boolean",
+        },
+        "cache_ttl_seconds": {
+          "description": "How long a cached result stays fresh, at most 86400 (24 hours).",
+          "maximum": 86400,
+          "minimum": 0,
+          "type": "integer",
+        },
+        "description": {
+          "anyOf": [
+            {
+              "maxLength": 1024,
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Free text describing what the query returns (at most 1024 characters).",
+        },
+        "name": {
+          "description": "The new display name (1-64 characters).",
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string",
+        },
+        "params": {
+          "description": "Stored default values for the query's $1..$n placeholders. They must cover every placeholder the query uses, numbered 1..N without gaps, each key once.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Placeholder, e.g. "$1".",
+                "pattern": "^\\$[1-9]\\d*$",
+                "type": "string",
+              },
+              "value": {
+                "description": "Always a string; the server converts it to the type the query needs (number, timestamp, boolean, text).",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "query": {
+          "description": "The TagoSQL statement: one read-only SELECT. Every FROM table is a table function with an alias, e.g. \`FROM device('DEVICE_ID') AS d\`: device('id') and entity('id') read one resource's data; device_tag and entity_tag read the FIRST resource matching the tag (lowest ID); device_data_by_tag('key','value', ...) returns the latest reading of every matching device; devices(), entities(), devices_tag, and entities_tag list resources, the tag forms returning EVERY match. Allowed: aliases, DISTINCT, COUNT/AVG/SUM/MIN/MAX, JOIN with ON (Starter plan or above), WHERE, IN, BETWEEN, IS NULL, LIKE/ILIKE, GROUP BY, HAVING, ORDER BY, LIMIT/OFFSET, arithmetic. Not allowed: subqueries, WITH, UNION, window functions, ::casts, writes. Always add LIMIT: a query without one saves, but fails at execution once its result exceeds the plan row cap. LIMIT and OFFSET take fixed numbers, never placeholders; page with a parameter cursor instead (e.g. WHERE time < $1). Use $1..$n placeholders for values, and in the id slot of device($1) or entity($1). The list tables and device_data_by_tag cannot be joined, and device_data_by_tag allows no aggregates or GROUP BY. In a JOIN, alias same-named columns apart (rows are keyed by column name). Call lookup_sql_tables for columns and functions.",
+          "minLength": 1,
+          "type": "string",
+        },
+        "rate_limit_rpm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Per-query cap on executions per minute; null removes it.",
+        },
+        "sql_query_id": {
+          "description": "The 24-character SQL query ID.",
+          "maxLength": 24,
+          "minLength": 24,
+          "type": "string",
+        },
+        "tags": {
+          "description": "Tags for the query, also usable to grant execution through Access Management. E.g: [{ key: 'audience', value: 'portal' }]",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "description": "Tag key",
+                "type": "string",
+              },
+              "value": {
+                "description": "Tag value",
+                "type": "string",
+              },
+            },
+            "required": [
+              "key",
+              "value",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "sql_query_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_sql_query",
+    "title": "Update SQL Query",
   },
   {
     "annotations": {

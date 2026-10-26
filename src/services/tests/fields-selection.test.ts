@@ -10,6 +10,7 @@ import { searchConnectorsConfigJSON } from "../integration/tools/search-connecto
 import { searchNetworksConfigJSON } from "../integration/tools/search-networks";
 import { searchSecretsConfigJSON } from "../profile/tools/search-secrets";
 import { searchRunUsersConfigJSON } from "../run-users/tools/search-run-users";
+import { searchSqlQueriesConfigJSON } from "../sql/tools/search-sql-queries";
 import { IToolConfig } from "../types";
 
 const SELECTED_VALUE = "selected-field-value";
@@ -80,6 +81,12 @@ const cases: FieldsSelectionCase[] = [
     selectedField: "description",
     unselectedField: "name",
     makeResources: (item) => ({ integration: { connectors: { list: vi.fn().mockResolvedValue([item]) } } }),
+  },
+  {
+    config: searchSqlQueriesConfigJSON,
+    selectedField: "created_at",
+    unselectedField: "active",
+    makeResources: (item) => ({ sql: { list: vi.fn().mockResolvedValue([item]) } }),
   },
 ];
 

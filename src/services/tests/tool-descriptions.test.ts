@@ -10,8 +10,20 @@ import { entityTools } from "../entities/tools/index";
 import { integrationTools } from "../integration/tools/index";
 import { profileMetricsTools } from "../profile/tools/index";
 import { userTools } from "../run-users/tools/index";
+import { sqlTools } from "../sql/tools/index";
 
-const allTools = [...actionTools, ...analysisTools, ...deviceTools, ...docsTools, ...documentationTools, ...entityTools, ...integrationTools, ...profileMetricsTools, ...userTools];
+const allTools = [
+  ...actionTools,
+  ...analysisTools,
+  ...deviceTools,
+  ...docsTools,
+  ...documentationTools,
+  ...entityTools,
+  ...integrationTools,
+  ...profileMetricsTools,
+  ...userTools,
+  ...sqlTools,
+];
 
 function extractExamples(description: string): string[] {
   const matches = description.matchAll(/<example>([\s\S]*?)<\/example>/g);

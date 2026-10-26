@@ -13,6 +13,7 @@ Path-specific rules live in nested `AGENTS.md` files; read the one under the dir
 - `src/services/docs/AGENTS.md` - official-docs teaching tools and the credential-specific device-data routes.
 - `src/services/documentation/AGENTS.md` - code-example tool bounds, coverage matching, and public-content caching.
 - `src/services/integration/AGENTS.md` - connector/network search filter exception.
+- `src/services/sql/AGENTS.md` - TagoSQL edit-as-full-replace, server-side SQL validation, execution caching and output budget, and the access grants.
 - `src/evals/AGENTS.md` - frozen-dataset discipline and offline-vs-provider gating.
 
 ## Project Overview
@@ -92,12 +93,13 @@ Each service module follows a consistent pattern:
 10. **Dashboards** - Dashboard/widget CRUD, schema lookup and validation, and custom-widget code tools. See `services/dashboards/AGENTS.md`.
 11. **Files** - Storage listing and listing-verified file deletion, the way to find and clean files that outlive what created them. See `services/files/AGENTS.md`.
 12. **Access Management** - Policy CRUD plus the permission-catalog lookup that turns a denial into the grant to add. An analysis is denied with "Authorization Denied"; a run user is denied silently, by an empty list. Create and update are split by target kind, since six resource names appear under both kinds with different action sets, and one policy holding both kinds grants its whole rule list to both. See `services/access-management/AGENTS.md`.
+13. **TagoSQL** - Saved-query CRUD, version lookup, execution with a bounded result table, and table/function discovery. Edits resend the whole query. See `services/sql/AGENTS.md`.
 
 ### Tool Design
 
 Every tool is single-purpose with a `snake_case` `verb_noun` name (`search_devices`, `create_action`), a `title`, MCP behavior annotations, and a mutation class.
 
-- **Resource-list search tools** (`search_devices`, `search_actions`, `search_analyses`, `search_dashboards`, `search_entities`, `search_run_users`, `search_secrets`) take `filter`/`page`/`amount`/`fields`/`response_format` and render concise tables with truncation steering. `fields` controls the rendered columns as well as the SDK query: no `fields` in concise mode renders the concise defaults; explicit `fields` renders exactly those fields even in concise mode; detailed mode renders every returned field. Some searches deviate from this contract; those exceptions are documented in the owning domain's `AGENTS.md`.
+- **Resource-list search tools** (`search_devices`, `search_actions`, `search_analyses`, `search_dashboards`, `search_entities`, `search_run_users`, `search_secrets`, `search_sql_queries`) take `filter`/`page`/`amount`/`fields`/`response_format` and render concise tables with truncation steering. `fields` controls the rendered columns as well as the SDK query: no `fields` in concise mode renders the concise defaults; explicit `fields` renders exactly those fields even in concise mode; detailed mode renders every returned field. Some searches deviate from this contract; those exceptions are documented in the owning domain's `AGENTS.md`.
 - Get tools take a 24-character resource ID.
 - **Credential-safe output boundary**: `buildServer` wraps every tool call. Thrown failures are formatted through `utils/safe-error.ts` and rendered results pass through the same literal redaction, so the request credential never leaves the server even when the API reflects it (in errors, console output, or downloaded source). Handlers additionally redact operation-specific secrets the root cannot know: submitted environment-variable values, uploaded script source (plaintext and base64), minted analysis tokens, and signed URLs. Mutation success messages are controlled local confirmations, never interpolated SDK text; operations whose contract returns data (created IDs, device-data counts, rotation replacement tokens) return that data, not SDK acknowledgment strings.
 

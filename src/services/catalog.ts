@@ -10,6 +10,7 @@ import { fileTools } from "./files/tools/index";
 import { integrationTools } from "./integration/tools/index";
 import { profileMetricsTools } from "./profile/tools/index";
 import { userTools } from "./run-users/tools/index";
+import { sqlTools } from "./sql/tools/index";
 import { IToolConfig } from "./types";
 
 /**
@@ -31,6 +32,7 @@ const toolCatalog: IToolConfig[] = [
   ...integrationTools,
   ...profileMetricsTools,
   ...userTools,
+  ...sqlTools,
 ];
 
 export { toolCatalog };
