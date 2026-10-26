@@ -38,6 +38,7 @@ const PROJECTED_ANALYSIS_FIELDS = [
   "file_name",
   "version",
   "versions",
+  "endpoint",
 ] as const;
 
 function projectAnalysis(info: Record<string, unknown>): Record<string, unknown> {

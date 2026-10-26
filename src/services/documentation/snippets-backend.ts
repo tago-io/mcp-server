@@ -9,7 +9,7 @@ const SNIPPET_SOURCE_MAX_BYTES = 1 * 1024 * 1024;
 const MAX_REDIRECT_HOPS = 3;
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
-const SNIPPET_ANALYSIS_RUNTIMES = ["node-legacy", "python-legacy", "node-rt2025", "python-rt2025", "deno-rt2025"] as const;
+const SNIPPET_ANALYSIS_RUNTIMES = ["node-legacy", "python-legacy", "node-rt2025", "python-rt2025", "deno-rt2025", "bun-rt2026", "luau-rt2026"] as const;
 
 type SnippetAnalysisRuntime = (typeof SNIPPET_ANALYSIS_RUNTIMES)[number];
 type SnippetCategory = "analysis" | "payload-parser";

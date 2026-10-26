@@ -15,8 +15,8 @@ importers:
         specifier: 2.7.0
         version: 2.7.0
       '@tago-io/sdk':
-        specifier: ^12.2.7
-        version: 12.2.7
+        specifier: ^12.3.6
+        version: 12.3.6
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -726,9 +726,9 @@ packages:
     resolution: {integrity: sha512-9/9noVtr01ZpSa5KtAMfn5PNWy0yWdZB8+gn+ZrwYWtTDvbCmmn70mNKYBmGn0sQjKkXf4pQn8uo9culUOuzzQ==}
     engines: {node: '>=20.0.0'}
 
-  '@tago-io/sdk@12.2.7':
-    resolution: {integrity: sha512-BczMUj2Mmo+2MBo0eYGr6oXygsKpdOrzuWet5S882K9Pel/ZTZBSJquXrs9ctyUoiLX0ws+tknZzQp19BjvfSg==}
-    engines: {node: '>=20.0.0'}
+  '@tago-io/sdk@12.3.6':
+    resolution: {integrity: sha512-NmNmqsuls4YLfcdAjzWqljnU4TKO+7B8jVxWBjeJ7Ef9SWFvp9xcyY/JXgoR0OEbj7z2fsd7P63gVSUsms1UBA==}
+    engines: {node: '>=22.12.0', pnpm: '>=11.0.0'}
 
   '@tybys/wasm-util@0.10.3':
     resolution: {integrity: sha512-F3fo1MYrRJYL3zER0OUOmkutjr1Vp23m7OsSgp7nq4SP6OqX6C/56XFIPAl5bt3zaBRjmW7SGz3u/6LwFpYcOg==}
@@ -2387,7 +2387,7 @@ snapshots:
       validator: 13.15.26
       zod: 4.3.6
 
-  '@tago-io/sdk@12.2.7':
+  '@tago-io/sdk@12.3.6':
     dependencies:
       nanoid: 5.1.5
       papaparse: 5.5.3

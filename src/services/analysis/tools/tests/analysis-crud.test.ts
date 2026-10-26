@@ -1,6 +1,7 @@
 import { Resources } from "@tago-io/sdk";
 import { HttpResponse, http } from "msw";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { z } from "zod/v3";
 
 import { makeTestContext, TEST_REGION } from "../../../../testing/context";
 import { invokeTool } from "../../../../testing/invoke-tool";
@@ -68,6 +69,16 @@ describe("create_analysis wire bodies", () => {
 
     expect(bodies[0]).toEqual({ name: "Default Runtime", runtime: "deno-rt2025", run_on: "tago" });
     expect(bodies[1]).toEqual({ name: "Node Analysis", runtime: "node-rt2025", run_on: "tago" });
+  });
+
+  it.each(["bun-rt2026", "luau-rt2026"])("creates a %s analysis with that runtime on the wire", async (runtime) => {
+    const bodies = captureBodies("post", `${API}/analysis`, fixtures.analysisCreateResponse);
+    const params = { name: "New Runtime", runtime };
+
+    expect(z.object(createAnalysisConfigJSON.parameters).safeParse(params).success).toBe(true);
+    await invokeTool(createAnalysisConfigJSON, makeContext(), params);
+
+    expect(bodies[0]).toEqual({ name: "New Runtime", runtime, run_on: "tago" });
   });
 
   it("accepts 20 environment variables and rejects 21 before any request", async () => {
@@ -253,5 +264,156 @@ describe("analysis mutation logging secrecy", () => {
         spy.mockRestore();
       }
     }
+  });
+});
+
+describe("analysis Endpoint", () => {
+  const ENDPOINT_URL = `${TEST_REGION.api}/endpoint/${ANALYSIS_ID}/`;
+
+  function useStoredAnalysis(overrides: Record<string, unknown>) {
+    mockServer.use(http.get(`${API}/analysis/:analysisID`, () => ok({ ...fixtures.analysisInfo, ...overrides })));
+  }
+
+  it("turns on the Endpoint of a Luau analysis, sending only the change and reporting the URL and the call_endpoint grant", async () => {
+    useStoredAnalysis({ runtime: "luau-rt2026", endpoint: { active: false, access: "token" } });
+    const bodies = captureBodies("put", `${API}/analysis/:analysisID`, "Successfully Updated");
+
+    const result = await invokeTool(updateAnalysisConfigJSON, makeContext(), { analysis_id: ANALYSIS_ID, endpoint: { active: true } });
+
+    expect(bodies).toEqual([{ endpoint: { active: true } }]);
+    expect(result).toContain(`Endpoint is on (token access) at ${ENDPOINT_URL}`);
+    expect(result).toContain("`call_endpoint`");
+  });
+
+  it("sends endpoint together with other fields in one body on a Luau analysis, without echoing secrets", async () => {
+    useStoredAnalysis({ runtime: "luau-rt2026", endpoint: { active: false, access: "token" } });
+    const bodies = captureBodies("put", `${API}/analysis/:analysisID`, "Successfully Updated");
+    const variables = [{ key: "API_KEY", value: "submitted-env-sentinel-value" }];
+
+    const result = await invokeTool(updateAnalysisConfigJSON, makeContext(), {
+      analysis_id: ANALYSIS_ID,
+      name: "Orders",
+      environment_variables: variables,
+      endpoint: { active: true },
+    });
+
+    expect(bodies).toEqual([{ name: "Orders", variables, endpoint: { active: true } }]);
+    expect(result).not.toContain(fixtures.analysisInfo.token);
+    expect(result).not.toContain(fixtures.analysisInfo.variables[0].value);
+    expect(result).not.toContain("submitted-env-sentinel-value");
+  });
+
+  it("refuses the whole update, not just endpoint, on a non-Luau analysis, without echoing secrets", async () => {
+    const bodies = captureBodies("put", `${API}/analysis/:analysisID`, "Successfully Updated");
+
+    const error = await invokeTool(updateAnalysisConfigJSON, makeContext(), {
+      analysis_id: ANALYSIS_ID,
+      name: "Orders",
+      environment_variables: [{ key: "API_KEY", value: "submitted-env-sentinel-value" }],
+      endpoint: { active: true },
+    }).catch((caught) => caught as Error);
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toMatch(/only luau-rt2026 analyses can serve an Endpoint/);
+    expect(bodies).toHaveLength(0);
+    for (const secret of [fixtures.analysisInfo.token, fixtures.analysisInfo.variables[0].value, "submitted-env-sentinel-value"]) {
+      expect((error as Error).message).not.toContain(secret);
+    }
+  });
+
+  it("turns on public access and still names the call_endpoint grant, which token-carrying callers need in both modes", async () => {
+    useStoredAnalysis({ runtime: "luau-rt2026", endpoint: { active: false, access: "token" } });
+    const bodies = captureBodies("put", `${API}/analysis/:analysisID`, "Successfully Updated");
+
+    const result = await invokeTool(updateAnalysisConfigJSON, makeContext(), { analysis_id: ANALYSIS_ID, endpoint: { active: true, access: "public" } });
+
+    expect(bodies).toEqual([{ endpoint: { active: true, access: "public" } }]);
+    expect(result).toContain(`Endpoint is on (public access) at ${ENDPOINT_URL}`);
+    expect(result).toContain("`call_endpoint`");
+  });
+
+  it.each([
+    { stored: { active: false, access: "public" }, sent: { active: true } },
+    { stored: { active: true, access: "token" }, sent: { access: "public" } },
+  ])("reports the merged Endpoint state: stored $stored plus sent $sent is on with public access", async ({ stored, sent }) => {
+    useStoredAnalysis({ runtime: "luau-rt2026", endpoint: stored });
+    const bodies = captureBodies("put", `${API}/analysis/:analysisID`, "Successfully Updated");
+
+    const result = await invokeTool(updateAnalysisConfigJSON, makeContext(), { analysis_id: ANALYSIS_ID, endpoint: sent });
+
+    expect(bodies).toEqual([{ endpoint: sent }]);
+    expect(result).toContain(`Endpoint is on (public access) at ${ENDPOINT_URL}`);
+    expect(result).not.toContain("inactive");
+  });
+
+  it.each([
+    { label: "already inactive", stored: { active: false }, sent: {} },
+    { label: "deactivated in the same request", stored: { active: true }, sent: { active: false } },
+  ])("warns that the Endpoint answers 404 when the analysis is $label", async ({ stored, sent }) => {
+    useStoredAnalysis({ runtime: "luau-rt2026", endpoint: { active: false, access: "token" }, ...stored });
+    captureBodies("put", `${API}/analysis/:analysisID`, "Successfully Updated");
+
+    const result = await invokeTool(updateAnalysisConfigJSON, makeContext(), { analysis_id: ANALYSIS_ID, ...sent, endpoint: { active: true } });
+
+    expect(result).toContain("Endpoint is on (token access)");
+    expect(result).toContain("The analysis itself is inactive, so the Endpoint answers 404 until the analysis is activated");
+  });
+
+  it("does not warn when the same request reactivates an inactive analysis", async () => {
+    useStoredAnalysis({ runtime: "luau-rt2026", active: false, endpoint: { active: false, access: "token" } });
+    captureBodies("put", `${API}/analysis/:analysisID`, "Successfully Updated");
+
+    const result = await invokeTool(updateAnalysisConfigJSON, makeContext(), { analysis_id: ANALYSIS_ID, active: true, endpoint: { active: true } });
+
+    expect(result).toContain("Endpoint is on (token access)");
+    expect(result).not.toContain("inactive");
+  });
+
+  it("reports an Endpoint switched off without the grant hint", async () => {
+    useStoredAnalysis({ runtime: "luau-rt2026", endpoint: { active: true, access: "public" } });
+    captureBodies("put", `${API}/analysis/:analysisID`, "Successfully Updated");
+
+    const result = await invokeTool(updateAnalysisConfigJSON, makeContext(), { analysis_id: ANALYSIS_ID, endpoint: { active: false } });
+
+    expect(result).toContain(`Endpoint is off. When on, it is served at ${ENDPOINT_URL}`);
+    expect(result).not.toContain("call_endpoint");
+  });
+
+  it("refuses an Endpoint on a non-Luau analysis with no PUT traffic", async () => {
+    const bodies = captureBodies("put", `${API}/analysis/:analysisID`, "Successfully Updated");
+
+    await expect(invokeTool(updateAnalysisConfigJSON, makeContext(), { analysis_id: ANALYSIS_ID, endpoint: { active: true } })).rejects.toThrow(
+      /only luau-rt2026 analyses can serve an Endpoint; this analysis runs node-rt2025/
+    );
+    expect(bodies).toHaveLength(0);
+  });
+
+  it("refuses an empty endpoint object before any request", async () => {
+    const requests: string[] = [];
+    mockServer.events.on("request:start", ({ request }) => requests.push(request.url));
+
+    await expect(invokeTool(updateAnalysisConfigJSON, makeContext(), { analysis_id: ANALYSIS_ID, endpoint: {} })).rejects.toThrow(/endpoint.*`active`, `access`/s);
+    expect(requests).toEqual([]);
+    mockServer.events.removeAllListeners();
+  });
+
+  it("accepts only the token and public access modes", () => {
+    const schema = z.object(updateAnalysisConfigJSON.parameters).strict();
+
+    expect(schema.safeParse({ analysis_id: ANALYSIS_ID, endpoint: { access: "public" } }).success).toBe(true);
+    expect(schema.safeParse({ analysis_id: ANALYSIS_ID, endpoint: { access: "anyone" } }).success).toBe(false);
+    expect(schema.safeParse({ analysis_id: ANALYSIS_ID, endpoint: { active: true, url: "x" } }).success).toBe(false);
+  });
+
+  it("shows the Endpoint in the concise get_analysis view of a Luau analysis only, and never the token", async () => {
+    useStoredAnalysis({ runtime: "luau-rt2026", endpoint: { active: true, access: "token" } });
+    const luau = await getAnalysisConfigJSON.tool(makeContext(), { analysis_id: ANALYSIS_ID });
+    mockServer.resetHandlers();
+    useStoredAnalysis({ endpoint: { active: false, access: "token" } });
+    const node = await getAnalysisConfigJSON.tool(makeContext(), { analysis_id: ANALYSIS_ID });
+
+    expect(luau).toMatch(/endpoint[\s\S]*\| access \| token \|/);
+    expect(luau).not.toContain(fixtures.analysisInfo.token);
+    expect(node).not.toContain("endpoint");
   });
 });

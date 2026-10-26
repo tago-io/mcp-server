@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod/v3";
 
 import { applyCrossFieldValidation } from "../services/apply-cross-field";
 import { toolCatalog } from "../services/catalog";
@@ -21,7 +22,9 @@ function buildServer(context: ServerContext): McpServer {
       {
         title: toolConfig.title,
         description: toolConfig.description,
-        inputSchema: toolConfig.parameters,
+        // Strict: an unknown argument must fail loudly. The SDK's default
+        // strip mode drops it and the call reports success without it.
+        inputSchema: z.object(toolConfig.parameters).strict(),
         annotations: toolConfig.annotations,
       },
       async (params) => {

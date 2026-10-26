@@ -79,7 +79,7 @@ describe("search_analyses", () => {
     expect(list.mock.calls[0][0].fields).not.toContain("console");
   });
 
-  it.each(["node-legacy", "python-legacy", "node-rt2025", "python-rt2025", "deno-rt2025", "other"])("accepts the %s runtime filter", (runtime) => {
+  it.each(["node-legacy", "python-legacy", "node-rt2025", "python-rt2025", "deno-rt2025", "bun-rt2026", "luau-rt2026", "other"])("accepts the %s runtime filter", (runtime) => {
     const schema = z.object(searchAnalysesConfigJSON.parameters);
     expect(schema.safeParse({ filter: { runtime } }).success).toBe(true);
   });

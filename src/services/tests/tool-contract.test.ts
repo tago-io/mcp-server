@@ -186,7 +186,10 @@ const contractCases: Record<string, ContractCase> = {
   },
   delete_run_user: { happy: { run_user_id: USER_ID }, invalid: {} },
   read_run_user_notifications: { happy: { run_user_id: USER_ID }, invalid: { run_user_id: "too-short" } },
-  send_run_user_notification: { happy: { run_user_id: USER_ID, title: "Hi", message: "Body" }, invalid: { run_user_id: USER_ID, title: "Hi" } },
+  send_run_user_notification: {
+    happy: { run_user_id: USER_ID, title: "Hi", message: "Body", buttons: [{ id: "ack", label: "Acknowledge", triggers: [{ analysis_id: ANALYSIS_ID }] }] },
+    invalid: { run_user_id: USER_ID, title: "Hi" },
+  },
   update_run_user_notification: {
     happy: { notification_id: NOTIFICATION_ID, title: "Updated" },
     // No editable field alongside the ID; rejected before any SDK traffic.
@@ -228,10 +231,6 @@ const contractCases: Record<string, ContractCase> = {
   },
 };
 
-// platform_overview takes an empty schema; unknown keys are stripped by zod,
-// so its "invalid" case is legitimately a success. Tracked here explicitly.
-const INVALID_INPUT_IS_ACCEPTED = new Set(["platform_overview"]);
-
 async function connect() {
   const resources = new Resources({ token: ANALYSIS_TOKEN, region: TEST_REGION });
   const server = buildServer({ resources, token: ANALYSIS_TOKEN, region: TEST_REGION, credentialKind: "analysis" });
@@ -250,6 +249,27 @@ describe("tool contract coverage", () => {
     const catalogNames = toolCatalog.map((tool) => tool.name).sort();
     const caseNames = Object.keys(contractCases).sort();
     expect(caseNames).toEqual(catalogNames);
+  });
+});
+
+describe("strict tool input", () => {
+  it("rejects an unknown argument beside valid ones before any request, instead of dropping it", async () => {
+    const requests: string[] = [];
+    const onRequest = ({ request }: { request: Request }) => requests.push(request.url);
+    mockServer.events.on("request:start", onRequest);
+
+    const { client, server } = await connect();
+    try {
+      const result = await client.callTool({ name: "update_dashboard", arguments: { dashboard_id: DASHBOARD_ID, label: "Renamed", not_a_field: true } });
+      const content = result.content as Array<{ type: string; text: string }>;
+      expect(result.isError).toBe(true);
+      expect(content[0].text).toContain("not_a_field");
+      expect(requests).toEqual([]);
+    } finally {
+      mockServer.events.removeListener("request:start", onRequest);
+      await client.close();
+      await server.close();
+    }
   });
 });
 
@@ -284,11 +304,7 @@ describe.each(toolCatalog.map((tool) => [tool.name] as const))("%s", (toolName) 
     try {
       const result = await client.callTool({ name: toolName, arguments: cases.invalid }).catch((error) => ({ isError: true, content: [{ type: "text", text: String(error) }] }));
 
-      if (INVALID_INPUT_IS_ACCEPTED.has(toolName)) {
-        expect(result.isError).toBeFalsy();
-      } else {
-        expect(result.isError, `invalid input for ${toolName} was accepted`).toBe(true);
-      }
+      expect(result.isError, `invalid input for ${toolName} was accepted`).toBe(true);
     } finally {
       await client.close();
       await server.close();
