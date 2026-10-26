@@ -5613,6 +5613,25 @@ The type parameter accepts one of seven values:
           "description": "The new description for the analysis.",
           "type": "string",
         },
+        "endpoint": {
+          "additionalProperties": false,
+          "description": "HTTP Endpoint of a luau-rt2026 analysis, served at {API URL}/endpoint/{analysis_id}/ and every path below it. Only the fields sent change.",
+          "properties": {
+            "access": {
+              "description": ""token" (default) requires a token from this profile; "public" also lets anyone with the URL call it without a token, running with the analysis's own permissions. A token that is sent is checked in both modes.",
+              "enum": [
+                "token",
+                "public",
+              ],
+              "type": "string",
+            },
+            "active": {
+              "description": "Turns the Endpoint on or off.",
+              "type": "boolean",
+            },
+          },
+          "type": "object",
+        },
         "environment_variables": {
           "description": "Environment variables available to the script (max 20, unique keys). Values are sensitive and never echoed back. Replaces the current set entirely when updating.",
           "items": {

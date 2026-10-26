@@ -173,8 +173,8 @@ function targetKindsOf(targets: readonly string[][]): TargetType[] {
  *
  * The API validates each target on its own and never correlates a target to the
  * rules beside it, and evaluation pools a matched policy's entire rule list
- * without filtering by kind. Five resources exist in both catalogs (`device`,
- * `entity`, `dashboard`, `run_user`, `sql`), so a rule written for the analysis
+ * without filtering by kind. Six resources exist in both catalogs (`device`,
+ * `entity`, `dashboard`, `run_user`, `sql`, `analysis`), so a rule written for the analysis
  * silently reaches the co-targeted run users too, and the reverse.
  *
  * These tools cannot produce one, and neither can the platform's own agent
@@ -185,7 +185,7 @@ function targetKindsOf(targets: readonly string[][]): TargetType[] {
 const MIXED_TARGET_CONSEQUENCE = [
   "Its rules are not split between the two: every rule applies to whichever kind matched.",
   "So any rule naming a resource AND action that both kinds can be granted reaches both, which is rarely what was intended.",
-  "The shared resource names are `device`, `entity`, `dashboard`, `run_user` and `sql`, but their action sets differ, so check the pairing with lookup_access_permissions rather than assuming every rule on those crosses over.",
+  "The shared resource names are `device`, `entity`, `dashboard`, `run_user`, `sql` and `analysis`, but their action sets differ, so check the pairing with lookup_access_permissions rather than assuming every rule on those crosses over.",
   "Either update tool can still rename this policy, retag it, or set `active: false` to switch it off reversibly.",
   "Neither will replace its targets, since that resolves it to one kind and drops the other, and neither will replace its rules, since a tool that owns one kind cannot safely author rules for both.",
   "To split it properly, create one policy per kind and then delete this one.",

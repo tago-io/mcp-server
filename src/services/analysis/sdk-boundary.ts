@@ -30,6 +30,24 @@ const environmentVariablesSchema = z
 
 type EnvironmentVariableInput = z.infer<typeof environmentVariablesSchema>[number];
 
+// Only Luau analyses can serve HTTP requests through an Endpoint.
+const ENDPOINT_RUNTIME = "luau-rt2026";
+
+const endpointSchema = z
+  .object({
+    active: z.boolean().describe("Turns the Endpoint on or off.").optional(),
+    access: z
+      .enum(["token", "public"])
+      .describe(
+        '"token" (default) requires a token from this profile; "public" also lets anyone with the URL call it without a token, running with the analysis\'s own permissions. A token that is sent is checked in both modes.'
+      )
+      .optional(),
+  })
+  .strict()
+  .describe(`HTTP Endpoint of a ${ENDPOINT_RUNTIME} analysis, served at {API URL}/endpoint/{analysis_id}/ and every path below it. Only the fields sent change.`);
+
+type EndpointInput = z.infer<typeof endpointSchema>;
+
 interface AnalysisCreateParams {
   name: string;
   description?: string;
@@ -41,6 +59,7 @@ interface AnalysisCreateParams {
 }
 
 interface AnalysisEditParams {
+  endpoint?: EndpointInput;
   name?: string;
   description?: string;
   active?: boolean;
@@ -105,9 +124,19 @@ function buildAnalysisEditBody(params: AnalysisEditParams): Partial<AnalysisInfo
     interval: params.interval,
     variables: params.environment_variables,
     tags: params.tags,
+    endpoint: params.endpoint,
   });
   return body as Partial<AnalysisInfo>;
 }
 
-export { buildAnalysisCreateBody, buildAnalysisEditBody, environmentValueSecrets, environmentVariablesIssue, environmentVariablesSchema, MAX_ENVIRONMENT_VARIABLES };
-export type { EnvironmentVariableInput };
+export {
+  buildAnalysisCreateBody,
+  buildAnalysisEditBody,
+  ENDPOINT_RUNTIME,
+  endpointSchema,
+  environmentValueSecrets,
+  environmentVariablesIssue,
+  environmentVariablesSchema,
+  MAX_ENVIRONMENT_VARIABLES,
+};
+export type { EndpointInput, EnvironmentVariableInput };

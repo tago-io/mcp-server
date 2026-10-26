@@ -178,6 +178,18 @@ describe("each create tool validates against its own kind's catalog", () => {
     await createRunUserPolicy({ name: "Fine", targets: [ANY_TARGET], permissions: [rule] });
     expect(storedPolicies().at(-1)?.permissions).toEqual([{ effect: "allow", action: ["arrangement"], resource: ["dashboard"] }]);
   });
+
+  it("grants a run user call_endpoint on one Luau analysis, the remedy update_analysis names", async () => {
+    await createRunUserPolicy({
+      name: "Call order endpoint",
+      targets: [{ by: "id", id: fixtures.IDS.user }],
+      permissions: [{ effect: "allow", resource: "analysis", actions: ["call_endpoint"], match: { by: "id", id: ANALYSIS_ID } }],
+    });
+
+    const created = storedPolicies().at(-1);
+    expect(created?.targets).toEqual([["run_user", "id", fixtures.IDS.user]]);
+    expect(created?.permissions).toEqual([{ effect: "allow", action: ["call_endpoint"], resource: ["analysis", "id", ANALYSIS_ID] }]);
+  });
 });
 
 describe("the create tools tolerate a catalog they cannot fully judge", () => {
