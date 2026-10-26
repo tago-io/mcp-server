@@ -1,6 +1,7 @@
 import { Resources } from "@tago-io/sdk";
 import { HttpResponse, http } from "msw";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { z } from "zod/v3";
 
 import { makeTestContext, TEST_REGION } from "../../../../testing/context";
 import { invokeTool } from "../../../../testing/invoke-tool";
@@ -68,6 +69,16 @@ describe("create_analysis wire bodies", () => {
 
     expect(bodies[0]).toEqual({ name: "Default Runtime", runtime: "deno-rt2025", run_on: "tago" });
     expect(bodies[1]).toEqual({ name: "Node Analysis", runtime: "node-rt2025", run_on: "tago" });
+  });
+
+  it.each(["bun-rt2026", "luau-rt2026"])("creates a %s analysis with that runtime on the wire", async (runtime) => {
+    const bodies = captureBodies("post", `${API}/analysis`, fixtures.analysisCreateResponse);
+    const params = { name: "New Runtime", runtime };
+
+    expect(z.object(createAnalysisConfigJSON.parameters).safeParse(params).success).toBe(true);
+    await invokeTool(createAnalysisConfigJSON, makeContext(), params);
+
+    expect(bodies[0]).toEqual({ name: "New Runtime", runtime, run_on: "tago" });
   });
 
   it("accepts 20 environment variables and rejects 21 before any request", async () => {

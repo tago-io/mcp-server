@@ -383,6 +383,8 @@ const snippetsAnalysisLegacyIndex = snippetsIndex("node-legacy", [
 const snippetsAnalysisPythonLegacyIndex = snippetsIndex("python-legacy", []);
 const snippetsAnalysisPythonIndex = snippetsIndex("python-rt2025", []);
 const snippetsAnalysisDenoIndex = snippetsIndex("deno-rt2025", []);
+const snippetsAnalysisBunIndex = snippetsIndex("bun-rt2026", []);
+const snippetsAnalysisLuauIndex = snippetsIndex("luau-rt2026", []);
 
 const snippetsParserIndex = snippetsIndex("javascript", [
   {
@@ -726,6 +728,8 @@ const fixtures = {
   snippetsAnalysisPythonLegacyIndex,
   snippetsAnalysisPythonIndex,
   snippetsAnalysisDenoIndex,
+  snippetsAnalysisBunIndex,
+  snippetsAnalysisLuauIndex,
   snippetsParserIndex,
   snippetSourceConsole,
   snippetSourceParser,

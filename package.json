@@ -44,7 +44,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@tago-io/dashboard-schema": "2.7.0",
-    "@tago-io/sdk": "^12.2.7",
+    "@tago-io/sdk": "^12.3.6",
     "dotenv": "^17.4.2",
     "ipaddr.js": "2.4.0",
     "mcps-logger": "^1.0.0",

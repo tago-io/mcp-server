@@ -12,7 +12,7 @@ const createAnalysisBaseSchema = z.object({
   runtime: z
     .enum(ANALYSIS_CREATE_RUNTIMES)
     .describe(
-      `Runtime for the new analysis; it cannot be changed later. Defaults to \`${DEFAULT_ANALYSIS_RUNTIME}\`, which resolves imports automatically. \`node-rt2025\` installs no third-party dependencies: package imports must be pre-bundled into one file, but import-free JavaScript using runtime globals (\`process.env\`, \`fetch\`) works without bundling.`
+      `Runtime for the new analysis; it cannot be changed later. Defaults to \`${DEFAULT_ANALYSIS_RUNTIME}\`, which resolves imports automatically. \`node-rt2025\` installs no third-party dependencies: package imports must be pre-bundled into one file, but import-free JavaScript using runtime globals (\`process.env\`, \`fetch\`) works without bundling. \`luau-rt2026\` only works with devices, entities, and analyses: no libraries, internet, Secrets, or Analysis Token.`
     )
     .optional(),
   interval: z.string().describe("Schedule interval for automatic runs, e.g. '5 minutes' or '1 hour'. Omit for trigger-only analyses.").optional(),
@@ -55,7 +55,7 @@ const createAnalysisConfigJSON: IToolConfig = {
   name: "create_analysis",
   description: `Creates a new analysis (serverless script) in the TagoIO profile, hosted on TagoIO.
 
-Use this when the user wants a new analysis to run custom logic: data processing, integrations, or scheduled jobs. The analysis is created without a script; upload one afterwards with upload_analysis_script to make it runnable. Pick the runtime before writing any code: it decides the module system and the entry point. \`deno-rt2025\` (TypeScript) and \`python-rt2025\` resolve dependencies automatically; \`node-rt2025\` installs no third-party dependencies, so package imports must be pre-bundled into one file while import-free JavaScript using runtime globals (\`process.env\`, \`fetch\`) works unbundled; the legacy runtimes are deprecated and not offered for new analyses. Runtimes for new analyses are ${ANALYSIS_CREATE_RUNTIMES.join(", ")} (default ${DEFAULT_ANALYSIS_RUNTIME}). Environment variable values are sensitive and are never echoed back.
+Use this when the user wants a new analysis to run custom logic: data processing, integrations, or scheduled jobs. The analysis is created without a script; upload one afterwards with upload_analysis_script to make it runnable. Pick the runtime before writing any code: it decides the module system and the entry point. \`deno-rt2025\` (TypeScript, \`npm:\` imports), \`bun-rt2026\` (TypeScript, packages imported by plain name), and \`python-rt2025\` resolve dependencies automatically; \`luau-rt2026\` is the low-cost runtime for frequent device and entity jobs, with no libraries, internet, Secrets, or Analysis Token (its permissions come from an Access Management policy targeting the analysis); \`node-rt2025\` installs no third-party dependencies, so package imports must be pre-bundled into one file while import-free JavaScript using runtime globals (\`process.env\`, \`fetch\`) works unbundled; the legacy runtimes are deprecated and not offered for new analyses. Runtimes for new analyses are ${ANALYSIS_CREATE_RUNTIMES.join(", ")} (default ${DEFAULT_ANALYSIS_RUNTIME}). Environment variable values are sensitive and are never echoed back.
 
 <example>
 {

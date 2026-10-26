@@ -269,7 +269,7 @@ const searchCodeExamplesConfigJSON: IToolConfig = {
   name: "search_code_examples",
   description: `Searches TagoIO's public code snippets catalog (snippets.tago.io) for working example scripts covering Analysis scripts and Payload Parsers. Use when developing a TagoIO Analysis (serverless compute function), writing a Payload Parser to decode device data, or looking up how a task is done in real example code. Results list matching examples (title, description, runtime, filename); pass the exact type/runtime/filename to get_code_example to read a file's full source. The catalog is public: no TagoIO credential is sent.
 
-Set type to the kind of code you are writing. For type "analysis", optionally set runtime (node-legacy, python-legacy, node-rt2025, python-rt2025, or deno-rt2025) to restrict results; omit runtime to search all runtimes. runtime is not valid with type "payload-parser"; parsers are always JavaScript.
+Set type to the kind of code you are writing. For type "analysis", optionally set runtime (${SNIPPET_ANALYSIS_RUNTIMES.join(", ")}) to restrict results; omit runtime to search all runtimes. runtime is not valid with type "payload-parser"; parsers are always JavaScript.
 
 Do not use this tool for general programming questions unrelated to TagoIO or to retrieve live device data; for platform feature and configuration documentation, use search_docs instead. The catalog is small and may not contain an example for a given task: a "no sufficiently matching example" result means exactly that. Never infer API routes, endpoints, or behavior from an example that does not demonstrate them; confirm API behavior with search_docs.
 

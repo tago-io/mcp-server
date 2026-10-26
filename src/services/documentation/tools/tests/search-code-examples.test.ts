@@ -6,7 +6,7 @@ import { makeTestContext } from "../../../../testing/context";
 import { fixtures } from "../../../../testing/mocks/fixtures";
 import { SNIPPETS_SITE } from "../../../../testing/mocks/handlers";
 import { mockServer, strictListenOptions } from "../../../../testing/mocks/server";
-import { resetSnippetIndexCache } from "../../snippets-backend";
+import { resetSnippetIndexCache, SNIPPET_ANALYSIS_RUNTIMES } from "../../snippets-backend";
 import { MAX_RESPONSE_BYTES, runSearchCodeExamples, searchCodeExamplesBaseSchema, searchCodeExamplesConfigJSON } from "../search-code-examples";
 
 const context = makeTestContext();
@@ -166,7 +166,7 @@ describe("search_code_examples handler", () => {
   });
 
   it("errors when every index fails", async () => {
-    for (const runtime of ["node-legacy", "python-legacy", "node-rt2025", "python-rt2025", "deno-rt2025"]) {
+    for (const runtime of SNIPPET_ANALYSIS_RUNTIMES) {
       mockServer.use(http.get(`${SNIPPETS_SITE}/analysis/${runtime}.json`, () => new HttpResponse(null, { status: 500 })));
     }
 
@@ -176,7 +176,7 @@ describe("search_code_examples handler", () => {
   it("bounds and sanitizes the all-index-failure error even under hostile oversized redirects", async () => {
     const sentinel = "hostile-redirect-sentinel";
     const hostileLocation = `https://evil.example/${sentinel}/${"x".repeat(10_000)}`;
-    for (const runtime of ["node-legacy", "python-legacy", "node-rt2025", "python-rt2025", "deno-rt2025"]) {
+    for (const runtime of SNIPPET_ANALYSIS_RUNTIMES) {
       mockServer.use(http.get(`${SNIPPETS_SITE}/analysis/${runtime}.json`, () => new HttpResponse(null, { status: 302, headers: { location: hostileLocation } })));
     }
 
@@ -190,7 +190,7 @@ describe("search_code_examples handler", () => {
     expect(Buffer.byteLength(message, "utf8")).toBeLessThanOrEqual(MAX_RESPONSE_BYTES);
     expect(message).not.toContain(sentinel);
     expect(message).not.toContain("evil.example");
-    for (const runtime of ["node-legacy", "python-legacy", "node-rt2025", "python-rt2025", "deno-rt2025"]) {
+    for (const runtime of SNIPPET_ANALYSIS_RUNTIMES) {
       expect(message).toContain(runtime);
     }
     expect(message).toMatch(/retry/i);
@@ -244,7 +244,7 @@ describe("search_code_examples handler", () => {
       filename: `console-${index}-${"f".repeat(150)}.js`,
       file_path: `node-rt2025/console-${index}.js`,
     }));
-    for (const runtime of ["node-legacy", "python-legacy", "node-rt2025", "python-rt2025", "deno-rt2025"]) {
+    for (const runtime of SNIPPET_ANALYSIS_RUNTIMES) {
       mockServer.use(http.get(`${SNIPPETS_SITE}/analysis/${runtime}.json`, () => HttpResponse.json({ snippets: entries })));
     }
 
@@ -263,7 +263,7 @@ describe("search_code_examples handler", () => {
   });
 
   it("bounds a parallel multi-runtime search by ONE operation deadline", async () => {
-    for (const runtime of ["node-legacy", "python-legacy", "node-rt2025", "python-rt2025", "deno-rt2025"]) {
+    for (const runtime of SNIPPET_ANALYSIS_RUNTIMES) {
       mockServer.use(
         http.get(`${SNIPPETS_SITE}/analysis/${runtime}.json`, async () => {
           await new Promise((resolve) => setTimeout(resolve, 500));
