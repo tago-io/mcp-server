@@ -1,5 +1,6 @@
 import { z } from "zod/v3";
 
+import { escapeTableCell, truncateUtf8 } from "../../../utils/text-budget";
 import { invalidParamError } from "../../../utils/tool-errors";
 import { IToolConfig, ServerContext } from "../../types";
 import { fetchSnippetIndex, SNIPPET_ANALYSIS_RUNTIMES, SNIPPETS_FETCH_TIMEOUT_MS, SnippetAnalysisRuntime, SnippetIndexEntry } from "../snippets-backend";
@@ -132,29 +133,6 @@ function scoreEntry(entry: SnippetIndexEntry, tokens: string[]): { score: number
   }
 
   return { score, matchedTokens };
-}
-
-function escapeTableCell(value: string): string {
-  return value.replace(/\|/g, "\\|").replace(/\s+/g, " ").trim();
-}
-
-/** Truncates to a UTF-8 byte budget on codepoint boundaries, marking the cut with an ellipsis. */
-function truncateUtf8(value: string, maxBytes: number): string {
-  if (Buffer.byteLength(value, "utf8") <= maxBytes) {
-    return value;
-  }
-  const budget = maxBytes - Buffer.byteLength("…", "utf8");
-  let truncated = "";
-  let bytes = 0;
-  for (const char of value) {
-    const charBytes = Buffer.byteLength(char, "utf8");
-    if (bytes + charBytes > budget) {
-      break;
-    }
-    truncated += char;
-    bytes += charBytes;
-  }
-  return `${truncated}…`;
 }
 
 async function searchCodeExamplesTool(_context: ServerContext, params: SearchCodeExamplesSchema): Promise<string> {
