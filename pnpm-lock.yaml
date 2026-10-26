@@ -12,8 +12,8 @@ importers:
         specifier: ^1.29.0
         version: 1.29.0(zod@4.4.3)
       '@tago-io/dashboard-schema':
-        specifier: 2.7.0
-        version: 2.7.0
+        specifier: 2.8.0
+        version: 2.8.0
       '@tago-io/sdk':
         specifier: ^12.3.6
         version: 12.3.6
@@ -722,8 +722,8 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@tago-io/dashboard-schema@2.7.0':
-    resolution: {integrity: sha512-9/9noVtr01ZpSa5KtAMfn5PNWy0yWdZB8+gn+ZrwYWtTDvbCmmn70mNKYBmGn0sQjKkXf4pQn8uo9culUOuzzQ==}
+  '@tago-io/dashboard-schema@2.8.0':
+    resolution: {integrity: sha512-hEo+DqjCXS/zPmFD4CGNBDITwCKBw5ph79EXjVajvMzlcnwhj+YjccTBC0uZqJu2ZZwFdEQclTtWaIQkJGUtbA==}
     engines: {node: '>=20.0.0'}
 
   '@tago-io/sdk@12.3.6':
@@ -2377,7 +2377,7 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@tago-io/dashboard-schema@2.7.0':
+  '@tago-io/dashboard-schema@2.8.0':
     dependencies:
       bson-objectid: 2.0.4
       cron-parser: 5.5.0
