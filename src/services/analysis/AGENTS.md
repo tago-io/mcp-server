@@ -26,3 +26,5 @@ Analysis script downloads go through a bounded SSRF-guarded fetch (`source-fetch
 
 - `update_analysis` cannot change the runtime or run location.
 - `delete_analysis` has no confirmation flag by design; the MCP client/operator owns destructive-call approval (the tool is annotated destructive).
+- `update_analysis` takes `endpoint` (`active`, `access`: token|public) only for `luau-rt2026`; it reads the stored analysis to refuse other runtimes and to report the resulting Endpoint URL (`{region api}/endpoint/{id}/`). The API merges a partial `endpoint` object, so sending only `active` keeps the stored `access`. Callers using a run user or analysis token also need the Access Management grant `analysis` / `call_endpoint`; the result says so. The platform answers 404 on an inactive analysis's Endpoint even when it is on, so the result also warns when the analysis is inactive (stored, or deactivated in the same request).
+- `endpoint` is in the safe projection (it holds no secret) and in the concise `get_analysis` view for Luau analyses only.
