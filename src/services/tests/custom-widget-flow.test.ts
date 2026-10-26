@@ -180,7 +180,7 @@ describe("custom-widget development flow", () => {
     expect(uploadedV2).toContain("bundled successfully");
     expect((store.widget.display as Record<string, unknown>).artifact_url).toContain("hash2");
 
-    // 8. A label-only update on the bundled widget passes validation and preserves the artifact (adapter compensation).
+    // 8. A label-only update on the bundled widget passes validation and preserves the artifact.
     const relabeled = await step(updateWidgetConfigJSON.tool(context, { dashboard_id: DASHBOARD_ID, widget_id: WIDGET_ID, patch: { label: "Flow Metric v2" } }));
     expect(relabeled).toMatch(/updated/i);
     expect((store.widget.display as Record<string, unknown>).artifact_url).toContain("hash2");

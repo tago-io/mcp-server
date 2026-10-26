@@ -11,15 +11,19 @@ Dashboard/widget mutations validate through `validation-adapter.ts`, the only mo
 - Creates send the sanitized parsed configuration. `create_dashboard` validates locally (placeholder profile) before ANY SDK traffic, including the profile lookup.
 - Updates take a compact caller patch, prefetch the current state, merge recursively (arrays replace atomically, explicit `null` clears, the widget `type` is immutable), and validate the full merged candidate.
 - Dashboard updates send only the sanitized caller-supplied paths. Array items are projected pairwise against the caller-supplied item, so package-injected defaults inside array elements never transit.
-- Widget updates send each caller-changed top-level object in its COMPLETE validated merged form, because the widget PUT replaces each top-level JSON column wholesale (no server-side merge; a sparse nested wire patch would wipe every sibling field). Scalars, arrays, and explicit nulls keep the sanitized patch value, and the current `analysis_run` is preserved on every wire update unless explicitly changed or cleared (the API detaches it whenever a PUT body omits it).
+- Widget updates send each caller-changed top-level object in its COMPLETE validated merged form, because the widget PUT replaces each top-level JSON column wholesale (no server-side merge; a sparse nested wire patch would wipe every sibling field). Scalars, arrays, and explicit nulls keep the sanitized patch value, and the current `analysis_run` is preserved on every wire update unless explicitly changed or cleared (the API detaches it whenever a PUT body omits it). Because a touched `display` goes out complete, stored Admin state such as `display.resource_options` and the bundler's `display.artifact_url` rides along unchanged; the package must model every key the Admin stores, or every update on that widget fails validation.
 - Package-generated fields and the validation-only `profile` field never reach the SDK.
 - Nullable layout state round-trips: `arrangement[].tab` and `tabs[].hidden` accept `null`, and collections clear with `[]`.
 
 Dashboard/widget reads strip capability token fields (`utils/strip-token-fields.ts`) while preserving the rest of the configuration.
 
-## artifact_url compensation
+## Caller-written artifact_url
 
-The adapter compensates for the platform-managed `display.artifact_url` on bundled custom widgets: the pinned package strict-rejects the key while the API stores it, so it is stripped from the fetched current state before merged-candidate validation (`update_widget` and `validate_widget_configuration` update mode) and re-attached unchanged onto the wire display. Caller-supplied `artifact_url` stays rejected. Remove this when the package models the field.
+`display.artifact_url` is written by the bundler after `upload_custom_widget_code`. The package models it, so stored state validates, but `assertNoCallerArtifactURL` rejects it in a create candidate, an update patch, and a create-mode `validate_widget_configuration` candidate.
+
+## Blueprint slots
+
+`create_dashboard` takes `type` and the blueprint fields; a blueprint field without `type: "blueprint"` fails the cross-field check. `update_dashboard` refuses blueprint fields when the fetched dashboard is not a blueprint. `blueprint_devices` replaces atomically like `tabs`. A new slot is sent without `id`: the package generates one on parse, but projection drops it and the API assigns the real ID. An entity slot's `conditions` match entity tags, and a widget binds to a slot through its `resource` entry `id`. `get_dashboard` shows the blueprint fields in its concise view on blueprint dashboards, because callers need the slot IDs to keep slots and bind widgets.
 
 ## Duplicate-tab invariant
 

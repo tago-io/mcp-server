@@ -73,6 +73,17 @@ describe("create_widget", () => {
     expect((error as Error).message).toContain("widget_schema_lookup");
     expect(bodies).toHaveLength(0);
   });
+
+  it("rejects a caller-supplied display.artifact_url, firing no POST", async () => {
+    const bodies = captureBodies("post", `${API}/dashboard/:dashboardID/widget/`, fixtures.widgetCreateResponse);
+    const configuration = { label: "Custom metric", type: "iframe", display: { url: "", artifact_url: "https://evil.example/x.html" } };
+
+    const error = await createWidgetConfigJSON.tool(makeContext(), { dashboard_id: DASHBOARD_ID, configuration }).catch((caught) => caught as Error);
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toContain("artifact_url");
+    expect(bodies).toHaveLength(0);
+  });
 });
 
 describe("update_widget", () => {
@@ -237,10 +248,9 @@ describe("update_widget against an API-faithful stateful widget store", () => {
 });
 
 // A bundled custom widget is an iframe widget whose display carries the
-// bundler-written `artifact_url`, a key the pinned dashboard-schema package
-// strict-rejects even though the API stores it. The adapter must strip it
-// before validation and re-attach it unchanged on the wire, or every update
-// on a bundled widget fails (and a display update would detach the artifact).
+// bundler-written `artifact_url`. Every update on it must validate, and a
+// display update must send it unchanged: the PUT replaces the whole display
+// column, so dropping it would detach the bundled artifact.
 describe("update_widget on a bundled custom widget", () => {
   const SOURCE_URL = `https://files.example.test/${"f".repeat(24)}/storage/widgets/${WIDGET_ID}.tsx`;
   const ARTIFACT_URL = `https://files.example.test/${"f".repeat(24)}/storage/widgets/.bundled/${WIDGET_ID}/abc123def456.html`;
@@ -297,6 +307,78 @@ describe("update_widget on a bundled custom widget", () => {
     expect(error).toBeInstanceOf(Error);
     expect((error as Error).message).toContain("artifact_url");
     expect(store.putBodies).toHaveLength(0);
+  });
+});
+
+// A custom widget as the Admin saves it once its data sources are configured:
+// user and device groups in display.resource_options, and an entity data source
+// bound to a blueprint entity slot (the slot ID as the resource `id`).
+describe("update_widget on a custom widget configured in the Admin", () => {
+  const SLOT_ID = "6adf687312f2ac000cafd9a5";
+  const ADMIN_RESOURCE_OPTIONS = {
+    user: {
+      groups: [
+        {
+          id: "MKG1jWS41ywCbKXePmaLV",
+          amount: 1000,
+          filters: [{ from_blueprint: true, tag_key: "", tag_value: "", blueprint_device: SLOT_ID, blueprint_device_tag_match: "customer_id" }],
+          data: [{ type: "parameter", parameter: "email", editable: false }],
+        },
+      ],
+    },
+    device: { groups: [] },
+    entity: { groups: [] },
+  };
+  const STORED_ADMIN_IFRAME = {
+    id: WIDGET_ID,
+    dashboard: DASHBOARD_ID,
+    label: "Users",
+    type: "iframe",
+    analysis_run: "61f00000000000000000b001",
+    display: {
+      url: `https://files.example.test/${"f".repeat(24)}/storage/widgets/${WIDGET_ID}.tsx`,
+      artifact_url: `https://files.example.test/${"f".repeat(24)}/storage/widgets/.bundled/${WIDGET_ID}/abc123.html`,
+      max_data: 500,
+      resource_options: ADMIN_RESOURCE_OPTIONS,
+    },
+    resource: [{ id: SLOT_ID, type: "entity", view: ["name"], index: "id_updated_at_idx", amount: 1000, orderBy: "desc", editable: [] }],
+  };
+
+  function adminWidgetStore() {
+    const store = { widget: structuredClone(STORED_ADMIN_IFRAME) as Record<string, unknown>, putBodies: [] as Array<Record<string, unknown>> };
+    mockServer.use(
+      http.get(`${API}/dashboard/:dashboardID/widget/:widgetID`, () => ok(store.widget)),
+      http.put(`${API}/dashboard/:dashboardID/widget/:widgetID`, async ({ request }) => {
+        store.putBodies.push((await request.json()) as Record<string, unknown>);
+        return ok("Successfully Updated");
+      })
+    );
+    return store;
+  }
+
+  it("accepts a label-only patch instead of failing on the stored resource_options", async () => {
+    const store = adminWidgetStore();
+
+    await invokeTool(updateWidgetConfigJSON, makeContext(), { dashboard_id: DASHBOARD_ID, widget_id: WIDGET_ID, patch: { label: "Renamed" } });
+
+    expect(store.putBodies).toEqual([{ label: "Renamed", analysis_run: STORED_ADMIN_IFRAME.analysis_run }]);
+  });
+
+  it("keeps the stored resource_options, artifact_url, and analysis_run when a patch changes another display field", async () => {
+    const store = adminWidgetStore();
+
+    await invokeTool(updateWidgetConfigJSON, makeContext(), { dashboard_id: DASHBOARD_ID, widget_id: WIDGET_ID, patch: { display: { max_data: 100 } } });
+
+    expect(store.putBodies).toEqual([{ display: { ...STORED_ADMIN_IFRAME.display, max_data: 100 }, analysis_run: STORED_ADMIN_IFRAME.analysis_run }]);
+  });
+
+  it("replaces the entity data source with another blueprint slot", async () => {
+    const store = adminWidgetStore();
+    const resource = [{ id: "6adf687312f2ac000cafd9a6", type: "entity", view: ["name", "organization_id"], index: "id_updated_at_idx" }];
+
+    await invokeTool(updateWidgetConfigJSON, makeContext(), { dashboard_id: DASHBOARD_ID, widget_id: WIDGET_ID, patch: { resource } });
+
+    expect(store.putBodies).toEqual([{ resource, analysis_run: STORED_ADMIN_IFRAME.analysis_run }]);
   });
 });
 

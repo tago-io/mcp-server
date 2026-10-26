@@ -47,32 +47,19 @@ const WIDGET_TYPES = Object.keys(widgetCreateSchemas).sort();
 
 const TABS_EXAMPLE = '[{ "key": "overview", "value": "Overview" }]';
 
-// Bundler-managed display keys: the widget-bundler writeback stores
-// `display.artifact_url` on every bundled widget (the API server's internal
-// display schema is an open record), but the pinned package's strict display
-// schemas reject it as an unrecognized key. Stripped from the CURRENT state
-// before merged-candidate validation and re-attached unchanged onto the wire
-// display so the PUT (wholesale column replacement) never drops it. The
-// writeback writes only `url` (declared) and `artifact_url`, audited against
-// the upload component. Remove once the package models the field.
-const BUNDLER_MANAGED_DISPLAY_KEYS = ["artifact_url"] as const;
+// `display.artifact_url` is written by the widget bundler after
+// upload_custom_widget_code. The package models it, so stored state validates
+// and the complete merged display keeps it on the wire; callers must not set it.
+const ARTIFACT_URL_EXAMPLE = '{ "display": { "max_data": 500 } }';
 
-function splitBundlerManagedDisplay(state: Record<string, unknown>): { stripped: Record<string, unknown>; preserved: Record<string, unknown> } {
-  if (!isPlainObject(state.display)) {
-    return { stripped: state, preserved: {} };
+function assertNoCallerArtifactURL(candidate: unknown): void {
+  if (isPlainObject(candidate) && isPlainObject(candidate.display) && Object.hasOwn(candidate.display, "artifact_url")) {
+    throw invalidParamError(
+      "display.artifact_url",
+      "is written by the platform when upload_custom_widget_code bundles the widget source and cannot be set directly; omit it",
+      ARTIFACT_URL_EXAMPLE
+    );
   }
-  const display = { ...state.display };
-  const preserved: Record<string, unknown> = {};
-  for (const key of BUNDLER_MANAGED_DISPLAY_KEYS) {
-    if (Object.hasOwn(display, key)) {
-      preserved[key] = display[key];
-      delete display[key];
-    }
-  }
-  if (Object.keys(preserved).length === 0) {
-    return { stripped: state, preserved };
-  }
-  return { stripped: { ...state, display }, preserved };
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -184,6 +171,7 @@ function validateWidgetCreate(candidate: unknown): ValidatedCreate {
   const type = typeof shape.type === "string" ? shape.type : "";
   requireWidgetType(type);
   assertNoAllDataQuery(shape.data);
+  assertNoCallerArtifactURL(shape);
   const result = widgetCreateSchemas[type].safeParse(candidate);
   if (!result.success) {
     return { ok: false, issues: toValidationIssues(result.error.issues) };
@@ -198,10 +186,8 @@ function validateWidgetUpdate(current: Record<string, unknown>, patch: Record<st
     return { ok: false, issues: [{ path: "type", message: `widget type is immutable; this widget is "${type}". Delete and recreate to change type` }] };
   }
   assertNoAllDataQuery(patch.data);
-  // Bundler-managed keys come out of the CURRENT state only; a patch that
-  // names them still fails strict validation (they are not caller-writable).
-  const { stripped: strippedCurrent, preserved: preservedDisplay } = splitBundlerManagedDisplay(current);
-  const mergedCandidate = mergePatch(strippedCurrent, patch);
+  assertNoCallerArtifactURL(patch);
+  const mergedCandidate = mergePatch(current, patch);
   mergedCandidate.type = type;
   const result = widgetUpdateSchemas[type].safeParse(mergedCandidate);
   if (!result.success) {
@@ -229,13 +215,6 @@ function validateWidgetUpdate(current: Record<string, unknown>, patch: Record<st
     wireUpdate.analysis_run = merged.analysis_run;
   }
 
-  // Re-attach bundler-managed display keys unchanged: when the wire update
-  // carries a display object, the PUT replaces the whole column, and dropping
-  // `artifact_url` would detach the widget's bundled artifact.
-  if (Object.keys(preservedDisplay).length > 0 && isPlainObject(wireUpdate.display)) {
-    wireUpdate.display = { ...wireUpdate.display, ...preservedDisplay };
-  }
-
   return { ok: true, merged, wireUpdate };
 }
 
@@ -251,13 +230,14 @@ function validateWidgetCandidate(candidate: unknown, mode: "create" | "update"):
   const type = typeof shape.type === "string" ? shape.type : "";
   requireWidgetType(type);
   assertNoAllDataQuery(shape.data);
-  const schemas = mode === "create" ? widgetCreateSchemas : widgetUpdateSchemas;
   // Update-mode candidates are typically fetched widget state, which on a
-  // bundled widget legitimately carries the bundler-managed display keys the
-  // strict package schema does not model. Create candidates are caller-
-  // authored, so the keys stay rejected there.
-  const input = mode === "update" ? splitBundlerManagedDisplay(shape).stripped : candidate;
-  const result = schemas[type].safeParse(input);
+  // bundled widget legitimately carries artifact_url; create candidates are
+  // caller-authored, so the key stays rejected there.
+  if (mode === "create") {
+    assertNoCallerArtifactURL(shape);
+  }
+  const schemas = mode === "create" ? widgetCreateSchemas : widgetUpdateSchemas;
+  const result = schemas[type].safeParse(candidate);
   if (!result.success) {
     return { ok: false, issues: toValidationIssues(result.error.issues) };
   }
