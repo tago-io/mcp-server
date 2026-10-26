@@ -4519,6 +4519,160 @@ The type parameter accepts one of seven values:
       "$schema": "http://json-schema.org/draft-07/schema#",
       "additionalProperties": false,
       "properties": {
+        "buttons": {
+          "description": "Action buttons shown on the notification (at most 4).",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "color": {
+                "description": "Button color as a hex value, e.g. '#337ab7'.",
+                "type": "string",
+              },
+              "id": {
+                "description": "Button identifier, unique within the notification, e.g. 'ack'.",
+                "minLength": 1,
+                "type": "string",
+              },
+              "label": {
+                "description": "Button text.",
+                "minLength": 1,
+                "type": "string",
+              },
+              "triggers": {
+                "description": "What pressing the button does.",
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "description": "Runs an analysis when the button is pressed.",
+                      "properties": {
+                        "analysis_id": {
+                          "description": "The 24-character analysis ID.",
+                          "maxLength": 24,
+                          "minLength": 24,
+                          "type": "string",
+                        },
+                        "scope": {
+                          "default": [],
+                          "description": "Data passed to the analysis as its \`scope\` when the button is pressed. Defaults to [].",
+                          "items": {
+                            "additionalProperties": {},
+                            "type": "object",
+                          },
+                          "type": "array",
+                        },
+                      },
+                      "required": [
+                        "analysis_id",
+                      ],
+                      "type": "object",
+                    },
+                    {
+                      "additionalProperties": false,
+                      "description": "Calls or opens a URL when the button is pressed.",
+                      "properties": {
+                        "body": {
+                          "additionalProperties": {},
+                          "description": "Request body for POST/PUT calls.",
+                          "type": "object",
+                        },
+                        "method": {
+                          "description": "HTTP method, or REDIRECT to open the URL instead of calling it.",
+                          "enum": [
+                            "POST",
+                            "GET",
+                            "PUT",
+                            "DELETE",
+                            "REDIRECT",
+                          ],
+                          "type": "string",
+                        },
+                        "url": {
+                          "description": "Target URL: an http(s) link, or a TagoRUN page path starting with '/'. With method REDIRECT, the page or link to open.",
+                          "pattern": "^(https?:\\/\\/|\\/(?!\\/))",
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "url",
+                        "method",
+                      ],
+                      "type": "object",
+                    },
+                  ],
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+            },
+            "required": [
+              "id",
+              "label",
+              "triggers",
+            ],
+            "type": "object",
+          },
+          "maxItems": 4,
+          "type": "array",
+        },
+        "buttons_autodisable": {
+          "description": "Whether the buttons disable after the first press.",
+          "type": "boolean",
+        },
+        "buttons_enabled": {
+          "description": "Whether the buttons can be pressed.",
+          "type": "boolean",
+        },
+        "icon": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bg_color": {
+                  "type": "string",
+                },
+                "svg_color": {
+                  "type": "string",
+                },
+                "svg_url": {
+                  "format": "uri",
+                  "pattern": "^https:\\/\\/",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "svg_url",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bg_color": {
+                  "type": "string",
+                },
+                "fit": {
+                  "enum": [
+                    "fill",
+                    "contain",
+                    "cover",
+                  ],
+                  "type": "string",
+                },
+                "image_url": {
+                  "format": "uri",
+                  "pattern": "^https:\\/\\/",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "image_url",
+              ],
+              "type": "object",
+            },
+          ],
+          "description": "Notification icon: an SVG (\`svg_url\`) or an image (\`image_url\`).",
+        },
         "message": {
           "description": "The notification body text.",
           "minLength": 1,
@@ -6387,6 +6541,160 @@ The type parameter accepts one of seven values:
       "$schema": "http://json-schema.org/draft-07/schema#",
       "additionalProperties": false,
       "properties": {
+        "buttons": {
+          "description": "The new action buttons, replacing the current ones (at most 4). Send [] to remove them all.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "color": {
+                "description": "Button color as a hex value, e.g. '#337ab7'.",
+                "type": "string",
+              },
+              "id": {
+                "description": "Button identifier, unique within the notification, e.g. 'ack'.",
+                "minLength": 1,
+                "type": "string",
+              },
+              "label": {
+                "description": "Button text.",
+                "minLength": 1,
+                "type": "string",
+              },
+              "triggers": {
+                "description": "What pressing the button does.",
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "description": "Runs an analysis when the button is pressed.",
+                      "properties": {
+                        "analysis_id": {
+                          "description": "The 24-character analysis ID.",
+                          "maxLength": 24,
+                          "minLength": 24,
+                          "type": "string",
+                        },
+                        "scope": {
+                          "default": [],
+                          "description": "Data passed to the analysis as its \`scope\` when the button is pressed. Defaults to [].",
+                          "items": {
+                            "additionalProperties": {},
+                            "type": "object",
+                          },
+                          "type": "array",
+                        },
+                      },
+                      "required": [
+                        "analysis_id",
+                      ],
+                      "type": "object",
+                    },
+                    {
+                      "additionalProperties": false,
+                      "description": "Calls or opens a URL when the button is pressed.",
+                      "properties": {
+                        "body": {
+                          "additionalProperties": {},
+                          "description": "Request body for POST/PUT calls.",
+                          "type": "object",
+                        },
+                        "method": {
+                          "description": "HTTP method, or REDIRECT to open the URL instead of calling it.",
+                          "enum": [
+                            "POST",
+                            "GET",
+                            "PUT",
+                            "DELETE",
+                            "REDIRECT",
+                          ],
+                          "type": "string",
+                        },
+                        "url": {
+                          "description": "Target URL: an http(s) link, or a TagoRUN page path starting with '/'. With method REDIRECT, the page or link to open.",
+                          "pattern": "^(https?:\\/\\/|\\/(?!\\/))",
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "url",
+                        "method",
+                      ],
+                      "type": "object",
+                    },
+                  ],
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+            },
+            "required": [
+              "id",
+              "label",
+              "triggers",
+            ],
+            "type": "object",
+          },
+          "maxItems": 4,
+          "type": "array",
+        },
+        "buttons_autodisable": {
+          "description": "Whether the buttons disable after the first press.",
+          "type": "boolean",
+        },
+        "buttons_enabled": {
+          "description": "Whether the buttons can be pressed.",
+          "type": "boolean",
+        },
+        "icon": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bg_color": {
+                  "type": "string",
+                },
+                "svg_color": {
+                  "type": "string",
+                },
+                "svg_url": {
+                  "format": "uri",
+                  "pattern": "^https:\\/\\/",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "svg_url",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bg_color": {
+                  "type": "string",
+                },
+                "fit": {
+                  "enum": [
+                    "fill",
+                    "contain",
+                    "cover",
+                  ],
+                  "type": "string",
+                },
+                "image_url": {
+                  "format": "uri",
+                  "pattern": "^https:\\/\\/",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "image_url",
+              ],
+              "type": "object",
+            },
+          ],
+          "description": "Notification icon: an SVG (\`svg_url\`) or an image (\`image_url\`).",
+        },
         "message": {
           "description": "The new notification body text.",
           "minLength": 1,

@@ -186,7 +186,10 @@ const contractCases: Record<string, ContractCase> = {
   },
   delete_run_user: { happy: { run_user_id: USER_ID }, invalid: {} },
   read_run_user_notifications: { happy: { run_user_id: USER_ID }, invalid: { run_user_id: "too-short" } },
-  send_run_user_notification: { happy: { run_user_id: USER_ID, title: "Hi", message: "Body" }, invalid: { run_user_id: USER_ID, title: "Hi" } },
+  send_run_user_notification: {
+    happy: { run_user_id: USER_ID, title: "Hi", message: "Body", buttons: [{ id: "ack", label: "Acknowledge", triggers: [{ analysis_id: ANALYSIS_ID }] }] },
+    invalid: { run_user_id: USER_ID, title: "Hi" },
+  },
   update_run_user_notification: {
     happy: { notification_id: NOTIFICATION_ID, title: "Updated" },
     // No editable field alongside the ID; rejected before any SDK traffic.
